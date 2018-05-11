@@ -1,0 +1,2 @@
+/usr/bin/ar qc libMDP.a  CMakeFiles/MDP.dir/src/main/cpp/src/MDP/model.cpp.o CMakeFiles/MDP.dir/src/main/cpp/src/MDP/mdp.cpp.o
+/usr/bin/ranlib libMDP.a

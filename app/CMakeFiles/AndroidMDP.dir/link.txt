@@ -1,0 +1,2 @@
+/usr/bin/ar qc libAndroidMDP.a  CMakeFiles/AndroidMDP.dir/src/main/cpp/src/AndroidMDP/Util/Seed.cpp.o CMakeFiles/AndroidMDP.dir/src/main/cpp/src/AndroidMDP/MDP/SparseModel.cpp.o
+/usr/bin/ranlib libAndroidMDP.a
