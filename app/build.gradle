@@ -15,8 +15,10 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
-                cppFlags "-std=c++17"
             }
+        }
+        ndk {
+            //abiFilters 'armeabi-v7a'
         }
     }
     buildTypes {
@@ -28,6 +30,7 @@ android {
     externalNativeBuild {
         cmake {
             path "CMakeLists.txt"
+            version "3.11.0"
         }
     }
 }
