@@ -2,6 +2,7 @@ package com.example.jaycee.pomdpobjectsearch
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Button
 
 class ActivityCamera : AppCompatActivity()
 {
@@ -10,6 +11,8 @@ class ActivityCamera : AppCompatActivity()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
 
-        JNIBridge().init()
+        findViewById<Button>(R.id.button_object_toilet).setOnClickListener {
+                JNIBridge().initSearch(1, 500)
+            }
     }
 }

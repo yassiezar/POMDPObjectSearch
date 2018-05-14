@@ -12,6 +12,17 @@ namespace AndroidMDP
         using Values = Vector;
         using Actions = std::vector<size_t>;
 
+        struct ValueFunction
+        {
+            Values values;
+            Actions actions;
+
+            ValueFunction() {}
+            ValueFunction(Values v, Actions a) :
+                    values(std::move(v)), actions(std::move(a)) {}
+        };
+        using QFunction = Matrix2D;
+
         template <typename M>
         struct is_generative_model
         {
@@ -58,6 +69,41 @@ namespace AndroidMDP
             enum
             {
                 value = test<M>(0) && is_generative_model<M>::value
+            };
+        };
+
+        template<typename M>
+        struct is_model_eigen
+        {
+        private:
+            #define RETVAL_EXTRACTOR(fun_name)                                                                                                  \
+                                                                                                                                                \
+            template <typename Z, typename ...Args> static auto fun_name##RetType(Z* z) ->                                                      \
+                                                                typename remove_cv_ref<decltype(z->fun_name(std::declval<Args>()...))>::type;   \
+                                                                                                                                                \
+            template <typename Z, typename ...Args> static auto fun_name##RetType(...) -> int
+
+            RETVAL_EXTRACTOR(getTransitionFunction);
+            RETVAL_EXTRACTOR(getRewardFunction);
+
+            using F = decltype(getTransitionFunctionRetType<const M, size_t>(0));
+            using R = decltype(getRewardFunctionRetType<const M>(0));
+
+            template <typename Z> static constexpr auto test(int) -> decltype(
+
+                static_cast<const F & (Z::*)(size_t) const>     (&Z::getTranstionFunction),
+                static_cast<const R & (Z::*)()       const>     (&Z::getRewardFucntion),
+                bool()
+            ) { return true; }
+            template<typename Z> static constexpr auto test(...) -> bool { return false; }
+
+            #undef RETVAL_EXTRACTOR
+        public:
+            enum
+            {
+                value = is_model<M>::value && test<M> &&
+                        std::is_base_of<Eigen::EigenBase<F>, F>::value &&
+                        std::is_base_of<Eigen::EigenBase<R>, R>::value
             };
         };
     }

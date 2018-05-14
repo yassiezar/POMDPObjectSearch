@@ -28,6 +28,9 @@ namespace AndroidMDP
     using SparseMatrix4D = boost::multi_array<SparseMatrix2D, 2>;
 
     using ProbabilityVector = Vector;
+
+    template<typename T>
+    struct remove_cv_ref {using type = typename std::remove_cv<typename std::remove_reference<T>::type>::type; };
 }
 
 #endif

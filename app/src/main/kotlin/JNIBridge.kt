@@ -10,5 +10,6 @@ public class JNIBridge
         }
     }
 
-    external fun init() : Boolean
+    external fun initSearch(target: Long, horizon: Long) : Boolean
+    external fun getAction(state: Long) : Long
 }

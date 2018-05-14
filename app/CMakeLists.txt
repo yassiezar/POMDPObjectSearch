@@ -12,6 +12,9 @@ add_library(AndroidMDP
             SHARED
             src/main/cpp/src/AndroidMDP/Util/Seed.cpp
             src/main/cpp/src/AndroidMDP/MDP/SparseModel.cpp
+            src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.cpp
+            src/main/cpp/src/AndroidMDP/MDP/Util.cpp
+            src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.cpp
             )
 
 add_library(MDP

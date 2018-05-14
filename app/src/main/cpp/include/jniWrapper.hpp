@@ -9,7 +9,10 @@
 extern "C" {
 #endif
 
-JNIEXPORT bool JNICALL Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_init(JNIEnv *env, jobject obj);
+JNIEXPORT bool JNICALL Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_initSearch(JNIEnv*, jobject, jlong, jlong);
+JNIEXPORT jlong JNICALL Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_getAction(JNIEnv*  jobject, jlong);
+
+MDPNameSpace::MDP mdp;
 
 #ifdef __cplusplus
 }

@@ -2,7 +2,7 @@
 
 namespace MDPNameSpace
 {
-    Model::Model(size_t t) : target(t) { }
+    Model::Model() : target() { }
 
     double Model::getExpectedReward(size_t s, size_t a, size_t s1) const
     {
@@ -96,5 +96,10 @@ namespace MDPNameSpace
         vector[S_OBSERVATION] = s / gridSize;
 
         return vector;
+    }
+
+    void Model::setTarget(const size_t t)
+    {
+        target = t;
     }
 }

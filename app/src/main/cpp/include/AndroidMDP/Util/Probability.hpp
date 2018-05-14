@@ -36,6 +36,18 @@ namespace AndroidMDP
         }
         return d-1;
     }
+
+    template <typename T, typename G>
+    size_t sampleProbability(const size_t d, const T& in, G& generator) {
+        static std::uniform_real_distribution<double> sampleDistribution(0.0, 1.0);
+        double p = sampleDistribution(generator);
+
+        for ( size_t i = 0; i < d; ++i ) {
+            if ( in[i] > p ) return i;
+            p -= in[i];
+        }
+        return d-1;
+    }
 }
 
 #endif

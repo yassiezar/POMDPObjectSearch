@@ -1,19 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ActivityCamera">
+    tools:context=".ActivityCamera"
+    android:orientation="vertical"  >
 
-    <TextView
-        android:id="@+id/sample_text"
-        android:layout_width="wrap_content"
+   <Button
+       android:layout_height="wrap_content"
+       android:layout_width="wrap_content"
+       android:id="@+id/button_object_toilet"
+       android:text="Toilet"
+       />
+
+    <Button
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_width="wrap_content"
+        android:id="@+id/button_object_computer_monitor"
+        android:text="Computer Monitor"
+        />
 
-</android.support.constraint.ConstraintLayout>
+    <Button
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:id="@+id/button_object_kettle"
+        android:text="Kettle"
+        />
+
+</LinearLayout>
