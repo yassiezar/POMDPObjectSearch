@@ -7,6 +7,10 @@ set(CMAKE_VERBOSE_MAKEFILE on)
 include_directories(/usr/local/include/)
 include_directories(/usr/include/eigen3/)
 include_directories(src/main/cpp/include/)
+include_directories(/home/jaycee/src/github.com/openal-soft/include/)
+
+add_library(openal SHARED IMPORTED )
+set_target_properties(openal PROPERTIES IMPORTED_LOCATION src/main/jniLibs/${ANDROID_ABI}/libopenal.so )
 
 add_library(AndroidMDP
             SHARED

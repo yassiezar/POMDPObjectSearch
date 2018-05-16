@@ -7,25 +7,10 @@
     tools:context=".ActivityCamera"
     android:orientation="vertical"  >
 
-   <Button
-       android:layout_height="wrap_content"
-       android:layout_width="wrap_content"
-       android:id="@+id/button_object_toilet"
-       android:text="Toilet"
-       />
-
-    <Button
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:id="@+id/button_object_computer_monitor"
-        android:text="Computer Monitor"
-        />
-
-    <Button
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:id="@+id/button_object_kettle"
-        android:text="Kettle"
-        />
+    <android.opengl.GLSurfaceView
+        android:id="@+id/surfaceview"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_gravity="top"/>
 
 </LinearLayout>
