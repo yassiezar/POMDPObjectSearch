@@ -55,6 +55,8 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     private final ClassRendererBackground backgroundRenderer = new ClassRendererBackground();
     private final SnackbarHelper snackbarHelper = new SnackbarHelper(this);
 
+    private RunnableSoundGenerator runnableSoundGenerator = new RunnableSoundGenerator();
+
     private boolean requestARCoreInstall = true;
     private boolean viewportChanged = false;
 
@@ -218,6 +220,8 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
 
             Frame frame = session.update();
             Camera camera = frame.getCamera();
+
+            runnableSoundGenerator.update(camera);
 
             backgroundRenderer.draw(frame);
         }
