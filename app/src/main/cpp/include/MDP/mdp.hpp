@@ -1,5 +1,7 @@
 #include <chrono>
 
+#include <android/log.h>
+
 #include <MDP/model.hpp>
 
 #include <AndroidMDP/MDP/SparseModel.hpp>

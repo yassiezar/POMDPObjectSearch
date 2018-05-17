@@ -1,14 +1,18 @@
 package com.example.jaycee.pomdpobjectsearch;
 
 import android.Manifest;
+import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Messenger;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -32,19 +36,31 @@ import javax.microedition.khronos.opengles.GL10;
 public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.Renderer
 {
     private static final String TAG = ActivityCamera.class.getSimpleName();
+
     private static final int CAMERA_PERMISSION_CODE = 0;
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
+
+    private static final int T_COMPUTER_MONITOR = 0;
+    private static final int T_DESK = 1;
+    private static final int T_WINDOW = 2;
+    private static final int T_KETTLE = 3;
+    private static final int T_SINK = 4;
+    private static final int T_TOILET = 5;
+    private static final int T_HAND_DRYER = 6;
 
     private Session session;
 
     private GLSurfaceView surfaceView;
 
     private final ClassRendererBackground backgroundRenderer = new ClassRendererBackground();
+    private final SnackbarHelper snackbarHelper = new SnackbarHelper(this);
 
     private boolean requestARCoreInstall = true;
     private boolean viewportChanged = false;
 
     private int width, height;
+
+    private HandlerMDPIntentService handlerMdpIntentService = new HandlerMDPIntentService(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -61,8 +77,22 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
 
         Button buttonToilet = new Button(this);
         buttonToilet.setText("Toilet");
+        buttonToilet.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                if(!handlerMdpIntentService.getMdpLearning())
+                {
+                    Intent i = new Intent(ActivityCamera.this, IntentServiceMDP.class);
+                    i.putExtra("INT_TARGET", T_TOILET);
+                    i.putExtra("HANDLER_MESSENGER", new Messenger(handlerMdpIntentService));
+                    startService(i);
+                }
+            }
+        });
 
-        //this.addContentView(buttonToilet, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        this.addContentView(buttonToilet, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
     }
 
     @Override
@@ -189,7 +219,6 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             Frame frame = session.update();
             Camera camera = frame.getCamera();
 
-            Log.d(TAG, "Drawing frame");
             backgroundRenderer.draw(frame);
         }
         catch(Throwable t)

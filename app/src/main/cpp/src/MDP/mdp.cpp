@@ -10,10 +10,12 @@ namespace MDPNameSpace
 
     void MDP::solve(const size_t horizon)
     {
+        __android_log_print(ANDROID_LOG_DEBUG, "MDP_JNI", "Starting solver");
         AndroidMDP::MDP::ValueIteration solver(horizon);
 
         std::tuple<double, AndroidMDP::MDP::ValueFunction, AndroidMDP::MDP::QFunction> solution = solver(sparseModel);
         policy.setValueFunction(std::get<1>(solution));
+        __android_log_print(ANDROID_LOG_DEBUG, "MDP_JNI", "Done");
     }
 
     size_t MDP::getAction(const size_t state)
@@ -23,6 +25,7 @@ namespace MDPNameSpace
 
     void MDP::setTarget(const size_t target)
     {
+        __android_log_print(ANDROID_LOG_DEBUG, "MDP_JNI", "Setting MDP target");
         size_t a = fullModel.getA();
         size_t s = fullModel.getS();
 
@@ -43,5 +46,6 @@ namespace MDPNameSpace
         }
         sparseModel.setTransitionFunction(transitions);
         sparseModel.setRewardFunction(rewards);
+        __android_log_print(ANDROID_LOG_DEBUG, "MDP_JNI", "Done");
     }
 }
