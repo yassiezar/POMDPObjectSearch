@@ -1,3 +1,6 @@
+#ifndef MDP_MDP_HPP
+#define MDP_MDP_HPP
+
 #include <chrono>
 
 #include <android/log.h>
@@ -27,3 +30,5 @@ namespace MDPNameSpace
         AndroidMDP::MDP::Policy policy;
     };
 }
+
+#endif
