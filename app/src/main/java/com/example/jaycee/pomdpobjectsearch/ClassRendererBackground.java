@@ -1,6 +1,7 @@
 package com.example.jaycee.pomdpobjectsearch;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 public class ClassRendererBackground
 {
@@ -118,6 +120,21 @@ public class ClassRendererBackground
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
 
         ClassShaderUtil.checkGLError(TAG, "Draw");
+    }
+
+    public Bitmap getBitmap(int width, int height)
+    {
+        //ByteBuffer bitmapBuffer = ByteBuffer.allocateDirect(width*height);
+        IntBuffer bitmapBuffer = IntBuffer.allocate(width*height);
+        //bitmapBuffer.order(ByteOrder.nativeOrder());
+        bitmapBuffer.position(0);
+
+        GLES20.glReadPixels(0, 0, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, bitmapBuffer);
+
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+
+        bitmap.copyPixelsFromBuffer(bitmapBuffer);
+        return bitmap;
     }
 
     private static final float[] QUAD_COORDS =

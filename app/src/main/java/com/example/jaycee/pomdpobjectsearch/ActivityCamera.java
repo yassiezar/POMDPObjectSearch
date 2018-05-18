@@ -1,9 +1,9 @@
 package com.example.jaycee.pomdpobjectsearch;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
@@ -12,10 +12,15 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Toast;
+
+import com.google.android.gms.vision.barcode.Barcode;
+import com.google.android.gms.vision.barcode.BarcodeDetector;
 
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
@@ -221,13 +226,26 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             Frame frame = session.update();
             Camera camera = frame.getCamera();
 
-            runnableSoundGenerator.update(camera);
+            BarcodeDetector detector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.ALL_FORMATS).build();
+
+            runnableSoundGenerator.update(camera, session);
 
             backgroundRenderer.draw(frame);
+
+            Bitmap bitmap = backgroundRenderer.getBitmap(width, height);
+
+            com.google.android.gms.vision.Frame bitmapFrame = new com.google.android.gms.vision.Frame.Builder().setBitmap(bitmap).build();
+            SparseArray<Barcode> barcodes = detector.detect(bitmapFrame);
+
+            if(barcodes.size() > 0)
+            {
+                int key = barcodes.keyAt(0);
+                Log.d(TAG, "Barcode found: " + barcodes.get(key).displayValue);
+            }
         }
         catch(Throwable t)
         {
-            Log.e(TAG, "Exception on OpenGL thread.");
+            Log.e(TAG, "Exception on OpenGL thread: " + t);
         }
     }
 
