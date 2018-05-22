@@ -29,6 +29,9 @@ namespace SoundGenerator
         bool init();
         bool kill();
 
+        bool startSound();
+        bool endSound();
+
         void startPlay(jfloat pitch);
         void play(JNIEnv *env, jfloatArray src, jfloatArray list, jfloat gain, jfloat pitch);
         short convertToneToSemitone(float pitch);

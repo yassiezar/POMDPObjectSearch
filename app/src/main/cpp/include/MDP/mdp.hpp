@@ -3,7 +3,10 @@
 
 #include <chrono>
 
+#include <jni.h>
 #include <android/log.h>
+#include <android/asset_manager.h>
+#include <android/asset_manager_jni.h>
 
 #include <MDP/model.hpp>
 
@@ -11,8 +14,12 @@
 #include <AndroidMDP/MDP/Algorithms/ValueIteration.hpp>
 #include <AndroidMDP/MDP/Policies/Policy.hpp>
 
+#include <nlohmann/json.hpp>
+
 namespace MDPNameSpace
 {
+    using json = nlohmann::json;
+
     class MDP
     {
     public:

@@ -43,6 +43,7 @@ public class IntentServiceMDP extends IntentService
         }
 
         Log.d(TAG, "Starting MDP solver");
+        Toast.makeText(this, "Starting MDP...", Toast.LENGTH_LONG).show();
         JNIBridge.initSearch(intent.getIntExtra("INT_TARGET", 0), 500);
         Toast.makeText(this, "Done!", Toast.LENGTH_LONG).show();
 

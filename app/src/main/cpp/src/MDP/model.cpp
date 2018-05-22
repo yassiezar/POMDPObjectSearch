@@ -2,7 +2,7 @@
 
 namespace MDPNameSpace
 {
-    Model::Model() : target() { }
+    Model::Model() {}
 
     double Model::getExpectedReward(size_t s, size_t a, size_t s1) const
     {

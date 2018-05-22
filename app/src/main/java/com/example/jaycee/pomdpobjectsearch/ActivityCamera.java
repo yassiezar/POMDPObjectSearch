@@ -8,11 +8,18 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Messenger;
+import android.support.annotation.NonNull;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -26,6 +33,7 @@ import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Session;
+import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
@@ -56,11 +64,14 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     private Session session;
 
     private GLSurfaceView surfaceView;
+    private DrawerLayout drawerLayout;
 
     private final ClassRendererBackground backgroundRenderer = new ClassRendererBackground();
     private final SnackbarHelper snackbarHelper = new SnackbarHelper(this);
 
-    private RunnableSoundGenerator runnableSoundGenerator = new RunnableSoundGenerator();
+    BarcodeDetector detector;
+
+    private RunnableSoundGenerator runnableSoundGenerator = new RunnableSoundGenerator(this);
 
     private boolean requestARCoreInstall = true;
     private boolean viewportChanged = false;
@@ -75,6 +86,13 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
+
         surfaceView = findViewById(R.id.surfaceview);
         surfaceView.setPreserveEGLContextOnPause(true);
         surfaceView.setEGLContextClientVersion(2);
@@ -82,24 +100,48 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         surfaceView.setRenderer(this);
         surfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
 
-        Button buttonToilet = new Button(this);
-        buttonToilet.setText("Toilet");
-        buttonToilet.setOnClickListener(new View.OnClickListener()
+        drawerLayout = findViewById(R.id.layout_drawer_objects);
+        NavigationView navigationView = findViewById(R.id.navigation_view_objects);
+
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener()
         {
             @Override
-            public void onClick(View view)
+            public boolean onNavigationItemSelected(@NonNull MenuItem item)
             {
-                if(!handlerMdpIntentService.getMdpLearning())
+                switch (item.getItemId())
                 {
-                    Intent i = new Intent(ActivityCamera.this, IntentServiceMDP.class);
-                    i.putExtra("INT_TARGET", T_TOILET);
-                    i.putExtra("HANDLER_MESSENGER", new Messenger(handlerMdpIntentService));
-                    startService(i);
+                    case R.id.item_object_computer_monitor:
+                        runnableSoundGenerator.setTarget(T_COMPUTER_MONITOR);
+                        break;
+                    case R.id.item_object_desk:
+                        runnableSoundGenerator.setTarget(T_DESK);
+                        break;
+                    case R.id.item_object_window:
+                        runnableSoundGenerator.setTarget(T_WINDOW);
+                        break;
+                    case R.id.item_object_kettle:
+                        runnableSoundGenerator.setTarget(T_KETTLE);
+                        break;
+                    case R.id.item_object_sink:
+                        runnableSoundGenerator.setTarget(T_SINK);
+                        break;
+                    case R.id.item_object_toilet:
+                        runnableSoundGenerator.setTarget(T_TOILET);
+                        break;
+                    case R.id.item_object_hand_dryer:
+                        runnableSoundGenerator.setTarget(T_HAND_DRYER);
+                        break;
                 }
+
+                item.setCheckable(true);
+
+                drawerLayout.closeDrawers();
+
+                return true;
             }
         });
 
-        this.addContentView(buttonToilet, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        detector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.ALL_FORMATS).build();
     }
 
     @Override
@@ -165,6 +207,8 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         }
 
         surfaceView.onResume();
+
+        boolean initSound = JNIBridge.initSound();
     }
 
     @Override
@@ -176,6 +220,8 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             surfaceView.onPause();
             session.pause();
         }
+
+        boolean killSound = JNIBridge.killSound();
     }
 
     @Override
@@ -214,21 +260,23 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
 
         if(viewportChanged)
         {
-            viewportChanged = false;
-            int displayRotation = this.getSystemService(WindowManager.class).getDefaultDisplay().getRotation();
-            session.setDisplayGeometry(displayRotation, width, height);
+            try
+            {
+                viewportChanged = false;
+                int displayRotation = this.getSystemService(WindowManager.class).getDefaultDisplay().getRotation();
+                session.setDisplayGeometry(displayRotation, width, height);
+            }
+            catch(NullPointerException e)
+            {
+                Log.e(TAG, "defaultDisplay exception: " + e);
+            }
         }
 
+        session.setCameraTextureName(backgroundRenderer.getTextureId());
         try
         {
-            session.setCameraTextureName(backgroundRenderer.getTextureId());
-
             Frame frame = session.update();
             Camera camera = frame.getCamera();
-
-            BarcodeDetector detector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.ALL_FORMATS).build();
-
-            runnableSoundGenerator.update(camera, session);
 
             backgroundRenderer.draw(frame);
 
@@ -242,11 +290,37 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                 int key = barcodes.keyAt(0);
                 Log.d(TAG, "Barcode found: " + barcodes.get(key).displayValue);
             }
+
+            if(camera.getTrackingState() == TrackingState.TRACKING &&
+                    (handlerMdpIntentService.getMdpLearned() || runnableSoundGenerator.isTargetSet()))
+            {
+                runnableSoundGenerator.update(camera, session);
+            }
+            else
+            {
+                Log.w(TAG, "Camera not tracking or target is not set. ");
+            }
+        }
+        catch(CameraNotAvailableException e)
+        {
+            Log.e(TAG, "Camera not available: " + e);
         }
         catch(Throwable t)
         {
             Log.e(TAG, "Exception on OpenGL thread: " + t);
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        switch (item.getItemId())
+        {
+            case android.R.id.home:
+                drawerLayout.openDrawer(GravityCompat.START);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     public boolean hasCameraPermission()

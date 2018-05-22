@@ -35,6 +35,17 @@ namespace SoundGenerator
         return 0;
     }
 
+    bool SoundGenerator::startSound()
+    {
+        alGenBuffers(NUM_BUFFERS, soundBuf);
+        alGenSources(1, &soundSrc);
+        playing = false;
+
+        __android_log_print(ANDROID_LOG_INFO, SOUNDLOG, "Started sound");
+
+        return 0;
+    }
+
     bool SoundGenerator::kill()
     {
         ALCdevice* device = NULL;
@@ -48,6 +59,17 @@ namespace SoundGenerator
         alcCloseDevice(device);
 
         __android_log_print(ANDROID_LOG_INFO, SOUNDLOG, "OpenAL Sound destroyed.");
+
+        return 0;
+    }
+
+    bool SoundGenerator::endSound()
+    {
+        alDeleteBuffers(NUM_BUFFERS, soundBuf);
+        alDeleteSources(1, &soundSrc);
+        playing = false;
+
+        __android_log_print(ANDROID_LOG_INFO, SOUNDLOG, "Ended Sound.");
 
         return 0;
     }

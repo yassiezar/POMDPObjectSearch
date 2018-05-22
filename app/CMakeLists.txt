@@ -40,6 +40,7 @@ add_library(MDP
 target_link_libraries(MDP
                     AndroidMDP
                     log
+                    android
                     )
 
 add_library(JNI

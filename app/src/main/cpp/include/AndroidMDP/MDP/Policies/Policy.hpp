@@ -26,7 +26,10 @@ namespace AndroidMDP
 
         private:
             PolicyTable policy_;
+            friend std::istream& operator>>(std::istream &is, Policy & p);
         };
+
+        std::istream& operator>>(std::istream &is, Policy & p);
     }
 }
 

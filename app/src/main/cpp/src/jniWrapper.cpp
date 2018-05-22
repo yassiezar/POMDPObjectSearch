@@ -1,7 +1,11 @@
 #include <jniWrapper.hpp>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 JNIEXPORT bool JNICALL
-Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_initSearch(JNIEnv *env, jobject obj, jlong target, jlong horizon)
+Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_initSearch(JNIEnv* env, jobject obj, jlong target, jlong horizon)
 {
     mdp.setTarget(target);
     mdp.solve(horizon);
@@ -10,7 +14,35 @@ Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_initSearch(JNIEnv *env, jobj
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_getAction(JNIEnv *env, jobject obj, jlong state)
+Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_getAction(JNIEnv* env, jobject obj, jlong state)
 {
     mdp.getAction(state);
 }
+
+JNIEXPORT bool JNICALL
+Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_initSound(JNIEnv* env, jobject obj)
+{
+    soundGenerator.init();
+    soundGenerator.startSound();
+
+    return true;
+}
+
+JNIEXPORT bool JNICALL
+Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_killSound(JNIEnv* env, jobject obj)
+{
+    soundGenerator.endSound();
+    soundGenerator.kill();
+
+    return true;
+}
+
+JNIEXPORT void JNICALL
+Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_playSound(JNIEnv* env, jobject obj, jfloatArray src, jfloatArray list, jfloat gain, jfloat pitch)
+{
+    soundGenerator.play(env, src, list, gain, pitch);
+}
+
+#ifdef __cplusplus
+}
+#endif

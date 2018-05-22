@@ -27,6 +27,17 @@ namespace MDPNameSpace
         S_OBSERVATION = 2,
     };
 
+    enum Observations
+    {
+        O_COMPUTER_MONITOR = 0,
+        O_DESK = 1,
+        O_WINDOW = 2,
+        O_KETTLE = 3,
+        O_SINK = 4,
+        O_TOILET = 5,
+        O_HAND_DRYER = 6,
+    };
+
     class Model
     {
     public:
