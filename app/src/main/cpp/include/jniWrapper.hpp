@@ -17,11 +17,11 @@ JNIEXPORT bool JNICALL Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_initS
 JNIEXPORT bool JNICALL Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_killSound(JNIEnv*, jobject);
 JNIEXPORT void JNICALL_Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_playSound(JNIEnv*, jobject, jfloatArray, jfloatArray, jfloat, jfloat);
 
-static MDPNameSpace::MDP mdp;
-static SoundGenerator::SoundGenerator soundGenerator;
-
 #ifdef __cplusplus
 }
 #endif
+
+static MDPNameSpace::MDP mdp;
+static SoundGenerator::SoundGenerator soundGenerator;
 
 #endif

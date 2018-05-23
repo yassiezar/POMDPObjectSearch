@@ -34,7 +34,7 @@ namespace SoundGenerator
 
         void startPlay(jfloat pitch);
         void play(JNIEnv *env, jfloatArray src, jfloatArray list, jfloat gain, jfloat pitch);
-        short convertToneToSemitone(float pitch);
+        float convertToneToSemitone(float pitch);
         short* generateSoundWave(size_t bufferSize, jfloat pitch, short lastVal, bool onUpSwing);
         bool sourcePlaying();
 

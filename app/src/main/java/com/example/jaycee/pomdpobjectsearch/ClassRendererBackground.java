@@ -124,9 +124,7 @@ public class ClassRendererBackground
 
     public Bitmap getBitmap(int width, int height)
     {
-        //ByteBuffer bitmapBuffer = ByteBuffer.allocateDirect(width*height);
         IntBuffer bitmapBuffer = IntBuffer.allocate(width*height);
-        //bitmapBuffer.order(ByteOrder.nativeOrder());
         bitmapBuffer.position(0);
 
         GLES20.glReadPixels(0, 0, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, bitmapBuffer);

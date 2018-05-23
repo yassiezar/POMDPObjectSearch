@@ -12,13 +12,13 @@ import android.util.SparseIntArray;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Random;
 
 public class RunnableSoundGenerator implements Runnable
 {
     private static final String TAG = RunnableSoundGenerator.class.getSimpleName();
-    private static final long ANGLE_INTERVAL = 30;
+    private static final long ANGLE_INTERVAL = 15;
+    private static final long GRID_SIZE = 6;
 
     private Activity callingActivity;
 
@@ -27,10 +27,11 @@ public class RunnableSoundGenerator implements Runnable
     private Anchor anchorTarget;
 
     private boolean targetReached = false;
-    private boolean targetSet = false;
+    private boolean targetObjectSet = false;
+    private boolean targetObjectFound = false;
 
-    private long observation = 0;
-    private long target = 0;
+    private long observation = -1;
+    private long targetObject = 0;
 
     private Policy policy;
 
@@ -43,17 +44,23 @@ public class RunnableSoundGenerator implements Runnable
     public void run()
     {
         float[] currentPhoneRotation = convertQuaternionToEuler(phonePose.getRotationQuaternion());
-        //float[] targetRotation = convertQuaternionToEuler(targetPose.getRotationQuaternion());
+        float[] targetRotation = convertQuaternionToEuler(targetPose.getRotationQuaternion());
 
-        /*
-        if(Math.abs(currentPhoneRotation[0] - targetRotation[0]) <= 3 ||
+        JNIBridge.playSound(targetPose.getTranslation(), phonePose.getTranslation(), 1.f, getPitch(Math.toRadians(targetRotation[1] - currentPhoneRotation[1])));
+
+        Log.d(TAG, String.format("phone: %f %f %f", currentPhoneRotation[0], currentPhoneRotation[1], currentPhoneRotation[2]));
+        Log.d(TAG, String.format("target: %f %f %f", targetRotation[0], targetRotation[1], targetRotation[2]));
+
+        if(Math.abs(currentPhoneRotation[0] - targetRotation[0]) <= 3 &&
                 Math.abs(currentPhoneRotation[1] - targetRotation[1]) <= 3)
         {
+            Log.i(TAG, "Target reached");
             targetReached = true;
-            observation = 0;
+            if(observation == targetObject)
+            {
+                targetObjectFound = true;
+            }
         }
-        */
-        Log.d(TAG, String.format("roll: %f pitch: %f yaw: %f", currentPhoneRotation[0], currentPhoneRotation[1], currentPhoneRotation[2]));
     }
 
     public void update(Camera camera, Session session)
@@ -62,38 +69,60 @@ public class RunnableSoundGenerator implements Runnable
         if(targetReached)
         {
             targetReached = false;
-            anchorTarget.detach();
+            if(anchorTarget != null)
+            {
+                anchorTarget.detach();
+            }
 
-            float[] angles = convertQuaternionToEuler(phonePose.getRotationQuaternion());
-
-            //long action = JNIBridge.getAction(decodeState(angles[0], angles[1], observation));
-            long action = policy.getAction(decodeState(angles[0], angles[1], observation));
-            //float roll = action[0] * ANGLE_INTERVAL;
-            //float pitch = action[1] * ANGLE_INTERVAL;
-
-            //float[] nextTargetRotation = convertEulerToQuaternion(roll, pitch, 0);
-
-            //targetPose = new Pose(new float[] {0.f, 0.f, 0.f}, nextTargetRotation);
-
-            //anchorTarget = session.createAnchor(targetPose);
+            setNewTarget(session);
         }
 
         this.run();
     }
 
-    public long decodeState(float pan, float tilt, float obs)
+    public long encodeState(float fpan, float ftilt, long obs)
     {
-        return 0;
+        int pan = Math.round(fpan);
+        int tilt = Math.round(ftilt);
+
+        if(obs == -1)
+        {
+            Random rand = new Random();
+            obs = rand.nextInt(7);
+        }
+
+        long state = 0;
+        long multiplier = 1;
+
+        state += (multiplier * pan);
+        multiplier *= GRID_SIZE;
+        state += (multiplier * tilt);
+        multiplier *= GRID_SIZE;
+        state += (multiplier * obs);
+
+        return state;
     }
 
-    public long[] encodeState(long state)
+    public long[] decodeState(long state)
     {
         return new long[] {0, 0, 0};
     }
 
     public float[] convertEulerToQuaternion(float roll, float pitch, float yaw)
     {
-        return new float[] {0.f, 0.f, 0.f, 0.f};
+        double cy = Math.cos(yaw * 0.5);
+        double sy = Math.sin(yaw * 0.5);
+        double cr = Math.cos(roll * 0.5);
+        double sr = Math.sin(roll * 0.5);
+        double cp = Math.cos(pitch * 0.5);
+        double sp = Math.sin(pitch * 0.5);
+
+        double qw = cy * cr * cp + sy * sr * sp;
+        double qx = cy * sr * cp - sy * cr * sp;
+        double qy = cy * cr * sp + sy * sr * cp;
+        double qz = sy * cr * cp - cy * sr * sp;
+
+        return new float[] {(float)qx, (float)qy, (float)qz, (float)qw};
     }
 
     public float[] convertQuaternionToEuler(float[] q)
@@ -118,19 +147,111 @@ public class RunnableSoundGenerator implements Runnable
         float cosy = 1.f - 2.f * (q[1] * q[1] + q[2] * q[2]);
         float yaw = (float)Math.atan2(siny, cosy);
 
-        return new float[] {roll, pitch, yaw};
+        return new float[] {(float)(roll*180/Math.PI), (float)(pitch*180/Math.PI), (float)(yaw*180/Math.PI)};
     }
 
-    public void setTarget(long target)
+    public void setTargetObject(long target)
     {
         policy = new Policy((int)target);
-
-        this.target = target;
-
-        this.targetSet = true;
+        this.targetObject = target;
+        this.targetObjectSet = true;
+        this.targetReached = true;
+        this.targetObjectFound = false;
     }
 
-    public boolean isTargetSet() { return this.targetSet; }
+    public void setNewTarget(Session session)
+    {
+        float[] angles = convertQuaternionToEuler(phonePose.getRotationQuaternion());
+
+        int action = policy.getAction(encodeState(angles[0], angles[1], observation));
+        float tilt, pan;
+        switch(action)
+        {
+            case Policy.A_UP:
+                pan = angles[0];
+                tilt = angles[1] + 1.f * ANGLE_INTERVAL;
+                break;
+            case Policy.A_DOWN:
+                pan = angles[0];
+                tilt = angles[1] + (-1.f) * ANGLE_INTERVAL;
+                break;
+            case Policy.A_LEFT:
+                pan = angles[0] + (-1.f) * ANGLE_INTERVAL;
+                tilt = angles[1];
+                break;
+            case Policy.A_RIGHT:
+                pan = angles[0] + 1.f * ANGLE_INTERVAL;
+                tilt = angles[1];
+                break;
+            default:
+                pan = angles[0];
+                tilt = angles[1];
+        }
+
+        float[] nextTargetRotation = convertEulerToQuaternion(pan, tilt, angles[2]);
+
+        float targetX = phonePose.getTranslation()[0] + (float)Math.sin(pan);
+        float targetY = phonePose.getTranslation()[1] + (float)Math.sin(tilt);
+        float targetZ = 1.f;
+
+        targetPose = new Pose(new float[] {targetX, targetY, targetZ}, nextTargetRotation);
+
+        anchorTarget = session.createAnchor(targetPose);
+    }
+
+    public float[] multiplyQuaternions(float[] q1, float[] q2)
+    {
+        float qw = q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
+        float qx = q1[0]*q2[1] + q1[1]*q2[0] - q1[2]*q2[3] + q1[3]*q2[2];
+        float qy = q1[0]*q2[2] + q1[1]*q2[3] + q1[2]*q2[0] - q1[3]*q2[1];
+        float qz = q1[0]*q2[3] - q1[1]*q2[2] + q1[2]*q2[1] + q1[3]*q2[0];
+
+        return new float[] {qx, qy, qz, qw};
+    }
+
+    public float[] normaliseQuaternion(float[] q)
+    {
+        float norm = q[0] + q[1] + q[2] + q[3];
+
+        return new float[] {q[0]/norm, q[1]/norm, q[2]/norm, q[3]/norm};
+    }
+
+    public float getPitch(double elevation)
+    {
+        // Log.i(TAG, String.format("elevation: %f", elevation));
+        float pitch;
+        // From config file; HI setting
+        int pitchHighLim = 12;
+        int pitchLowLim = 6;
+
+        // Compensate for the Tango's default position being 90deg upright
+        if(elevation >= Math.PI / 2)
+        {
+            pitch = (float)(Math.pow(2, 64));
+        }
+
+        else if(elevation <= -Math.PI / 2)
+        {
+            pitch = (float)(Math.pow(2, pitchHighLim));
+        }
+
+        else
+        {
+            double gradientAngle = Math.toDegrees(Math.atan((pitchHighLim - pitchLowLim) / Math.PI));
+
+            float grad = (float)(Math.tan(Math.toRadians(gradientAngle)));
+            float intercept = (float)(pitchHighLim - Math.PI / 2 * grad);
+
+            pitch = (float)(Math.pow(2, grad * -elevation + intercept));
+        }
+        Log.i(TAG, String.format("pitch: %f", pitch));
+
+        return pitch;
+    }
+
+    public boolean isTargetObjectSet() { return this.targetObjectSet; }
+    public void setObservation(int observation) { this.observation = observation; }
+    public boolean isTargetObjectFound() { return this.targetObjectFound; }
 
     class Policy
     {
@@ -141,6 +262,11 @@ public class RunnableSoundGenerator implements Runnable
         private static final int O_SINK = 4;
         private static final int O_TOILET = 5;
         private static final int O_HAND_DRYER = 6;
+
+        private static final int A_UP = 0;
+        private static final int A_DOWN = 1;
+        private static final int A_LEFT = 2;
+        private static final int A_RIGHT = 3;
 
         private int target;
 
@@ -219,7 +345,7 @@ public class RunnableSoundGenerator implements Runnable
             }
         }
 
-        public long getAction(long state)
+        public int getAction(long state)
         {
             return policy.get((int)state);
         }

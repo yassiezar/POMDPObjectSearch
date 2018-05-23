@@ -1,13 +1,11 @@
 package com.example.jaycee.pomdpobjectsearch;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.os.Messenger;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -20,11 +18,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
@@ -111,25 +105,25 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                 switch (item.getItemId())
                 {
                     case R.id.item_object_computer_monitor:
-                        runnableSoundGenerator.setTarget(T_COMPUTER_MONITOR);
+                        runnableSoundGenerator.setTargetObject(T_COMPUTER_MONITOR);
                         break;
                     case R.id.item_object_desk:
-                        runnableSoundGenerator.setTarget(T_DESK);
+                        runnableSoundGenerator.setTargetObject(T_DESK);
                         break;
                     case R.id.item_object_window:
-                        runnableSoundGenerator.setTarget(T_WINDOW);
+                        runnableSoundGenerator.setTargetObject(T_WINDOW);
                         break;
                     case R.id.item_object_kettle:
-                        runnableSoundGenerator.setTarget(T_KETTLE);
+                        runnableSoundGenerator.setTargetObject(T_KETTLE);
                         break;
                     case R.id.item_object_sink:
-                        runnableSoundGenerator.setTarget(T_SINK);
+                        runnableSoundGenerator.setTargetObject(T_SINK);
                         break;
                     case R.id.item_object_toilet:
-                        runnableSoundGenerator.setTarget(T_TOILET);
+                        runnableSoundGenerator.setTargetObject(T_TOILET);
                         break;
                     case R.id.item_object_hand_dryer:
-                        runnableSoundGenerator.setTarget(T_HAND_DRYER);
+                        runnableSoundGenerator.setTargetObject(T_HAND_DRYER);
                         break;
                 }
 
@@ -289,10 +283,12 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             {
                 int key = barcodes.keyAt(0);
                 Log.d(TAG, "Barcode found: " + barcodes.get(key).displayValue);
+                runnableSoundGenerator.setObservation(Integer.parseInt(barcodes.get(key).displayValue));
             }
 
             if(camera.getTrackingState() == TrackingState.TRACKING &&
-                    (handlerMdpIntentService.getMdpLearned() || runnableSoundGenerator.isTargetSet()))
+                    (handlerMdpIntentService.getMdpLearned() || runnableSoundGenerator.isTargetObjectSet()) &&
+                    !runnableSoundGenerator.isTargetObjectFound())
             {
                 runnableSoundGenerator.update(camera, session);
             }

@@ -2,7 +2,17 @@
 
 namespace SoundGenerator
 {
-    SoundGenerator::SoundGenerator() { }
+    SoundGenerator::SoundGenerator()
+    {
+        float note = 16.4;
+        float interval = pow(2, 1/12.f);
+
+        for(int i = 0; i < 120; i ++)
+        {
+            notes[i] = note;
+            note *= interval;
+        }
+    }
 
     bool SoundGenerator::init()
     {
@@ -123,7 +133,7 @@ namespace SoundGenerator
         env->GetFloatArrayRegion(list, 0, listLen, lList);
 
         // Set source properties
-        alSourcef(soundSrc, AL_GAIN, gain);
+        alSourcef(soundSrc, AL_GAIN, 1.f);
 
         float orient[6] = { /*fwd:*/ 0.f, 0.f, -1.f, /*up:*/ 0.f, 1.f, 0.f};
         alListenerfv(AL_ORIENTATION, orient);
@@ -151,6 +161,7 @@ namespace SoundGenerator
         alSourcei(soundSrc, AL_LOOPING, AL_TRUE);
 
         pitch = convertToneToSemitone(pitch);
+        __android_log_print(ANDROID_LOG_INFO, SOUNDLOG, "pitch: %f", pitch);
 
         if(!sourcePlaying())
         {
@@ -195,7 +206,7 @@ namespace SoundGenerator
         return samples;
     }
 
-    short SoundGenerator::convertToneToSemitone(float pitch)
+    float SoundGenerator::convertToneToSemitone(float pitch)
     {
         float nPitch = 0;
 
@@ -203,7 +214,7 @@ namespace SoundGenerator
         {
             if(pitch - notes[i] < 0)
             {
-                nPitch = (short)(notes[i] + 0.5);
+                nPitch = (float)(notes[i] + 0.5f);
                 __android_log_print(ANDROID_LOG_DEBUG, SOUNDLOG, "Old pitch: %d New pitch: %d", (int)pitch, (int)nPitch);
                 break;
             }
