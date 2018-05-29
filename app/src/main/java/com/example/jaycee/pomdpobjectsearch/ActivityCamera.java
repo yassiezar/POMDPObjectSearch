@@ -74,8 +74,6 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
 
     private int width, height;
 
-    private List<Integer> listFoundTargets;
-
     private HandlerMDPIntentService handlerMdpIntentService = new HandlerMDPIntentService(this);
 
     @Override
@@ -101,11 +99,6 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         drawerLayout = findViewById(R.id.layout_drawer_objects);
         NavigationView navigationView = findViewById(R.id.navigation_view_objects);
 
-        ////////////
-        // REMOVE //
-        ////////////
-        runnableSoundGenerator.setTargetObject(T_COMPUTER_MONITOR);
-        ///////////
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener()
         {
             @Override
@@ -145,8 +138,6 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         });
 
         detector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.ALL_FORMATS).build();
-
-        listFoundTargets = new ArrayList<>();
     }
 
     @Override
@@ -340,7 +331,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
 
     public boolean hasCameraPermission()
     {
-        return ContextCompat.checkSelfPermission(this, CAMERA_PERMISSION)== PackageManager.PERMISSION_GRANTED;
+        return ContextCompat.checkSelfPermission(this, CAMERA_PERMISSION) == PackageManager.PERMISSION_GRANTED;
     }
 
     public void requestCameraPermission()

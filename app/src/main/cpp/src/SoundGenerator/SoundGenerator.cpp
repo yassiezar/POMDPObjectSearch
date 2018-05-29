@@ -161,7 +161,7 @@ namespace SoundGenerator
         alSourcei(soundSrc, AL_LOOPING, AL_TRUE);
 
         pitch = convertToneToSemitone(pitch);
-        __android_log_print(ANDROID_LOG_INFO, SOUNDLOG, "pitch: %f", pitch);
+        __android_log_print(ANDROID_LOG_DEBUG, SOUNDLOG, "pitch: %f", pitch);
 
         if(!sourcePlaying())
         {

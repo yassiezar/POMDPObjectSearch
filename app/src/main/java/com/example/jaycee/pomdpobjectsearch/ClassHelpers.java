@@ -1,7 +1,5 @@
 package com.example.jaycee.pomdpobjectsearch;
 
-import android.util.Log;
-
 public class ClassHelpers
 {
     private static final String TAG = ClassHelpers.class.getSimpleName();
@@ -26,6 +24,7 @@ public class ClassHelpers
             this.w = q[3];
         }
 
+        /*
         public float[] getEuler()
         {
             float roll, pitch, yaw;
@@ -55,6 +54,7 @@ public class ClassHelpers
 
             return new float[] {(float)(Math.toDegrees(roll)), (float)(Math.toDegrees(pitch)), (float)(Math.toDegrees(yaw))};
         }
+        */
 
         public void normalise()
         {
@@ -102,6 +102,26 @@ public class ClassHelpers
 
         public void rotateByQuaternion(mQuaternion q)
         {
+            float x = (1 - 2 * q.y * q.y - 2 * q.z * q.z) * this.x +
+                    2 * (q.x * q.y + q.w * q.z) * this.y +
+                    2 * (q.x * q.z - q.w * q.y) * this.z;
+            float y = 2 * (q.x * q.y - q.w * q.z) * this.x +
+                    (1 - 2 * q.x * q.x - 2 * q.z * q.z) * this.y +
+                    2 * (q.y * q.z + q.w * q.x) * this.z;
+            float z = 2 * (q.x * q.z + q.w * q.y) * this.x +
+                    2 * (q.y * q.z - q.w * q.x) * this.y +
+                    (1 - 2 * q.x * q.x - 2 * q.y * q.y) * this.z;
+
+
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+
+        public void rotateByQuaternion(float[] q1)
+        {
+            mQuaternion q = new mQuaternion(q1);
+
             float x = (1 - 2 * q.y * q.y - 2 * q.z * q.z) * this.x +
                     2 * (q.x * q.y + q.w * q.z) * this.y +
                     2 * (q.x * q.z - q.w * q.y) * this.z;

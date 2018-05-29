@@ -41,6 +41,8 @@ public class RunnableSoundGenerator implements Runnable
 
     private List<Long> listTargetFound;
 
+    ClassMetrics metrics = new ClassMetrics();
+
     public RunnableSoundGenerator(Activity callingActivity)
     {
         this.callingActivity = callingActivity;
@@ -50,29 +52,6 @@ public class RunnableSoundGenerator implements Runnable
     @Override
     public void run()
     {
-        /*
-        float[] currentPhoneRotation = convertQuaternionToEuler(phonePose.getRotationQuaternion());
-        float[] targetRotation = convertQuaternionToEuler(targetPose.getRotationQuaternion());
-
-        JNIBridge.playSound(targetPose.getTranslation(), phonePose.getTranslation(), 1.f, getPitch(Math.toRadians(currentPhoneRotation[1] - targetRotation[1])));
-
-        Log.d(TAG, String.format("phone: %f %f %f", currentPhoneRotation[0], currentPhoneRotation[1], currentPhoneRotation[2]));
-        Log.d(TAG, String.format("target: %f %f %f", targetRotation[0], targetRotation[1], targetRotation[2]));
-
-        if(Math.abs(currentPhoneRotation[0] - targetRotation[0]) <= 3 &&
-                Math.abs(currentPhoneRotation[1] - targetRotation[1]) <= 3)
-        {
-            Log.i(TAG, "Target reached");
-            targetReached = true;
-        }
-
-        if(observation == targetObject)
-        {
-            targetObjectFound = true;
-            targetObjectSet = false;
-            listTargetFound = new ArrayList<>();
-        }
-        */
         ClassHelpers.mQuaternion phoneQ = new ClassHelpers.mQuaternion(phonePose.getRotationQuaternion());
         phoneQ.normalise();
 
@@ -82,7 +61,7 @@ public class RunnableSoundGenerator implements Runnable
         cameraVector.normalise();
 
         JNIBridge.playSound(targetPose.getTranslation(), phonePose.getTranslation(), 1.f, getPitch(cameraVector.getEuler()[1] - targetAngles[1]));
-        Log.i(TAG, String.format("pitch: %f cam: %f target: %f",getPitch(cameraVector.getEuler()[1] - targetAngles[1]), cameraVector.getEuler()[1], targetAngles[1]));
+        Log.d(TAG, String.format("pitch: %f cam: %f target: %f",getPitch(cameraVector.getEuler()[1] - targetAngles[1]), cameraVector.getEuler()[1], targetAngles[1]));
 
         if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.025 &&            // 0.025 == 3deg
                 Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.025)
@@ -115,6 +94,7 @@ public class RunnableSoundGenerator implements Runnable
         }
 
         this.run();
+        metrics.writeWifi();
     }
 
     public long encodeState(float fpan, float ftilt, long obs)
@@ -158,12 +138,15 @@ public class RunnableSoundGenerator implements Runnable
 
     public void setNewTarget(Session session)
     {
-        ClassHelpers.mQuaternion targetQ = new ClassHelpers.mQuaternion(phonePose.getRotationQuaternion());
-        targetQ.normalise();
-        float[] angles = targetQ.getEuler();
+        ClassHelpers.mVector targetV = new ClassHelpers.mVector(0.f, 0.f, 1.f);
+        targetV.normalise();
+        targetV.rotateByQuaternion(phonePose.getRotationQuaternion());
+        targetV.normalise();
+
+        float[] angles = targetV.getEuler();
 
         Log.i(TAG, "Pre: " + phonePose.toString());
-        Log.i(TAG, String.format("new target (pre): %f %f %f", angles[0], angles[1], angles[2]));
+        Log.i(TAG, String.format("current direction (pre): %f %f %f", angles[0], angles[1], angles[2]));
 
         int action = policy.getAction(encodeState(angles[1], angles[0], observation));
         ClassHelpers.mQuaternion rotationR;
@@ -193,6 +176,9 @@ public class RunnableSoundGenerator implements Runnable
         cameraVector.normalise();
 
         targetAngles = cameraVector.getEuler();
+        targetAngles[0] = angles[0];
+        targetAngles[1] += angles[1];
+        targetAngles[2] += angles[2];
 
         rotationR.multiply(new ClassHelpers.mQuaternion(phonePose.getRotationQuaternion()));
         rotationR.normalise();
@@ -203,6 +189,10 @@ public class RunnableSoundGenerator implements Runnable
 
         targetPose = new Pose(new float[] {targetX, targetY, targetZ}, rotationR.getQuaternionAsFloat());
         anchorTarget = session.createAnchor(targetPose);
+
+        Log.i(TAG, String.valueOf(action));
+        Log.i(TAG, "post: " + targetPose.toString());
+        Log.i(TAG, String.format("new target (post): %f %f %f", targetAngles[0], targetAngles[1], targetAngles[2]));
     }
 
     public float getPitch(double tilt)
@@ -232,7 +222,7 @@ public class RunnableSoundGenerator implements Runnable
 
             pitch = (float)(Math.pow(2, grad * -tilt + intercept));
         }
-        // Log.i(TAG, String.format("pitch: %f", pitch));
+        Log.d(TAG, String.format("pitch: %f", pitch));
 
         return pitch;
     }
