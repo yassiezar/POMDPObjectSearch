@@ -36,6 +36,8 @@ import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -72,6 +74,8 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
 
     private int width, height;
 
+    private List<Integer> listFoundTargets;
+
     private HandlerMDPIntentService handlerMdpIntentService = new HandlerMDPIntentService(this);
 
     @Override
@@ -97,6 +101,11 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         drawerLayout = findViewById(R.id.layout_drawer_objects);
         NavigationView navigationView = findViewById(R.id.navigation_view_objects);
 
+        ////////////
+        // REMOVE //
+        ////////////
+        runnableSoundGenerator.setTargetObject(T_COMPUTER_MONITOR);
+        ///////////
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener()
         {
             @Override
@@ -136,6 +145,8 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         });
 
         detector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.ALL_FORMATS).build();
+
+        listFoundTargets = new ArrayList<>();
     }
 
     @Override
@@ -274,16 +285,24 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
 
             backgroundRenderer.draw(frame);
 
-            Bitmap bitmap = backgroundRenderer.getBitmap(width, height);
-
-            com.google.android.gms.vision.Frame bitmapFrame = new com.google.android.gms.vision.Frame.Builder().setBitmap(bitmap).build();
-            SparseArray<Barcode> barcodes = detector.detect(bitmapFrame);
-
-            if(barcodes.size() > 0)
+            if(runnableSoundGenerator.isTargetObjectSet())
             {
-                int key = barcodes.keyAt(0);
-                Log.d(TAG, "Barcode found: " + barcodes.get(key).displayValue);
-                runnableSoundGenerator.setObservation(Integer.parseInt(barcodes.get(key).displayValue));
+                Bitmap bitmap = backgroundRenderer.getBitmap(width, height);
+
+                com.google.android.gms.vision.Frame bitmapFrame = new com.google.android.gms.vision.Frame.Builder().setBitmap(bitmap).build();
+                SparseArray<Barcode> barcodes = detector.detect(bitmapFrame);
+
+                if(barcodes.size() > 0)
+                {
+                    int key = barcodes.keyAt(0);
+                    int val = Integer.parseInt(barcodes.get(key).displayValue);
+                    Log.d(TAG, "Barcode found: " + val);
+                    runnableSoundGenerator.setObservation(val);
+                }
+                else
+                {
+                    runnableSoundGenerator.setObservation(-1);
+                }
             }
 
             if(camera.getTrackingState() == TrackingState.TRACKING &&

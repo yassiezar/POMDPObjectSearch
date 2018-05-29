@@ -12,6 +12,8 @@ import android.util.SparseIntArray;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class RunnableSoundGenerator implements Runnable
@@ -26,6 +28,8 @@ public class RunnableSoundGenerator implements Runnable
     private Pose targetPose;
     private Anchor anchorTarget;
 
+    private float[] targetAngles;
+
     private boolean targetReached = false;
     private boolean targetObjectSet = false;
     private boolean targetObjectFound = false;
@@ -35,18 +39,22 @@ public class RunnableSoundGenerator implements Runnable
 
     private Policy policy;
 
+    private List<Long> listTargetFound;
+
     public RunnableSoundGenerator(Activity callingActivity)
     {
         this.callingActivity = callingActivity;
+        this.listTargetFound = new ArrayList<>();
     }
 
     @Override
     public void run()
     {
+        /*
         float[] currentPhoneRotation = convertQuaternionToEuler(phonePose.getRotationQuaternion());
         float[] targetRotation = convertQuaternionToEuler(targetPose.getRotationQuaternion());
 
-        JNIBridge.playSound(targetPose.getTranslation(), phonePose.getTranslation(), 1.f, getPitch(Math.toRadians(targetRotation[1] - currentPhoneRotation[1])));
+        JNIBridge.playSound(targetPose.getTranslation(), phonePose.getTranslation(), 1.f, getPitch(Math.toRadians(currentPhoneRotation[1] - targetRotation[1])));
 
         Log.d(TAG, String.format("phone: %f %f %f", currentPhoneRotation[0], currentPhoneRotation[1], currentPhoneRotation[2]));
         Log.d(TAG, String.format("target: %f %f %f", targetRotation[0], targetRotation[1], targetRotation[2]));
@@ -56,17 +64,46 @@ public class RunnableSoundGenerator implements Runnable
         {
             Log.i(TAG, "Target reached");
             targetReached = true;
-            if(observation == targetObject)
-            {
-                targetObjectFound = true;
-            }
+        }
+
+        if(observation == targetObject)
+        {
+            targetObjectFound = true;
+            targetObjectSet = false;
+            listTargetFound = new ArrayList<>();
+        }
+        */
+        ClassHelpers.mQuaternion phoneQ = new ClassHelpers.mQuaternion(phonePose.getRotationQuaternion());
+        phoneQ.normalise();
+
+        ClassHelpers.mVector cameraVector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
+        cameraVector.normalise();
+        cameraVector.rotateByQuaternion(phoneQ);
+        cameraVector.normalise();
+
+        JNIBridge.playSound(targetPose.getTranslation(), phonePose.getTranslation(), 1.f, getPitch(cameraVector.getEuler()[1] - targetAngles[1]));
+        Log.i(TAG, String.format("pitch: %f cam: %f target: %f",getPitch(cameraVector.getEuler()[1] - targetAngles[1]), cameraVector.getEuler()[1], targetAngles[1]));
+
+        if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.025 &&            // 0.025 == 3deg
+                Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.025)
+        {
+            Log.i(TAG, "Target reached");
+            targetReached = true;
+        }
+
+        if(observation == targetObject)
+        {
+            targetObjectFound = true;
+            targetObjectSet = false;
+            listTargetFound = new ArrayList<>();
         }
     }
 
     public void update(Camera camera, Session session)
     {
         phonePose = camera.getDisplayOrientedPose();
-        if(targetReached)
+        if(targetReached ||
+                observation != -1)
         {
             targetReached = false;
             if(anchorTarget != null)
@@ -108,51 +145,11 @@ public class RunnableSoundGenerator implements Runnable
         return new long[] {0, 0, 0};
     }
 
-    public float[] convertEulerToQuaternion(float roll, float pitch, float yaw)
-    {
-        double cy = Math.cos(yaw * 0.5);
-        double sy = Math.sin(yaw * 0.5);
-        double cr = Math.cos(roll * 0.5);
-        double sr = Math.sin(roll * 0.5);
-        double cp = Math.cos(pitch * 0.5);
-        double sp = Math.sin(pitch * 0.5);
-
-        double qw = cy * cr * cp + sy * sr * sp;
-        double qx = cy * sr * cp - sy * cr * sp;
-        double qy = cy * cr * sp + sy * sr * cp;
-        double qz = sy * cr * cp - cy * sr * sp;
-
-        return new float[] {(float)qx, (float)qy, (float)qz, (float)qw};
-    }
-
-    public float[] convertQuaternionToEuler(float[] q)
-    {
-        float sinr = 2.f * (q[3] * q[1] - q[2] * q[0]);
-        float roll;
-        if(Math.abs(sinr) >= 1.f)
-        {
-            roll = (float)Math.copySign(Math.PI / 2, sinr);
-        }
-        else
-        {
-            roll = (float)Math.asin(sinr);
-        }
-
-        float sinp = 2.0f * (q[3]  * q[0] + q[1] * q[2]);
-        float cosp = 1.0f - 2.0f * (q[0] * q[0] + q[1] * q[1]);
-
-        float pitch = (float)Math.atan2(sinp, cosp);
-
-        float siny = 2.f * (q[3] * q[2] + q[0] * q[1]);
-        float cosy = 1.f - 2.f * (q[1] * q[1] + q[2] * q[2]);
-        float yaw = (float)Math.atan2(siny, cosy);
-
-        return new float[] {(float)(roll*180/Math.PI), (float)(pitch*180/Math.PI), (float)(yaw*180/Math.PI)};
-    }
-
     public void setTargetObject(long target)
     {
         policy = new Policy((int)target);
+        listTargetFound = new ArrayList<>();
+
         this.targetObject = target;
         this.targetObjectSet = true;
         this.targetReached = true;
@@ -161,76 +158,67 @@ public class RunnableSoundGenerator implements Runnable
 
     public void setNewTarget(Session session)
     {
-        float[] angles = convertQuaternionToEuler(phonePose.getRotationQuaternion());
+        ClassHelpers.mQuaternion targetQ = new ClassHelpers.mQuaternion(phonePose.getRotationQuaternion());
+        targetQ.normalise();
+        float[] angles = targetQ.getEuler();
 
-        int action = policy.getAction(encodeState(angles[0], angles[1], observation));
-        float tilt, pan;
+        Log.i(TAG, "Pre: " + phonePose.toString());
+        Log.i(TAG, String.format("new target (pre): %f %f %f", angles[0], angles[1], angles[2]));
+
+        int action = policy.getAction(encodeState(angles[1], angles[0], observation));
+        ClassHelpers.mQuaternion rotationR;
         switch(action)
         {
             case Policy.A_UP:
-                pan = angles[0];
-                tilt = angles[1] + 1.f * ANGLE_INTERVAL;
+                rotationR = new ClassHelpers.mQuaternion(1.f, 0.f, 0.f, (float)Math.toRadians(ANGLE_INTERVAL));
                 break;
             case Policy.A_DOWN:
-                pan = angles[0];
-                tilt = angles[1] + (-1.f) * ANGLE_INTERVAL;
+                rotationR = new ClassHelpers.mQuaternion(-1.f, 0.f, 0.f, (float)Math.toRadians(ANGLE_INTERVAL));
                 break;
             case Policy.A_LEFT:
-                pan = angles[0] + (-1.f) * ANGLE_INTERVAL;
-                tilt = angles[1];
+                rotationR = new ClassHelpers.mQuaternion(0.f,-1.f, 0.f, (float)Math.toRadians(ANGLE_INTERVAL));
                 break;
             case Policy.A_RIGHT:
-                pan = angles[0] + 1.f * ANGLE_INTERVAL;
-                tilt = angles[1];
+                rotationR = new ClassHelpers.mQuaternion(0.f, 1.f, 0.f, (float)Math.toRadians(ANGLE_INTERVAL));
                 break;
             default:
-                pan = angles[0];
-                tilt = angles[1];
+                rotationR = new ClassHelpers.mQuaternion(0.f, 0.f, 0.f, 0.f);
         }
+        rotationR.normalise();
 
-        float[] nextTargetRotation = convertEulerToQuaternion(pan, tilt, angles[2]);
+        ClassHelpers.mVector cameraVector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
+        cameraVector.normalise();
 
-        float targetX = phonePose.getTranslation()[0] + (float)Math.sin(pan);
-        float targetY = phonePose.getTranslation()[1] + (float)Math.sin(tilt);
-        float targetZ = 1.f;
+        cameraVector.rotateByQuaternion(rotationR);
+        cameraVector.normalise();
 
-        targetPose = new Pose(new float[] {targetX, targetY, targetZ}, nextTargetRotation);
+        targetAngles = cameraVector.getEuler();
 
+        rotationR.multiply(new ClassHelpers.mQuaternion(phonePose.getRotationQuaternion()));
+        rotationR.normalise();
+
+        float targetX = (float)Math.sin(targetAngles[2]);
+        float targetY = (float)Math.sin(targetAngles[1]);
+        float targetZ = -1.f;
+
+        targetPose = new Pose(new float[] {targetX, targetY, targetZ}, rotationR.getQuaternionAsFloat());
         anchorTarget = session.createAnchor(targetPose);
     }
 
-    public float[] multiplyQuaternions(float[] q1, float[] q2)
+    public float getPitch(double tilt)
     {
-        float qw = q1[0]*q2[0] - q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3];
-        float qx = q1[0]*q2[1] + q1[1]*q2[0] - q1[2]*q2[3] + q1[3]*q2[2];
-        float qy = q1[0]*q2[2] + q1[1]*q2[3] + q1[2]*q2[0] - q1[3]*q2[1];
-        float qz = q1[0]*q2[3] - q1[1]*q2[2] + q1[2]*q2[1] + q1[3]*q2[0];
-
-        return new float[] {qx, qy, qz, qw};
-    }
-
-    public float[] normaliseQuaternion(float[] q)
-    {
-        float norm = q[0] + q[1] + q[2] + q[3];
-
-        return new float[] {q[0]/norm, q[1]/norm, q[2]/norm, q[3]/norm};
-    }
-
-    public float getPitch(double elevation)
-    {
-        // Log.i(TAG, String.format("elevation: %f", elevation));
         float pitch;
         // From config file; HI setting
         int pitchHighLim = 12;
         int pitchLowLim = 6;
 
         // Compensate for the Tango's default position being 90deg upright
-        if(elevation >= Math.PI / 2)
+        if(tilt >= Math.PI / 2)
         {
             pitch = (float)(Math.pow(2, 64));
         }
 
-        else if(elevation <= -Math.PI / 2)
+        else if(tilt <= -Math.PI / 2)
         {
             pitch = (float)(Math.pow(2, pitchHighLim));
         }
@@ -242,16 +230,27 @@ public class RunnableSoundGenerator implements Runnable
             float grad = (float)(Math.tan(Math.toRadians(gradientAngle)));
             float intercept = (float)(pitchHighLim - Math.PI / 2 * grad);
 
-            pitch = (float)(Math.pow(2, grad * -elevation + intercept));
+            pitch = (float)(Math.pow(2, grad * -tilt + intercept));
         }
-        Log.i(TAG, String.format("pitch: %f", pitch));
+        // Log.i(TAG, String.format("pitch: %f", pitch));
 
         return pitch;
     }
 
     public boolean isTargetObjectSet() { return this.targetObjectSet; }
-    public void setObservation(int observation) { this.observation = observation; }
     public boolean isTargetObjectFound() { return this.targetObjectFound; }
+    public void setObservation(long observation)
+    {
+        if(!listTargetFound.contains(observation))
+        {
+            listTargetFound.add(observation);
+            this.observation = observation;
+        }
+        else
+        {
+            this.observation = -1;
+        }
+    }
 
     class Policy
     {
