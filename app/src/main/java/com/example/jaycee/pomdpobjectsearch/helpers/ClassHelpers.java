@@ -1,4 +1,4 @@
-package com.example.jaycee.pomdpobjectsearch;
+package com.example.jaycee.pomdpobjectsearch.helpers;
 
 public class ClassHelpers
 {

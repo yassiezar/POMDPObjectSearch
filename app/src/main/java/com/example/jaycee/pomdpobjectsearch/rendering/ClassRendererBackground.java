@@ -1,4 +1,4 @@
-package com.example.jaycee.pomdpobjectsearch;
+package com.example.jaycee.pomdpobjectsearch.rendering;
 
 import android.content.Context;
 import android.graphics.Bitmap;

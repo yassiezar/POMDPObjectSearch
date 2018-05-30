@@ -1,5 +1,6 @@
 package com.example.jaycee.pomdpobjectsearch;
 
+import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Pose;
@@ -61,7 +62,8 @@ public class RunnableSoundGenerator implements Runnable
         cameraVector.normalise();
 
         JNIBridge.playSound(targetPose.getTranslation(), phonePose.getTranslation(), 1.f, getPitch(cameraVector.getEuler()[1] - targetAngles[1]));
-        Log.d(TAG, String.format("pitch: %f cam: %f target: %f",getPitch(cameraVector.getEuler()[1] - targetAngles[1]), cameraVector.getEuler()[1], targetAngles[1]));
+
+        Log.i(TAG, String.format("pan: %f tilt: %f", Math.abs(cameraVector.getEuler()[2] - targetAngles[2]), Math.abs(cameraVector.getEuler()[1] - targetAngles[1])));
 
         if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.025 &&            // 0.025 == 3deg
                 Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.025)
@@ -72,6 +74,7 @@ public class RunnableSoundGenerator implements Runnable
 
         if(observation == targetObject)
         {
+            Log.i(TAG, "Target found");
             targetObjectFound = true;
             targetObjectSet = false;
             listTargetFound = new ArrayList<>();
@@ -88,6 +91,7 @@ public class RunnableSoundGenerator implements Runnable
             if(anchorTarget != null)
             {
                 anchorTarget.detach();
+                anchorTarget = null;
             }
 
             setNewTarget(session);
@@ -180,14 +184,15 @@ public class RunnableSoundGenerator implements Runnable
         targetAngles[1] += angles[1];
         targetAngles[2] += angles[2];
 
-        rotationR.multiply(new ClassHelpers.mQuaternion(phonePose.getRotationQuaternion()));
-        rotationR.normalise();
+        ClassHelpers.mQuaternion phoneQ = new ClassHelpers.mQuaternion(phonePose.getRotationQuaternion());
+        phoneQ.multiply(rotationR);
+        phoneQ.normalise();
 
-        float targetX = (float)Math.sin(targetAngles[2]);
-        float targetY = (float)Math.sin(targetAngles[1]);
-        float targetZ = -1.f;
+        float targetX = phonePose.getTranslation()[0] + (float)Math.sin(targetAngles[2]);
+        float targetY = phonePose.getTranslation()[1] + (float)Math.sin(targetAngles[1]);
+        float targetZ = phonePose.getTranslation()[2] -1.f;
 
-        targetPose = new Pose(new float[] {targetX, targetY, targetZ}, rotationR.getQuaternionAsFloat());
+        targetPose = new Pose(new float[] {targetX, targetY, targetZ}, phoneQ.getQuaternionAsFloat());
         anchorTarget = session.createAnchor(targetPose);
 
         Log.i(TAG, String.valueOf(action));
@@ -241,6 +246,8 @@ public class RunnableSoundGenerator implements Runnable
             this.observation = -1;
         }
     }
+
+    public Anchor getTargetAnchor() { return this.anchorTarget; }
 
     class Policy
     {

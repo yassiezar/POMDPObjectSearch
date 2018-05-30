@@ -20,12 +20,17 @@ import android.util.SparseArray;
 import android.view.MenuItem;
 import android.view.WindowManager;
 
+import com.example.jaycee.pomdpobjectsearch.helpers.SnackbarHelper;
+import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererBackground;
+import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererObject;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
+import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Frame;
+import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
@@ -37,7 +42,6 @@ import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationExceptio
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -63,16 +67,22 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     private DrawerLayout drawerLayout;
 
     private final ClassRendererBackground backgroundRenderer = new ClassRendererBackground();
+    private final ClassRendererObject objectRenderer = new ClassRendererObject();
     private final SnackbarHelper snackbarHelper = new SnackbarHelper(this);
 
-    BarcodeDetector detector;
+    private BarcodeDetector detector;
+
+    private ArrayList<Anchor> anchors = new ArrayList<>();
 
     private RunnableSoundGenerator runnableSoundGenerator = new RunnableSoundGenerator(this);
 
     private boolean requestARCoreInstall = true;
     private boolean viewportChanged = false;
+    private boolean test = false;
 
     private int width, height;
+
+    private final float[] anchorMatrix = new float[16];
 
     private HandlerMDPIntentService handlerMdpIntentService = new HandlerMDPIntentService(this);
 
@@ -228,6 +238,8 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         try
         {
             backgroundRenderer.createOnGlThread(this);
+            objectRenderer.createOnGlThread(this, "models/andy.obj", "models/andy.png");
+            objectRenderer.setMaterialProperties(0.f, 2.f, 0.5f, 6.f);
         }
         catch(IOException e)
         {
@@ -276,6 +288,32 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
 
             backgroundRenderer.draw(frame);
 
+            float[] projectionMatrix = new float[16];
+            camera.getProjectionMatrix(projectionMatrix, 0, 0.1f, 100.0f);
+
+            float[] viewMatrix = new float[16];
+            camera.getViewMatrix(viewMatrix, 0);
+
+            // Compute lighting from average intensity of the image.
+            // The first three components are color scaling factors.
+            // The last one is the average pixel intensity in gamma space.
+            final float[] colourCorrectionRgba = new float[4];
+            frame.getLightEstimate().getColorCorrection(colourCorrectionRgba, 0);
+
+            float scaleFactor = 1.f;
+
+            if(camera.getTrackingState() == TrackingState.TRACKING &&
+                    (handlerMdpIntentService.getMdpLearned() || runnableSoundGenerator.isTargetObjectSet()) &&
+                    !runnableSoundGenerator.isTargetObjectFound())
+            {
+                runnableSoundGenerator.update(camera, session);
+
+            }
+            else
+            {
+                Log.w(TAG, "Camera not tracking. ");
+            }
+
             if(runnableSoundGenerator.isTargetObjectSet())
             {
                 Bitmap bitmap = backgroundRenderer.getBitmap(width, height);
@@ -294,17 +332,19 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                 {
                     runnableSoundGenerator.setObservation(-1);
                 }
+
+                if(camera.getTrackingState() == TrackingState.TRACKING)
+                {
+                    runnableSoundGenerator.getTargetAnchor().getPose().toMatrix(anchorMatrix, 0);
+
+                    objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
+                    objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
+                }
             }
 
-            if(camera.getTrackingState() == TrackingState.TRACKING &&
-                    (handlerMdpIntentService.getMdpLearned() || runnableSoundGenerator.isTargetObjectSet()) &&
-                    !runnableSoundGenerator.isTargetObjectFound())
-            {
-                runnableSoundGenerator.update(camera, session);
-            }
             else
             {
-                Log.w(TAG, "Camera not tracking or target is not set. ");
+                Log.w(TAG, "No target set.");
             }
         }
         catch(CameraNotAvailableException e)

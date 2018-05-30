@@ -1,4 +1,4 @@
-package com.example.jaycee.pomdpobjectsearch;
+package com.example.jaycee.pomdpobjectsearch.helpers;
 
 import android.app.Activity;
 import android.support.design.widget.BaseTransientBottomBar;
@@ -16,7 +16,7 @@ public final class SnackbarHelper
 
     private Activity activity;
 
-    SnackbarHelper(Activity activity)
+    public SnackbarHelper(Activity activity)
     {
         this.activity = activity;
     }
