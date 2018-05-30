@@ -9,6 +9,7 @@ import com.google.ar.core.Session;
 import android.app.Activity;
 import android.util.Log;
 import android.util.SparseIntArray;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -65,8 +66,8 @@ public class RunnableSoundGenerator implements Runnable
 
         Log.i(TAG, String.format("pan: %f tilt: %f", Math.abs(cameraVector.getEuler()[2] - targetAngles[2]), Math.abs(cameraVector.getEuler()[1] - targetAngles[1])));
 
-        if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.025 &&            // 0.025 == 3deg
-                Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.025)
+        if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.1 &&            // 0.1 =~ deg
+                Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.1)
         {
             Log.i(TAG, "Target reached");
             targetReached = true;
@@ -88,12 +89,6 @@ public class RunnableSoundGenerator implements Runnable
                 observation != -1)
         {
             targetReached = false;
-            if(anchorTarget != null)
-            {
-                anchorTarget.detach();
-                anchorTarget = null;
-            }
-
             setNewTarget(session);
         }
 
@@ -149,10 +144,10 @@ public class RunnableSoundGenerator implements Runnable
 
         float[] angles = targetV.getEuler();
 
-        Log.i(TAG, "Pre: " + phonePose.toString());
-        Log.i(TAG, String.format("current direction (pre): %f %f %f", angles[0], angles[1], angles[2]));
+        Log.d(TAG, "Pre: " + phonePose.toString());
+        Log.d(TAG, String.format("current direction (pre): %f %f %f", angles[0], angles[1], angles[2]));
 
-        int action = policy.getAction(encodeState(angles[1], angles[0], observation));
+        final int action = policy.getAction(encodeState(angles[1], angles[0], observation));
         ClassHelpers.mQuaternion rotationR;
         switch(action)
         {
@@ -163,10 +158,10 @@ public class RunnableSoundGenerator implements Runnable
                 rotationR = new ClassHelpers.mQuaternion(-1.f, 0.f, 0.f, (float)Math.toRadians(ANGLE_INTERVAL));
                 break;
             case Policy.A_LEFT:
-                rotationR = new ClassHelpers.mQuaternion(0.f,-1.f, 0.f, (float)Math.toRadians(ANGLE_INTERVAL));
+                rotationR = new ClassHelpers.mQuaternion(0.f,1.f, 0.f, (float)Math.toRadians(ANGLE_INTERVAL));
                 break;
             case Policy.A_RIGHT:
-                rotationR = new ClassHelpers.mQuaternion(0.f, 1.f, 0.f, (float)Math.toRadians(ANGLE_INTERVAL));
+                rotationR = new ClassHelpers.mQuaternion(0.f,-1.f, 0.f, (float)Math.toRadians(ANGLE_INTERVAL));
                 break;
             default:
                 rotationR = new ClassHelpers.mQuaternion(0.f, 0.f, 0.f, 0.f);
@@ -195,9 +190,36 @@ public class RunnableSoundGenerator implements Runnable
         targetPose = new Pose(new float[] {targetX, targetY, targetZ}, phoneQ.getQuaternionAsFloat());
         anchorTarget = session.createAnchor(targetPose);
 
-        Log.i(TAG, String.valueOf(action));
-        Log.i(TAG, "post: " + targetPose.toString());
-        Log.i(TAG, String.format("new target (post): %f %f %f", targetAngles[0], targetAngles[1], targetAngles[2]));
+        Log.d(TAG, String.valueOf(action));
+        Log.d(TAG, "post: " + targetPose.toString());
+        Log.d(TAG, String.format("new target (post): %f %f %f", targetAngles[0], targetAngles[1], targetAngles[2]));
+
+        callingActivity.runOnUiThread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                String sAction = "";
+                if(action == 0)
+                {
+                    sAction = "up";
+                }
+                if(action == 1)
+                {
+                    sAction = "down";
+                }
+                if(action == 2)
+                {
+                    sAction = "left";
+                }
+                if(action == 3)
+                {
+                    sAction = "right";
+                }
+
+                Toast.makeText(callingActivity, sAction, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     public float getPitch(double tilt)
