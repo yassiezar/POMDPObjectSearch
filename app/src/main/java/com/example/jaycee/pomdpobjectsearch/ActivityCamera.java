@@ -30,7 +30,6 @@ import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Frame;
-import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
@@ -323,10 +322,16 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
 
                 if(barcodes.size() > 0)
                 {
-                    int key = barcodes.keyAt(0);
-                    int val = Integer.parseInt(barcodes.get(key).displayValue);
-                    Log.d(TAG, "Barcode found: " + val);
-                    runnableSoundGenerator.setObservation(val);
+                    for(int i = 0; i < barcodes.size(); i ++)
+                    {
+                        int key = barcodes.keyAt(i);
+                        int val = Integer.parseInt(barcodes.get(key).displayValue);
+                        if(runnableSoundGenerator.isUniqueObservation(val))
+                        {
+                            Log.d(TAG, "New barcode found: " + val);
+                            runnableSoundGenerator.setObservation(val);
+                        }
+                    }
                 }
                 else
                 {

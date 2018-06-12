@@ -256,6 +256,13 @@ public class RunnableSoundGenerator implements Runnable
 
     public boolean isTargetObjectSet() { return this.targetObjectSet; }
     public boolean isTargetObjectFound() { return this.targetObjectFound; }
+    public Anchor getTargetAnchor() { return this.anchorTarget; }
+
+    public boolean isUniqueObservation(long nObs)
+    {
+        return !listTargetFound.contains(nObs);
+    }
+
     public void setObservation(long observation)
     {
         if(!listTargetFound.contains(observation))
@@ -269,7 +276,6 @@ public class RunnableSoundGenerator implements Runnable
         }
     }
 
-    public Anchor getTargetAnchor() { return this.anchorTarget; }
 
     class Policy
     {
