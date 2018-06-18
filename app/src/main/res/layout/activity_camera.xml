@@ -8,7 +8,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"  >
@@ -22,14 +22,22 @@
             android:id="@+id/surfaceview"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:layout_gravity="top" >
+            android:layout_below="@id/toolbar">
         </android.opengl.GLSurfaceView>
-    </LinearLayout>
+        <View
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:background="@drawable/borders"
+            android:layout_centerInParent="true"
+            android:id="@+id/view_scanner"
+        />
+    </RelativeLayout>
     <android.support.design.widget.NavigationView
         android:id="@+id/navigation_view_objects"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        android:layout_below="@id/toolbar"
         android:fitsSystemWindows="true"
         app:menu="@menu/menu_objects" />
 </android.support.v4.widget.DrawerLayout>

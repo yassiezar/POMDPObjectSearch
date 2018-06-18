@@ -3,6 +3,8 @@ package com.example.jaycee.pomdpobjectsearch;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.PointF;
+import android.graphics.Rect;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
@@ -18,6 +20,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.WindowManager;
 
 import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererBackground;
@@ -38,6 +41,7 @@ import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -60,6 +64,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     private Session session;
 
     private GLSurfaceView surfaceView;
+    private View scannerView;
     private DrawerLayout drawerLayout;
 
     private final ClassRendererBackground backgroundRenderer = new ClassRendererBackground();
@@ -138,6 +143,8 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                 return true;
             }
         });
+
+        scannerView = findViewById(R.id.view_scanner);
 
         detector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.ALL_FORMATS).build();
         runnableSoundGenerator = new RunnableSoundGenerator(this);
@@ -322,8 +329,13 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                         int val = Integer.parseInt(barcodes.get(key).displayValue);
                         if(runnableSoundGenerator.isUniqueObservation(val))
                         {
-                            Log.d(TAG, "New barcode found: " + val);
-                            runnableSoundGenerator.setObservation(val);
+                            Rect scannerArea = new Rect(scannerView.getLeft(), scannerView.getTop(), scannerView.getRight(), scannerView.getBottom());
+                            if(scannerArea.contains(barcodes.get(key).getBoundingBox()))
+                            {
+                                Log.d(TAG, "New barcode found: " + val);
+                                runnableSoundGenerator.setObservation(val);
+                            }
+
                         }
                     }
                 }
