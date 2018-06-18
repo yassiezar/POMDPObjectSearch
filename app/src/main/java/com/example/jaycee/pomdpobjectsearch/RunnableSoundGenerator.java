@@ -7,6 +7,8 @@ import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 
 import android.app.Activity;
+import android.content.Context;
+import android.os.Vibrator;
 import android.util.Log;
 import android.util.SparseIntArray;
 import android.widget.Toast;
@@ -21,7 +23,7 @@ import java.util.Random;
 public class RunnableSoundGenerator implements Runnable
 {
     private static final String TAG = RunnableSoundGenerator.class.getSimpleName();
-    private static final long ANGLE_INTERVAL = 15;
+    private static final long ANGLE_INTERVAL = 45;
     private static final long GRID_SIZE = 6;
 
     private Activity callingActivity;
@@ -37,18 +39,21 @@ public class RunnableSoundGenerator implements Runnable
     private boolean targetObjectFound = false;
 
     private long observation = -1;
-    private long targetObject = 0;
+    private long targetObject = -1;
 
     private Policy policy;
 
     private List<Long> listTargetFound;
 
-    ClassMetrics metrics = new ClassMetrics();
+    private ClassMetrics metrics = new ClassMetrics();
+
+    private Vibrator vibrator;
 
     public RunnableSoundGenerator(Activity callingActivity)
     {
         this.callingActivity = callingActivity;
         this.listTargetFound = new ArrayList<>();
+        this.vibrator= (Vibrator)callingActivity.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     @Override
@@ -66,8 +71,8 @@ public class RunnableSoundGenerator implements Runnable
 
         Log.i(TAG, String.format("pan: %f tilt: %f", Math.abs(cameraVector.getEuler()[2] - targetAngles[2]), Math.abs(cameraVector.getEuler()[1] - targetAngles[1])));
 
-        if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.1 &&            // 0.1 =~ deg
-                Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.1)
+        if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.2 &&            // 0.2 =~ 6deg
+                Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.2)
         {
             Log.i(TAG, "Target reached");
             targetReached = true;
@@ -79,6 +84,8 @@ public class RunnableSoundGenerator implements Runnable
             targetObjectFound = true;
             targetObjectSet = false;
             listTargetFound = new ArrayList<>();
+            targetObject = -1;
+            vibrator.vibrate(500);
         }
     }
 
@@ -117,11 +124,6 @@ public class RunnableSoundGenerator implements Runnable
         state += (multiplier * obs);
 
         return state;
-    }
-
-    public long[] decodeState(long state)
-    {
-        return new long[] {0, 0, 0};
     }
 
     public void setTargetObject(long target)
@@ -257,11 +259,7 @@ public class RunnableSoundGenerator implements Runnable
     public boolean isTargetObjectSet() { return this.targetObjectSet; }
     public boolean isTargetObjectFound() { return this.targetObjectFound; }
     public Anchor getTargetAnchor() { return this.anchorTarget; }
-
-    public boolean isUniqueObservation(long nObs)
-    {
-        return !listTargetFound.contains(nObs);
-    }
+    public boolean isUniqueObservation(long nObs) { return !listTargetFound.contains(nObs); }
 
     public void setObservation(long observation)
     {
@@ -275,7 +273,6 @@ public class RunnableSoundGenerator implements Runnable
             this.observation = -1;
         }
     }
-
 
     class Policy
     {

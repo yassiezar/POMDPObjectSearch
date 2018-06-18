@@ -20,13 +20,11 @@ import android.util.SparseArray;
 import android.view.MenuItem;
 import android.view.WindowManager;
 
-import com.example.jaycee.pomdpobjectsearch.helpers.SnackbarHelper;
 import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererBackground;
 import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererObject;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
-import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Frame;
@@ -40,7 +38,6 @@ import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -67,17 +64,13 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
 
     private final ClassRendererBackground backgroundRenderer = new ClassRendererBackground();
     private final ClassRendererObject objectRenderer = new ClassRendererObject();
-    private final SnackbarHelper snackbarHelper = new SnackbarHelper(this);
 
     private BarcodeDetector detector;
 
-    private ArrayList<Anchor> anchors = new ArrayList<>();
-
-    private RunnableSoundGenerator runnableSoundGenerator = new RunnableSoundGenerator(this);
+    private RunnableSoundGenerator runnableSoundGenerator;
 
     private boolean requestARCoreInstall = true;
     private boolean viewportChanged = false;
-    private boolean test = false;
 
     private int width, height;
 
@@ -147,6 +140,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         });
 
         detector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.ALL_FORMATS).build();
+        runnableSoundGenerator = new RunnableSoundGenerator(this);
     }
 
     @Override
