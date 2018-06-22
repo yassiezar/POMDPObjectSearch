@@ -23,7 +23,7 @@ import java.util.Random;
 public class RunnableSoundGenerator implements Runnable
 {
     private static final String TAG = RunnableSoundGenerator.class.getSimpleName();
-    private static final long ANGLE_INTERVAL = 45;
+    private static final long ANGLE_INTERVAL = 15;
     private static final long GRID_SIZE = 6;
 
     private Activity callingActivity;
@@ -276,13 +276,17 @@ public class RunnableSoundGenerator implements Runnable
 
     class Policy
     {
-        private static final int O_COMPUTER_MONITOR = 0;
-        private static final int O_DESK = 1;
-        private static final int O_WINDOW = 2;
+        private static final int O_DOOR = 0;
+        private static final int O_LAPTOP = 1;
+        private static final int O_CHAIR = 2;
+
         private static final int O_KETTLE = 3;
-        private static final int O_SINK = 4;
-        private static final int O_TOILET = 5;
-        private static final int O_HAND_DRYER = 6;
+        private static final int O_REFRIGERATOR = 4;
+        private static final int O_MICROWAVE = 5;
+
+        private static final int O_SINK = 6;
+        private static final int O_TOILET = 7;
+        private static final int O_HAND_DRYER= 8;
 
         private static final int A_UP = 0;
         private static final int A_DOWN = 1;
@@ -301,17 +305,23 @@ public class RunnableSoundGenerator implements Runnable
 
             switch(target)
             {
-                case O_COMPUTER_MONITOR:
-                    this.fileName += "computer_monitor.txt";
+                case O_DOOR:
+                    this.fileName += "door.txt";
                     break;
-                case O_DESK:
-                    this.fileName += "desk.txt";
+                case O_LAPTOP:
+                    this.fileName += "laptop.txt";
                     break;
-                case O_WINDOW:
-                    this.fileName += "window.txt";
+                case O_CHAIR:
+                    this.fileName += "chair.txt";
                     break;
                 case O_KETTLE:
                     this.fileName += "kettle.txt";
+                    break;
+                case O_REFRIGERATOR:
+                    this.fileName += "refrigerator.txt";
+                    break;
+                case O_MICROWAVE:
+                    this.fileName += "microwave.txt";
                     break;
                 case O_SINK:
                     this.fileName += "sink.txt";

@@ -53,13 +53,17 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     private static final int CAMERA_PERMISSION_CODE = 0;
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
 
-    private static final int T_COMPUTER_MONITOR = 0;
-    private static final int T_DESK = 1;
-    private static final int T_WINDOW = 2;
+    private static final int T_DOOR = 0;
+    private static final int T_LAPTOP = 1;
+    private static final int T_CHAIR = 2;
+
     private static final int T_KETTLE = 3;
-    private static final int T_SINK = 4;
-    private static final int T_TOILET = 5;
-    private static final int T_HAND_DRYER = 6;
+    private static final int T_REFRIGERATOR = 4;
+    private static final int T_MICROWAVE = 5;
+
+    private static final int T_SINK = 6;
+    private static final int T_TOILET = 7;
+    private static final int T_HAND_DRYER= 8;
 
     private Session session;
 
@@ -113,26 +117,34 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             {
                 switch (item.getItemId())
                 {
-                    case R.id.item_object_computer_monitor:
-                        runnableSoundGenerator.setTargetObject(T_COMPUTER_MONITOR);
+                    case R.id.item_object_door:
+                        runnableSoundGenerator.setTargetObject(T_DOOR);
                         break;
-                    case R.id.item_object_desk:
-                        runnableSoundGenerator.setTargetObject(T_DESK);
+                    case R.id.item_object_laptop:
+                        runnableSoundGenerator.setTargetObject(T_LAPTOP);
                         break;
-                    case R.id.item_object_window:
-                        runnableSoundGenerator.setTargetObject(T_WINDOW);
+                    case R.id.item_object_chair:
+                        runnableSoundGenerator.setTargetObject(T_CHAIR);
                         break;
+
                     case R.id.item_object_kettle:
                         runnableSoundGenerator.setTargetObject(T_KETTLE);
                         break;
+                    case R.id.item_object_refrigerator:
+                        runnableSoundGenerator.setTargetObject(T_REFRIGERATOR);
+                        break;
+                    case R.id.item_object_microwave:
+                        runnableSoundGenerator.setTargetObject(T_MICROWAVE);
+                        break;
+
                     case R.id.item_object_sink:
                         runnableSoundGenerator.setTargetObject(T_SINK);
                         break;
-                    case R.id.item_object_toilet:
-                        runnableSoundGenerator.setTargetObject(T_TOILET);
-                        break;
                     case R.id.item_object_hand_dryer:
                         runnableSoundGenerator.setTargetObject(T_HAND_DRYER);
+                        break;
+                    case R.id.item_object_toilet:
+                        runnableSoundGenerator.setTargetObject(T_TOILET);
                         break;
                 }
 
