@@ -296,6 +296,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         try
         {
             Frame frame = session.update();
+            runnableSoundGenerator.setFrame(frame);
             Camera camera = frame.getCamera();
 
             backgroundRenderer.draw(frame);

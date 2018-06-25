@@ -5,7 +5,7 @@ import socket, datetime, atexit
 def get_filename():
     return datetime.datetime.now().strftime("%Y-%m-%d_%I:%M:%S")	
 
-host = "10.5.42.163"
+host = "10.5.42.29"
 port = 6666
 
 print (host)
@@ -16,7 +16,6 @@ serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 serversocket.bind((host, port))
 
 f = open(get_filename() + '.csv', 'w')
-
 
 def close_socket():
     print 'Closing Socket...'
