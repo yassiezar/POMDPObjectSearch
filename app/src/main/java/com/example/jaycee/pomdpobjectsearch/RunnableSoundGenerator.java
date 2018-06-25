@@ -72,7 +72,7 @@ public class RunnableSoundGenerator implements Runnable
         float[] target = new float[]{targetPose.getTranslation()[0] + (float)Math.sin(cameraVector.getEuler()[2]), targetPose.getTranslation()[1], targetPose.getTranslation()[2]};
         JNIBridge.playSound(target, phonePose.getTranslation(), 1.f, getPitch(cameraVector.getEuler()[1] - targetAngles[1]));
 
-        Log.i(TAG, String.format("pan: %f tilt: %f", Math.abs(cameraVector.getEuler()[2] - targetAngles[2]), Math.abs(cameraVector.getEuler()[1] - targetAngles[1])));
+        Log.d(TAG, String.format("pan: %f tilt: %f", Math.abs(cameraVector.getEuler()[2] - targetAngles[2]), Math.abs(cameraVector.getEuler()[1] - targetAngles[1])));
 
         if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.25 &&            // 0.25 =~ 7.5deg
                 Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.25)
@@ -205,7 +205,7 @@ public class RunnableSoundGenerator implements Runnable
 
         Log.d(TAG, String.valueOf(action));
         Log.d(TAG, "post: " + targetPose.toString());
-        Log.i(TAG, String.format("new target (post): %f %f %f", targetX, targetY, targetZ));
+        Log.d(TAG, String.format("new target (post): %f %f %f", targetX, targetY, targetZ));
 
         callingActivity.runOnUiThread(new Runnable()
         {

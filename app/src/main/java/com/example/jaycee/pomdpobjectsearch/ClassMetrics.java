@@ -17,7 +17,7 @@ public class ClassMetrics
 
     private WifiDataSend dataStreamer = null;
 
-    private double timetamp;
+    private double timestamp;
     private double targetX, targetY, targetZ;
     private double phoneX, phoneY, phoneZ;
     private double phoneQx, phoneQy, phoneQz, phoneQw;
@@ -25,9 +25,10 @@ public class ClassMetrics
 
     public void writeWifi()
     {
-        String wifiString = String.valueOf(timetamp) + DELIMITER +
+        String wifiString = String.valueOf(timestamp) + DELIMITER +
                 String.valueOf(observation) + DELIMITER +
                 String.valueOf(targetObservation) + DELIMITER +
+                String.valueOf(target) + DELIMITER +
                 String.valueOf(targetX) + DELIMITER +
                 String.valueOf(targetY) + DELIMITER +
                 String.valueOf(targetZ) + DELIMITER +
@@ -47,7 +48,7 @@ public class ClassMetrics
         }
     }
 
-    public void updateTimestamp(double timetamp) { this.timetamp = timetamp; }
+    public void updateTimestamp(double timestamp) { this.timestamp = timestamp; }
 
     public void updateTargetPosition(double x, double y, double z)
     {
