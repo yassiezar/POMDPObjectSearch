@@ -43,8 +43,8 @@ public class ClassMetrics
         if(dataStreamer == null ||
                 dataStreamer.getStatus() != AsyncTask.Status.RUNNING)
         {
-            dataStreamer = new WifiDataSend();
-            dataStreamer.execute(wifiString);
+            //dataStreamer = new WifiDataSend();
+            //dataStreamer.execute(wifiString);
         }
     }
 

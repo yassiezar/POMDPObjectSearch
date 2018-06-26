@@ -81,7 +81,8 @@ public class RunnableSoundGenerator implements Runnable
             targetReached = true;
         }
 
-        if(observation == targetObject)
+        Log.i(TAG, String.format("Target + Observation: %d %d", targetObject, observation));
+        if(observation == targetObject || targetReached)
         {
             Log.i(TAG, "Target found");
             targetObjectFound = true;
@@ -270,6 +271,7 @@ public class RunnableSoundGenerator implements Runnable
     public boolean isTargetObjectSet() { return this.targetObjectSet; }
     public boolean isTargetObjectFound() { return this.targetObjectFound; }
     public Anchor getTargetAnchor() { return this.anchorTarget; }
+    public long getTargetObject() { return this.targetObject; }
     public boolean isUniqueObservation(long nObs) { return !listTargetFound.contains(nObs); }
 
     public void setObservation(long observation)
@@ -291,17 +293,17 @@ public class RunnableSoundGenerator implements Runnable
 
     class Policy
     {
-        private static final int O_DOOR = 0;
-        private static final int O_LAPTOP = 1;
-        private static final int O_CHAIR = 2;
+        private static final int O_DOOR = 16;
+        private static final int O_LAPTOP = 28;
+        private static final int O_CHAIR = 11;
 
-        private static final int O_KETTLE = 3;
-        private static final int O_REFRIGERATOR = 4;
-        private static final int O_MICROWAVE = 5;
+        private static final int O_KETTLE = 24;
+        private static final int O_REFRIGERATOR = 35;
+        private static final int O_MICROWAVE = 29;
 
-        private static final int O_SINK = 6;
-        private static final int O_TOILET = 7;
-        private static final int O_HAND_DRYER= 8;
+        private static final int O_SINK = 37;
+        private static final int O_TOILET = 41;
+        private static final int O_HAND_DRYER = 23;
 
         private static final int A_UP = 0;
         private static final int A_DOWN = 1;

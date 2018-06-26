@@ -3,7 +3,6 @@ package com.example.jaycee.pomdpobjectsearch;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.PointF;
 import android.graphics.Rect;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
@@ -53,17 +52,17 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     private static final int CAMERA_PERMISSION_CODE = 0;
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
 
-    private static final int T_DOOR = 0;
-    private static final int T_LAPTOP = 1;
-    private static final int T_CHAIR = 2;
+    private static final int T_DOOR = 16;
+    private static final int T_LAPTOP = 28;
+    private static final int T_CHAIR = 11;
 
-    private static final int T_KETTLE = 3;
-    private static final int T_REFRIGERATOR = 4;
-    private static final int T_MICROWAVE = 5;
+    private static final int T_KETTLE = 24;
+    private static final int T_REFRIGERATOR = 35;
+    private static final int T_MICROWAVE = 29;
 
-    private static final int T_SINK = 6;
-    private static final int T_TOILET = 7;
-    private static final int T_HAND_DRYER= 8;
+    private static final int T_SINK = 37;
+    private static final int T_TOILET = 41;
+    private static final int T_HAND_DRYER = 23;
 
     private Session session;
 
@@ -340,6 +339,8 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                     {
                         int key = barcodes.keyAt(i);
                         int val = Integer.parseInt(barcodes.get(key).displayValue);
+                        Log.i(TAG, "New barcode found: " + val);
+                        Log.i(TAG, "Target is: " + runnableSoundGenerator.getTargetObject());
                         if(runnableSoundGenerator.isUniqueObservation(val))
                         {
                             Rect scannerArea = new Rect(scannerView.getLeft(), scannerView.getTop(), scannerView.getRight(), scannerView.getBottom());
@@ -348,7 +349,6 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                                 Log.d(TAG, "New barcode found: " + val);
                                 runnableSoundGenerator.setObservation(val);
                             }
-
                         }
                     }
                 }
