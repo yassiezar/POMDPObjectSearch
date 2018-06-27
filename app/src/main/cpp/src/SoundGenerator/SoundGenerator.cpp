@@ -163,7 +163,7 @@ namespace SoundGenerator
             alListener3f(AL_POSITION, lList[0], lList[1], lList[2]);
 
             // Set source position and orientation
-            alSource3f(soundSrc, AL_POSITION, -lSrc[0], lList[1], lList[2]);
+            alSource3f(soundSrc, AL_POSITION, lSrc[0], lList[1], lList[2]);
         }
         alListener3f(AL_VELOCITY, 0.f, 0.f, 0.f);
         alSource3f(soundSrc, AL_VELOCITY, 0.f, 0.f, 0.f);
