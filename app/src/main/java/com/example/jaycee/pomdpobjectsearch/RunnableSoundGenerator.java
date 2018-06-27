@@ -82,14 +82,16 @@ public class RunnableSoundGenerator implements Runnable
         }
 
         Log.i(TAG, String.format("Target + Observation: %d %d", targetObject, observation));
-        if(observation == targetObject || targetReached)
+        if(observation == targetObject)
         {
             Log.i(TAG, "Target found");
             targetObjectFound = true;
             targetObjectSet = false;
             listTargetFound = new ArrayList<>();
             targetObject = -1;
+            observation = -2;
             vibrator.vibrate(500);
+            //boolean stopSound = JNIBridge.stopSound();
         }
 
         metrics.updateTimestamp(frame.getTimestamp());

@@ -73,10 +73,20 @@ namespace SoundGenerator
         return 0;
     }
 
-    bool SoundGenerator::endSound()
+    bool SoundGenerator::killSound()
     {
         alDeleteBuffers(NUM_BUFFERS, soundBuf);
         alDeleteSources(1, &soundSrc);
+        playing = false;
+
+        __android_log_print(ANDROID_LOG_INFO, SOUNDLOG, "Ended Sound.");
+
+        return 0;
+    }
+
+    bool SoundGenerator::endSound()
+    {
+        alSourceStop(soundSrc);
         playing = false;
 
         __android_log_print(ANDROID_LOG_INFO, SOUNDLOG, "Ended Sound.");

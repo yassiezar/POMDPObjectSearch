@@ -43,6 +43,12 @@ Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_playSound(JNIEnv* env, jobje
     soundGenerator.play(env, src, list, gain, pitch);
 }
 
+JNIEXPORT bool JNICALL
+Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_stopSound(JNIEnv*, jobject)
+{
+    soundGenerator.endSound();
+}
+
 #ifdef __cplusplus
 }
 #endif
