@@ -74,8 +74,8 @@ public class RunnableSoundGenerator implements Runnable
 
         Log.d(TAG, String.format("pan: %f tilt: %f", Math.abs(cameraVector.getEuler()[2] - targetAngles[2]), Math.abs(cameraVector.getEuler()[1] - targetAngles[1])));
 
-        if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.13 &&            // 0.13 =~ 7.5deg
-                Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.13)
+        if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.18 &&            // 0.13 =~ 7.5deg
+                Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.18)
         {
             Log.i(TAG, "Target reached");
             targetReached = true;
