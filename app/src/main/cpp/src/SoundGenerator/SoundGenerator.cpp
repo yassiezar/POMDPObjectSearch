@@ -143,7 +143,7 @@ namespace SoundGenerator
         env->GetFloatArrayRegion(list, 0, listLen, lList);
 
         // Set source properties
-        alSourcef(soundSrc, AL_GAIN, 1.f);
+        alSourcef(soundSrc, AL_GAIN, gain);
 
         float orient[6] = { /*fwd:*/ 0.f, 0.f, -1.f, /*up:*/ 0.f, 1.f, 0.f};
         alListenerfv(AL_ORIENTATION, orient);

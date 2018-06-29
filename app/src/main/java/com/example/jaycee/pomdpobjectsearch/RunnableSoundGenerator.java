@@ -70,17 +70,17 @@ public class RunnableSoundGenerator implements Runnable
         cameraVector.normalise();
 
         float[] target = new float[]{targetPose.getTranslation()[0] + (targetPose.getTranslation()[2] - phonePose.getTranslation()[2])*((float)Math.sin(cameraVector.getEuler()[2])), targetPose.getTranslation()[1], targetPose.getTranslation()[2]};
-        JNIBridge.playSound(target, phonePose.getTranslation(), 1.f, getPitch(cameraVector.getEuler()[1] - targetAngles[1]));
 
         Log.d(TAG, String.format("pan: %f tilt: %f", Math.abs(cameraVector.getEuler()[2] - targetAngles[2]), Math.abs(cameraVector.getEuler()[1] - targetAngles[1])));
 
-        if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.18 &&            // 0.13 =~ 7.5deg
-                Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.18)
+        if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.15 &&            // 0.13 =~ 7.5deg
+                Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.15)
         {
             Log.i(TAG, "Target reached");
             targetReached = true;
         }
 
+        float gain = 1.f;
         Log.i(TAG, String.format("Target + Observation: %d %d", targetObject, observation));
         if(observation == targetObject)
         {
@@ -92,7 +92,9 @@ public class RunnableSoundGenerator implements Runnable
             observation = -2;
             vibrator.vibrate(500);
             //boolean stopSound = JNIBridge.stopSound();
+            gain = 0.f;
         }
+        JNIBridge.playSound(target, phonePose.getTranslation(), gain, getPitch(cameraVector.getEuler()[1] - targetAngles[1]));
 
         metrics.updateTimestamp(frame.getTimestamp());
         metrics.updatePhonePosition(phonePose.getTranslation()[0], phonePose.getTranslation()[1], phonePose.getTranslation()[2]);

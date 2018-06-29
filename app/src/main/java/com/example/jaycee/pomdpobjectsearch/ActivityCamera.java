@@ -250,6 +250,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         {
             backgroundRenderer.createOnGlThread(this);
             objectRenderer.createOnGlThread(this, "models/andy.obj", "models/andy.png");
+            //objectRenderer.createOnGlThread(this, "models/soccerball.obj", "models/PlatonicSurface_Color.jpg");
             objectRenderer.setMaterialProperties(0.f, 2.f, 0.5f, 6.f);
         }
         catch(IOException e)
