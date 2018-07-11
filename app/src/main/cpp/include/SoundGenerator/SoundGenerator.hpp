@@ -31,6 +31,7 @@ namespace SoundGenerator
 
         bool startSound();
         bool endSound();
+        bool killSound();
 
         void startPlay(jfloat pitch);
         void play(JNIEnv *env, jfloatArray src, jfloatArray list, jfloat gain, jfloat pitch);

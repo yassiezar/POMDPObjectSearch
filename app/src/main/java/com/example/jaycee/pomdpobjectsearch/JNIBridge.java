@@ -13,4 +13,5 @@ public class JNIBridge
     public static native boolean initSound();
     public static native boolean killSound();
     public static native void playSound(float[] src, float[] list, float gain, float pitch);
+    public static native boolean stopSound();
 }

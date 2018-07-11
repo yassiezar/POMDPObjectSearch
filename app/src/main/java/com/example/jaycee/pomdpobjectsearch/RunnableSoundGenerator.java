@@ -69,27 +69,29 @@ public class RunnableSoundGenerator implements Runnable
         cameraVector.rotateByQuaternion(phoneQ);
         cameraVector.normalise();
 
-        float[] target = new float[]{targetPose.getTranslation()[0] + (float)Math.sin(cameraVector.getEuler()[2]), targetPose.getTranslation()[1], targetPose.getTranslation()[2]};
+        float[] target = new float[]{targetPose.getTranslation()[0] + (targetPose.getTranslation()[2] - phonePose.getTranslation()[2])*((float)Math.sin(cameraVector.getEuler()[2])), targetPose.getTranslation()[1], targetPose.getTranslation()[2]};
         JNIBridge.playSound(target, phonePose.getTranslation(), 1.f, getPitch(cameraVector.getEuler()[1] - targetAngles[1]));
 
         Log.d(TAG, String.format("pan: %f tilt: %f", Math.abs(cameraVector.getEuler()[2] - targetAngles[2]), Math.abs(cameraVector.getEuler()[1] - targetAngles[1])));
 
-        if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.25 &&            // 0.25 =~ 7.5deg
-                Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.25)
+        if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.18 &&            // 0.13 =~ 7.5deg
+                Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.18)
         {
             Log.i(TAG, "Target reached");
             targetReached = true;
         }
 
         Log.i(TAG, String.format("Target + Observation: %d %d", targetObject, observation));
-        if(observation == targetObject || targetReached)
+        if(observation == targetObject)
         {
             Log.i(TAG, "Target found");
             targetObjectFound = true;
             targetObjectSet = false;
             listTargetFound = new ArrayList<>();
             targetObject = -1;
+            observation = -2;
             vibrator.vibrate(500);
+            //boolean stopSound = JNIBridge.stopSound();
         }
 
         metrics.updateTimestamp(frame.getTimestamp());
@@ -113,8 +115,8 @@ public class RunnableSoundGenerator implements Runnable
 
     public long encodeState(float fpan, float ftilt, long obs)
     {
-        int pan = Math.round(fpan);
-        int tilt = Math.round(ftilt);
+        int pan = Math.round(fpan) + 90;
+        int tilt = Math.round(ftilt) + 90;
 
         if(obs == -1)
         {
@@ -159,7 +161,7 @@ public class RunnableSoundGenerator implements Runnable
         Log.d(TAG, "Pre: " + phonePose.toString());
         Log.d(TAG, String.format("current direction (pre): %f %f %f", angles[0], angles[1], angles[2]));
 
-        final int action = policy.getAction(encodeState(angles[1], angles[0], observation));
+        final int action = policy.getAction(encodeState(angles[2], angles[1], observation));
         ClassHelpers.mQuaternion rotationR;
         switch(action)
         {
