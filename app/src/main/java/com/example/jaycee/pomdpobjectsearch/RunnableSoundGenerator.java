@@ -119,7 +119,7 @@ public class RunnableSoundGenerator implements Runnable
         if(obs == -1)
         {
             Random rand = new Random();
-            obs = rand.nextInt(7);
+            obs = rand.nextInt(24);
         }
 
         long state = 0;
@@ -312,7 +312,7 @@ public class RunnableSoundGenerator implements Runnable
 
         private int target;
 
-        private String fileName = "MDPPolicies/policy_";
+        private String fileName = "MDPPolicies/sarsa_policy";
 
         private SparseIntArray policy = new SparseIntArray();
 
@@ -320,7 +320,7 @@ public class RunnableSoundGenerator implements Runnable
         {
             this.target = target;
 
-            switch(target)
+/*            switch(target)
             {
                 case O_DOOR:
                     this.fileName += "door.txt";
@@ -349,7 +349,7 @@ public class RunnableSoundGenerator implements Runnable
                 case O_HAND_DRYER:
                     this.fileName += "hand_dryer.txt";
                     break;
-            }
+            }*/
 
             BufferedReader reader = null;
             try
