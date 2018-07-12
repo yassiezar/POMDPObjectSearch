@@ -212,7 +212,7 @@ public class RunnableSoundGenerator implements Runnable
         Log.d(TAG, "post: " + targetPose.toString());
         Log.d(TAG, String.format("new target (post): %f %f %f", targetX, targetY, targetZ));
 
-        callingActivity.runOnUiThread(new Runnable()
+        /*callingActivity.runOnUiThread(new Runnable()
         {
             @Override
             public void run()
@@ -237,7 +237,7 @@ public class RunnableSoundGenerator implements Runnable
 
                 Toast.makeText(callingActivity, sAction, Toast.LENGTH_SHORT).show();
             }
-        });
+        });*/
     }
 
     public float getPitch(double tilt)
@@ -278,7 +278,7 @@ public class RunnableSoundGenerator implements Runnable
     public long getTargetObject() { return this.targetObject; }
     public boolean isUniqueObservation(long nObs) { return !listTargetFound.contains(nObs); }
 
-    public void setObservation(long observation)
+    public void setObservation(final long observation)
     {
         metrics.updateObservation(observation);
         if(!listTargetFound.contains(observation))
@@ -291,6 +291,55 @@ public class RunnableSoundGenerator implements Runnable
             this.observation = -1;
         }
         metrics.updateTargetObservation(this.observation);
+
+        if(observation != -1)
+        {
+            callingActivity.runOnUiThread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    String val = "";
+                    if(observation == 17)
+                    {
+                        val = "Door handle";
+                    }
+                    if(observation == 9)
+                    {
+                        val = "Mouse";
+                    }
+                    if(observation == 16)
+                    {
+                        val = "Door";
+                    }
+                    if(observation == 28)
+                    {
+                        val = "Laptop";
+                    }
+                    if(observation == 8)
+                    {
+                        val = "Keyboard";
+                    }
+                    if(observation == 7)
+                    {
+                        val = "Monitor";
+                    }
+                    if(observation == 42)
+                    {
+                        val = "Window";
+                    }
+                    if(observation == 14)
+                    {
+                        val = "Desk";
+                    }
+                    if(observation == 38)
+                    {
+                        val = "Table";
+                    }
+                    Toast.makeText(callingActivity, val, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     public void setFrame(Frame frame) { this.frame = frame; }

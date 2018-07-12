@@ -21,6 +21,7 @@ import android.util.SparseArray;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererBackground;
 import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererObject;
@@ -339,9 +340,10 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                     for(int i = 0; i < barcodes.size(); i ++)
                     {
                         int key = barcodes.keyAt(i);
-                        int val = Integer.parseInt(barcodes.get(key).displayValue);
+                        final int val = Integer.parseInt(barcodes.get(key).displayValue);
                         Log.i(TAG, "New barcode found: " + val);
                         Log.i(TAG, "Target is: " + runnableSoundGenerator.getTargetObject());
+
                         if(runnableSoundGenerator.isUniqueObservation(val))
                         {
                             Rect scannerArea = new Rect(scannerView.getLeft(), scannerView.getTop(), scannerView.getRight(), scannerView.getBottom());
