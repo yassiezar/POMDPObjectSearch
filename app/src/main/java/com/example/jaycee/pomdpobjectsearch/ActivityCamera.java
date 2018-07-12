@@ -341,9 +341,6 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                     {
                         int key = barcodes.keyAt(i);
                         final int val = Integer.parseInt(barcodes.get(key).displayValue);
-                        Log.i(TAG, "New barcode found: " + val);
-                        Log.i(TAG, "Target is: " + runnableSoundGenerator.getTargetObject());
-
                         if(runnableSoundGenerator.isUniqueObservation(val))
                         {
                             Rect scannerArea = new Rect(scannerView.getLeft(), scannerView.getTop(), scannerView.getRight(), scannerView.getBottom());
@@ -357,7 +354,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                 }
                 else
                 {
-                    runnableSoundGenerator.setObservation(-1);
+                    runnableSoundGenerator.setObservation(44);
                 }
 
                 if(camera.getTrackingState() == TrackingState.TRACKING)
