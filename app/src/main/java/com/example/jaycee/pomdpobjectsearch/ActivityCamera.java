@@ -53,9 +53,9 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     private static final int CAMERA_PERMISSION_CODE = 0;
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
 
-    private static final int T_DOOR = 16;
-    private static final int T_LAPTOP = 28;
-    private static final int T_CHAIR = 11;
+    private static final int T_DOOR = 12;
+    private static final int T_LAPTOP = 18;
+    private static final int T_CHAIR = 8;
 
     private static final int T_KETTLE = 24;
     private static final int T_REFRIGERATOR = 35;
@@ -354,7 +354,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                 }
                 else
                 {
-                    runnableSoundGenerator.setObservation(44);
+                    runnableSoundGenerator.setObservation(0);
                 }
 
                 if(camera.getTrackingState() == TrackingState.TRACKING)

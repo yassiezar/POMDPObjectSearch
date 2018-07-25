@@ -40,7 +40,7 @@ public class RunnableSoundGenerator implements Runnable
     private boolean targetObjectSet = false;
     private boolean targetObjectFound = false;
 
-    private long observation = 44;
+    private long observation = 0;
     private long targetObject = -1;
 
     private Policy policy;
@@ -89,7 +89,7 @@ public class RunnableSoundGenerator implements Runnable
             targetObjectSet = false;
             listTargetFound = new ArrayList<>();
             targetObject = -1;
-            observation = 44;
+            observation = 0;
             vibrator.vibrate(500);
             gain = 0.f;
         }
@@ -104,7 +104,7 @@ public class RunnableSoundGenerator implements Runnable
     {
         phonePose = camera.getDisplayOrientedPose();
         if(targetReached ||
-                observation != 44)
+                observation != 0)
         {
             targetReached = false;
             setNewTarget(session);
@@ -116,7 +116,7 @@ public class RunnableSoundGenerator implements Runnable
 
     public long encodeState(float fpan, float ftilt, long obs)
     {
-        Log.i(TAG, String.format("Pan %f Tilt %f obs %d", fpan, ftilt, obs));
+        Log.d(TAG, String.format("Pan %f Tilt %f obs %d", fpan, ftilt, obs));
 
         int pan = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(fpan) + 90) / ANGLE_INTERVAL);
         int tilt = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(ftilt) + 90) / ANGLE_INTERVAL);
@@ -136,7 +136,7 @@ public class RunnableSoundGenerator implements Runnable
         multiplier *= GRID_SIZE;
         state += (multiplier * obs);
 
-        Log.i(TAG, String.format("Pan %d Tilt %d obs %d State: %d", pan, tilt, obs, state));
+        Log.d(TAG, String.format("Pan %d Tilt %d obs %d State: %d", pan, tilt, obs, state));
 
         return state;
     }
@@ -215,6 +215,9 @@ public class RunnableSoundGenerator implements Runnable
         Log.d(TAG, "post: " + targetPose.toString());
         Log.d(TAG, String.format("new target (post): %f %f %f", targetX, targetY, targetZ));
 
+        Log.i(TAG, String.format("Current state: %d", encodeState(angles[2], angles[1], targetObject)));
+        Log.i(TAG, String.format("Next state: %d", encodeState(targetY, targetX, targetObject)));
+
         /*callingActivity.runOnUiThread(new Runnable()
         {
             @Override
@@ -291,11 +294,11 @@ public class RunnableSoundGenerator implements Runnable
         }
         else
         {
-            this.observation = 44;
+            this.observation = 0;
         }
         metrics.updateTargetObservation(this.observation);
 
-        if(observation != 44 && observation != -1)
+        if(observation != 0 && observation != -1)
         {
             callingActivity.runOnUiThread(new Runnable()
             {
@@ -303,39 +306,39 @@ public class RunnableSoundGenerator implements Runnable
                 public void run()
                 {
                     String val = "";
-                    if(observation == 17)
+                    if(observation == 13)
                     {
                         val = "Door handle";
                     }
-                    if(observation == 9)
+                    if(observation == 7)
                     {
                         val = "Mouse";
                     }
-                    if(observation == 16)
+                    if(observation == 12)
                     {
                         val = "Door";
                     }
-                    if(observation == 28)
+                    if(observation == 18)
                     {
                         val = "Laptop";
                     }
-                    if(observation == 8)
+                    if(observation == 6)
                     {
                         val = "Keyboard";
                     }
-                    if(observation == 7)
+                    if(observation == 5)
                     {
                         val = "Monitor";
                     }
-                    if(observation == 42)
+                    if(observation == 23)
                     {
                         val = "Window";
                     }
-                    if(observation == 14)
+                    if(observation == 11)
                     {
                         val = "Desk";
                     }
-                    if(observation == 38)
+                    if(observation == 22)
                     {
                         val = "Table";
                     }
