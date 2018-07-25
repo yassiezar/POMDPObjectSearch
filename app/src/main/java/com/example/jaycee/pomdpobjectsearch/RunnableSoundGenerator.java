@@ -295,9 +295,9 @@ public class RunnableSoundGenerator implements Runnable
 
     class Policy
     {
-        private static final int O_DOOR = 16;
-        private static final int O_LAPTOP = 28;
-        private static final int O_CHAIR = 11;
+        private static final int O_DOOR = 12;
+        private static final int O_LAPTOP = 18;
+        private static final int O_CHAIR = 8;
 
         private static final int O_KETTLE = 24;
         private static final int O_REFRIGERATOR = 35;
@@ -312,17 +312,14 @@ public class RunnableSoundGenerator implements Runnable
         private static final int A_LEFT = 2;
         private static final int A_RIGHT = 3;
 
-        private int target;
 
-        private String fileName = "MDPPolicies/sarsa_policy";
+        private String fileName = "MDPPolicies/sarsa_";
 
         private SparseIntArray policy = new SparseIntArray();
 
         public Policy(int target)
         {
-            this.target = target;
-
-/*            switch(target)
+            switch(target)
             {
                 case O_DOOR:
                     this.fileName += "door.txt";
@@ -333,7 +330,7 @@ public class RunnableSoundGenerator implements Runnable
                 case O_CHAIR:
                     this.fileName += "chair.txt";
                     break;
-                case O_KETTLE:
+/*                case O_KETTLE:
                     this.fileName += "kettle.txt";
                     break;
                 case O_REFRIGERATOR:
@@ -350,8 +347,8 @@ public class RunnableSoundGenerator implements Runnable
                     break;
                 case O_HAND_DRYER:
                     this.fileName += "hand_dryer.txt";
-                    break;
-            }*/
+                    break;*/
+            }
 
             BufferedReader reader = null;
             try
