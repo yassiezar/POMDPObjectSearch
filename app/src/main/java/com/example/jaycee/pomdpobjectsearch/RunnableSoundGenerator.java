@@ -103,8 +103,7 @@ public class RunnableSoundGenerator implements Runnable
     public void update(Camera camera, Session session)
     {
         phonePose = camera.getDisplayOrientedPose();
-        if(targetReached ||
-                observation != 0)
+        if(targetReached)
         {
             targetReached = false;
             setNewTarget(session);
@@ -136,9 +135,19 @@ public class RunnableSoundGenerator implements Runnable
         multiplier *= GRID_SIZE;
         state += (multiplier * obs);
 
-        Log.d(TAG, String.format("Pan %d Tilt %d obs %d State: %d", pan, tilt, obs, state));
-
         return state;
+    }
+
+    public long[] decodeState(long state)
+    {
+        long[] stateVector = new long[3];
+        stateVector[0] = state % GRID_SIZE;
+        state /= GRID_SIZE;
+        stateVector[1] = state % GRID_SIZE;
+        state /= GRID_SIZE;
+        stateVector[2] = state;
+
+        return stateVector;
     }
 
     public void setTargetObject(long target)
@@ -213,10 +222,14 @@ public class RunnableSoundGenerator implements Runnable
 
         Log.d(TAG, String.valueOf(action));
         Log.d(TAG, "post: " + targetPose.toString());
-        Log.d(TAG, String.format("new target (post): %f %f %f", targetX, targetY, targetZ));
+        Log.i(TAG, String.format("new target (post): %f %f %f", targetX, targetY, targetZ));
 
-        Log.i(TAG, String.format("Current state: %d", encodeState(angles[2], angles[1], targetObject)));
+        long[] curState = decodeState(encodeState(angles[1], angles[2], observation));
+        long[] nextState = decodeState(encodeState(targetY, targetX, targetObject));
+        Log.i(TAG, String.format("Current state: %d", encodeState(angles[1], angles[2], observation)));
+        Log.i(TAG, String.format("%d %d %d", curState[0], curState[1], curState[2]));
         Log.i(TAG, String.format("Next state: %d", encodeState(targetY, targetX, targetObject)));
+        Log.i(TAG, String.format("%d %d %d", nextState[0], nextState[1], nextState[2]));
 
         /*callingActivity.runOnUiThread(new Runnable()
         {
