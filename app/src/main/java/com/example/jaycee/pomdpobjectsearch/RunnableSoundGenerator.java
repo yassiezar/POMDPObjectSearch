@@ -25,7 +25,7 @@ public class RunnableSoundGenerator implements Runnable
 {
     private static final String TAG = RunnableSoundGenerator.class.getSimpleName();
     private static final long ANGLE_INTERVAL = 15;
-    private static final long GRID_SIZE = 6;
+    private static final long GRID_SIZE = 12;
 
     private Activity callingActivity;
 
@@ -40,7 +40,7 @@ public class RunnableSoundGenerator implements Runnable
     private boolean targetObjectSet = false;
     private boolean targetObjectFound = false;
 
-    private long observation = -1;
+    private long observation = 44;
     private long targetObject = -1;
 
     private Policy policy;
@@ -70,18 +70,18 @@ public class RunnableSoundGenerator implements Runnable
         cameraVector.normalise();
 
         float[] target = new float[]{targetPose.getTranslation()[0] + (targetPose.getTranslation()[2] - phonePose.getTranslation()[2])*((float)Math.sin(cameraVector.getEuler()[2])), targetPose.getTranslation()[1], targetPose.getTranslation()[2]};
-        JNIBridge.playSound(target, phonePose.getTranslation(), 1.f, getPitch(cameraVector.getEuler()[1] - targetAngles[1]));
 
         Log.d(TAG, String.format("pan: %f tilt: %f", Math.abs(cameraVector.getEuler()[2] - targetAngles[2]), Math.abs(cameraVector.getEuler()[1] - targetAngles[1])));
 
-        if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.18 &&            // 0.13 =~ 7.5deg
-                Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.18)
+        if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.15 &&            // 0.13 =~ 7.5deg
+                Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.15)
         {
             Log.i(TAG, "Target reached");
             targetReached = true;
         }
 
-        Log.i(TAG, String.format("Target + Observation: %d %d", targetObject, observation));
+        float gain = 1.f;
+        Log.d(TAG, String.format("Target + Observation: %d %d", targetObject, observation));
         if(observation == targetObject)
         {
             Log.i(TAG, "Target found");
@@ -89,10 +89,11 @@ public class RunnableSoundGenerator implements Runnable
             targetObjectSet = false;
             listTargetFound = new ArrayList<>();
             targetObject = -1;
-            observation = -2;
+            observation = 44;
             vibrator.vibrate(500);
-            //boolean stopSound = JNIBridge.stopSound();
+            gain = 0.f;
         }
+        JNIBridge.playSound(target, phonePose.getTranslation(), gain, getPitch(cameraVector.getEuler()[1] - targetAngles[1]));
 
         metrics.updateTimestamp(frame.getTimestamp());
         metrics.updatePhonePosition(phonePose.getTranslation()[0], phonePose.getTranslation()[1], phonePose.getTranslation()[2]);
@@ -103,7 +104,7 @@ public class RunnableSoundGenerator implements Runnable
     {
         phonePose = camera.getDisplayOrientedPose();
         if(targetReached ||
-                observation != -1)
+                observation != 44)
         {
             targetReached = false;
             setNewTarget(session);
@@ -115,14 +116,16 @@ public class RunnableSoundGenerator implements Runnable
 
     public long encodeState(float fpan, float ftilt, long obs)
     {
-        int pan = Math.round(fpan) + 90;
-        int tilt = Math.round(ftilt) + 90;
+        Log.i(TAG, String.format("Pan %f Tilt %f obs %d", fpan, ftilt, obs));
 
-        if(obs == -1)
+        int pan = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(fpan) + 90) / ANGLE_INTERVAL);
+        int tilt = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(ftilt) + 90) / ANGLE_INTERVAL);
+
+        /*if(obs == -1)
         {
             Random rand = new Random();
             obs = rand.nextInt(24);
-        }
+        }*/
 
         long state = 0;
         long multiplier = 1;
@@ -132,6 +135,8 @@ public class RunnableSoundGenerator implements Runnable
         state += (multiplier * tilt);
         multiplier *= GRID_SIZE;
         state += (multiplier * obs);
+
+        Log.i(TAG, String.format("Pan %d Tilt %d obs %d State: %d", pan, tilt, obs, state));
 
         return state;
     }
@@ -210,7 +215,7 @@ public class RunnableSoundGenerator implements Runnable
         Log.d(TAG, "post: " + targetPose.toString());
         Log.d(TAG, String.format("new target (post): %f %f %f", targetX, targetY, targetZ));
 
-        callingActivity.runOnUiThread(new Runnable()
+        /*callingActivity.runOnUiThread(new Runnable()
         {
             @Override
             public void run()
@@ -235,7 +240,7 @@ public class RunnableSoundGenerator implements Runnable
 
                 Toast.makeText(callingActivity, sAction, Toast.LENGTH_SHORT).show();
             }
-        });
+        });*/
     }
 
     public float getPitch(double tilt)
@@ -276,7 +281,7 @@ public class RunnableSoundGenerator implements Runnable
     public long getTargetObject() { return this.targetObject; }
     public boolean isUniqueObservation(long nObs) { return !listTargetFound.contains(nObs); }
 
-    public void setObservation(long observation)
+    public void setObservation(final long observation)
     {
         metrics.updateObservation(observation);
         if(!listTargetFound.contains(observation))
@@ -286,9 +291,58 @@ public class RunnableSoundGenerator implements Runnable
         }
         else
         {
-            this.observation = -1;
+            this.observation = 44;
         }
         metrics.updateTargetObservation(this.observation);
+
+        if(observation != 44 && observation != -1)
+        {
+            callingActivity.runOnUiThread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    String val = "";
+                    if(observation == 17)
+                    {
+                        val = "Door handle";
+                    }
+                    if(observation == 9)
+                    {
+                        val = "Mouse";
+                    }
+                    if(observation == 16)
+                    {
+                        val = "Door";
+                    }
+                    if(observation == 28)
+                    {
+                        val = "Laptop";
+                    }
+                    if(observation == 8)
+                    {
+                        val = "Keyboard";
+                    }
+                    if(observation == 7)
+                    {
+                        val = "Monitor";
+                    }
+                    if(observation == 42)
+                    {
+                        val = "Window";
+                    }
+                    if(observation == 14)
+                    {
+                        val = "Desk";
+                    }
+                    if(observation == 38)
+                    {
+                        val = "Table";
+                    }
+                    Toast.makeText(callingActivity, val, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     public void setFrame(Frame frame) { this.frame = frame; }

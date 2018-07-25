@@ -21,6 +21,7 @@ import android.util.SparseArray;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererBackground;
 import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererObject;
@@ -250,6 +251,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         {
             backgroundRenderer.createOnGlThread(this);
             objectRenderer.createOnGlThread(this, "models/andy.obj", "models/andy.png");
+            //objectRenderer.createOnGlThread(this, "models/soccerball.obj", "models/PlatonicSurface_Color.jpg");
             objectRenderer.setMaterialProperties(0.f, 2.f, 0.5f, 6.f);
         }
         catch(IOException e)
@@ -338,9 +340,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                     for(int i = 0; i < barcodes.size(); i ++)
                     {
                         int key = barcodes.keyAt(i);
-                        int val = Integer.parseInt(barcodes.get(key).displayValue);
-                        Log.i(TAG, "New barcode found: " + val);
-                        Log.i(TAG, "Target is: " + runnableSoundGenerator.getTargetObject());
+                        final int val = Integer.parseInt(barcodes.get(key).displayValue);
                         if(runnableSoundGenerator.isUniqueObservation(val))
                         {
                             Rect scannerArea = new Rect(scannerView.getLeft(), scannerView.getTop(), scannerView.getRight(), scannerView.getBottom());
@@ -354,7 +354,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                 }
                 else
                 {
-                    runnableSoundGenerator.setObservation(-1);
+                    runnableSoundGenerator.setObservation(44);
                 }
 
                 if(camera.getTrackingState() == TrackingState.TRACKING)
