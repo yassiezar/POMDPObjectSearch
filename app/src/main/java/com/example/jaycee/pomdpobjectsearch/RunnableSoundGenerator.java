@@ -41,7 +41,7 @@ public class RunnableSoundGenerator implements Runnable
 
     private long observation = O_NOTHING;
     private long target = -1;
-    private long waypointState = decodeState(5, 5, O_NOTHING);
+    private long waypointState = decodeState(6, 6, O_NOTHING);
 
     private Policy policy;
 
@@ -52,7 +52,6 @@ public class RunnableSoundGenerator implements Runnable
     public RunnableSoundGenerator(Activity callingActivity)
     {
         this.callingActivity = callingActivity;
-        this.waypointAnchor = session.createAnchor(waypointPose);
         this.vibrator= (Vibrator)callingActivity.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
@@ -86,6 +85,7 @@ public class RunnableSoundGenerator implements Runnable
             waypointPose = getNewWaypoint(phonePose, currentState, action);
             waypointAnchor = session.createAnchor(waypointPose);
         }
+        // this.waypointAnchor = session.createAnchor(waypointPose);
         ClassHelpers.mVector waypointVector = getRotation(waypointPose);
         float[] waypointRotationAngles = waypointVector.getEuler();
         float waypointTilt = waypointRotationAngles[1];
