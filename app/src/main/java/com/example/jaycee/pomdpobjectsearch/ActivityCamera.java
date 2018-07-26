@@ -53,6 +53,8 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     private static final int CAMERA_PERMISSION_CODE = 0;
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
 
+    private static final int O_NOTHING = 0;
+
     private static final int T_DOOR = 12;
     private static final int T_LAPTOP = 18;
     private static final int T_CHAIR = 8;
@@ -84,8 +86,6 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     private int width, height;
 
     private final float[] anchorMatrix = new float[16];
-
-    private HandlerMDPIntentService handlerMdpIntentService = new HandlerMDPIntentService(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -251,7 +251,6 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         {
             backgroundRenderer.createOnGlThread(this);
             objectRenderer.createOnGlThread(this, "models/andy.obj", "models/andy.png");
-            //objectRenderer.createOnGlThread(this, "models/soccerball.obj", "models/PlatonicSurface_Color.jpg");
             objectRenderer.setMaterialProperties(0.f, 2.f, 0.5f, 6.f);
         }
         catch(IOException e)
@@ -317,11 +316,10 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             float scaleFactor = 1.f;
 
             if(camera.getTrackingState() == TrackingState.TRACKING &&
-                    (handlerMdpIntentService.getMdpLearned() || runnableSoundGenerator.isTargetObjectSet()) &&
+                    runnableSoundGenerator.isTargetObjectSet() &&
                     !runnableSoundGenerator.isTargetObjectFound())
             {
                 runnableSoundGenerator.update(camera, session);
-
             }
             else
             {

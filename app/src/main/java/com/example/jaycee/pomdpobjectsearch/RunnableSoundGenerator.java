@@ -27,6 +27,8 @@ public class RunnableSoundGenerator implements Runnable
     private static final long ANGLE_INTERVAL = 15;
     private static final long GRID_SIZE = 12;
 
+    private static final int O_NOTHING = 0;
+
     private Activity callingActivity;
 
     private Pose phonePose;
@@ -61,7 +63,7 @@ public class RunnableSoundGenerator implements Runnable
     @Override
     public void run()
     {
-        ClassHelpers.mQuaternion phoneQ = new ClassHelpers.mQuaternion(phonePose.getRotationQuaternion());
+/*        ClassHelpers.mQuaternion phoneQ = new ClassHelpers.mQuaternion(phonePose.getRotationQuaternion());
         phoneQ.normalise();
 
         ClassHelpers.mVector cameraVector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
@@ -97,14 +99,15 @@ public class RunnableSoundGenerator implements Runnable
 
         metrics.updateTimestamp(frame.getTimestamp());
         metrics.updatePhonePosition(phonePose.getTranslation()[0], phonePose.getTranslation()[1], phonePose.getTranslation()[2]);
-        metrics.updatePhoneOrientation(phonePose.getRotationQuaternion()[0], phonePose.getRotationQuaternion()[1], phonePose.getRotationQuaternion()[2], phonePose.getRotationQuaternion()[3]);
+        metrics.updatePhoneOrientation(phonePose.getRotationQuaternion()[0], phonePose.getRotationQuaternion()[1], phonePose.getRotationQuaternion()[2], phonePose.getRotationQuaternion()[3]);*/
+
+        long currentState = deco();
     }
 
     public void update(Camera camera, Session session)
     {
         phonePose = camera.getDisplayOrientedPose();
-        if(targetReached ||
-                observation != 0)
+        if(targetReached || observation != O_NOTHING)
         {
             targetReached = false;
             setNewTarget(session);
