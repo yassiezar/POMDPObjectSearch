@@ -40,6 +40,7 @@ public class RunnableSoundGenerator implements Runnable
     private boolean targetFound = false;
 
     private long observation = O_NOTHING;
+    private long prevCameraObservation = O_NOTHING;
     private long target = -1;
     private long waypointState = decodeState(6, 6, O_NOTHING);
 
@@ -64,6 +65,7 @@ public class RunnableSoundGenerator implements Runnable
             Log.i(TAG, "Target found");
             targetFound = true;
             targetSet = false;
+            observation = O_NOTHING;
             vibrator.vibrate(350);
             gain = 0.f;
         }
@@ -74,18 +76,19 @@ public class RunnableSoundGenerator implements Runnable
         float[] phoneRotationAngles = cameraVector.getEuler();
         float cameraPan = phoneRotationAngles[2];
         float cameraTilt = phoneRotationAngles[1];
-        long cameraObservation = this.observation;
+        long newCameraObservation = this.observation;
 
-        // Get current state
-        long currentState = decodeState(cameraPan, cameraTilt, cameraObservation);
+        // Get current state and generate new waypoint if agent is in new state or sees new object
+        long currentState = decodeState(cameraPan, cameraTilt, newCameraObservation);
         Log.i(TAG, String.format("current state %d waypoint state %d", currentState, waypointState));
-        if(currentState == waypointState)
+        if(equalPositionState(currentState, waypointState) || newCameraObservation != prevCameraObservation)
         {
+            Log.i(TAG, "Object found or found waypoint");
             long action = policy.getAction(currentState);
             waypointPose = getNewWaypoint(phonePose, currentState, action);
             waypointAnchor = session.createAnchor(waypointPose);
+            prevCameraObservation = newCameraObservation;
         }
-        // this.waypointAnchor = session.createAnchor(waypointPose);
         ClassHelpers.mVector waypointVector = getRotation(waypointPose);
         float[] waypointRotationAngles = waypointVector.getEuler();
         float waypointTilt = waypointRotationAngles[1];
@@ -157,6 +160,14 @@ public class RunnableSoundGenerator implements Runnable
         stateVector[2] = state;
 
         return stateVector;
+    }
+
+    public boolean equalPositionState(long s1, long s2)
+    {
+        long[] state1 = encodeState(s1);
+        long[] state2 = encodeState(s2);
+
+        return (state1[0] == state2[0]) && (state1[1] == state2[1]);
     }
 
     public void setTarget(long target)
@@ -257,35 +268,35 @@ public class RunnableSoundGenerator implements Runnable
                     {
                         val = "Door handle";
                     }
-                    if(observation == 7)
+                    else if(observation == 7)
                     {
                         val = "Mouse";
                     }
-                    if(observation == 12)
+                    else if(observation == 12)
                     {
                         val = "Door";
                     }
-                    if(observation == 18)
+                    else if(observation == 18)
                     {
                         val = "Laptop";
                     }
-                    if(observation == 6)
+                    else if(observation == 6)
                     {
                         val = "Keyboard";
                     }
-                    if(observation == 5)
+                    else if(observation == 5)
                     {
                         val = "Monitor";
                     }
-                    if(observation == 23)
+                    else if(observation == 23)
                     {
                         val = "Window";
                     }
-                    if(observation == 11)
+                    else if(observation == 11)
                     {
                         val = "Desk";
                     }
-                    if(observation == 22)
+                    else if(observation == 22)
                     {
                         val = "Table";
                     }

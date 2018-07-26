@@ -343,25 +343,25 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                 {
                     runnableSoundGenerator.setObservation(O_NOTHING);
                 }
-            }
 
-            // Compute lighting from average intensity of the image.
-            // The first three components are color scaling factors.
-            // The last one is the average pixel intensity in gamma space.
-            final float[] colourCorrectionRgba = new float[4];
-            frame.getLightEstimate().getColorCorrection(colourCorrectionRgba, 0);
+                // Compute lighting from average intensity of the image.
+                // The first three components are color scaling factors.
+                // The last one is the average pixel intensity in gamma space.
+                final float[] colourCorrectionRgba = new float[4];
+                frame.getLightEstimate().getColorCorrection(colourCorrectionRgba, 0);
 
-            float scaleFactor = 1.f;
-            if(camera.getTrackingState() == TrackingState.TRACKING)
-            {
-                runnableSoundGenerator.getWaypointAnchor().getPose().toMatrix(anchorMatrix, 0);
+                float scaleFactor = 1.f;
+                if(camera.getTrackingState() == TrackingState.TRACKING)
+                {
+                    runnableSoundGenerator.getWaypointAnchor().getPose().toMatrix(anchorMatrix, 0);
 
-                objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
-                objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
-            }
-            else
-            {
-                Log.w(TAG, "No target set.");
+                    objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
+                    objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
+                }
+                else
+                {
+                    Log.w(TAG, "No target set.");
+                }
             }
         }
         catch(CameraNotAvailableException e)
