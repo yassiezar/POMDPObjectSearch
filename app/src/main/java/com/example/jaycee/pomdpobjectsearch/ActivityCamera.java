@@ -118,33 +118,33 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                 switch (item.getItemId())
                 {
                     case R.id.item_object_door:
-                        runnableSoundGenerator.setTargetObject(T_DOOR);
+                        runnableSoundGenerator.setTarget(T_DOOR);
                         break;
                     case R.id.item_object_laptop:
-                        runnableSoundGenerator.setTargetObject(T_LAPTOP);
+                        runnableSoundGenerator.setTarget(T_LAPTOP);
                         break;
                     case R.id.item_object_chair:
-                        runnableSoundGenerator.setTargetObject(T_CHAIR);
+                        runnableSoundGenerator.setTarget(T_CHAIR);
                         break;
 
                     case R.id.item_object_kettle:
-                        runnableSoundGenerator.setTargetObject(T_KETTLE);
+                        runnableSoundGenerator.setTarget(T_KETTLE);
                         break;
                     case R.id.item_object_refrigerator:
-                        runnableSoundGenerator.setTargetObject(T_REFRIGERATOR);
+                        runnableSoundGenerator.setTarget(T_REFRIGERATOR);
                         break;
                     case R.id.item_object_microwave:
-                        runnableSoundGenerator.setTargetObject(T_MICROWAVE);
+                        runnableSoundGenerator.setTarget(T_MICROWAVE);
                         break;
 
                     case R.id.item_object_sink:
-                        runnableSoundGenerator.setTargetObject(T_SINK);
+                        runnableSoundGenerator.setTarget(T_SINK);
                         break;
                     case R.id.item_object_hand_dryer:
-                        runnableSoundGenerator.setTargetObject(T_HAND_DRYER);
+                        runnableSoundGenerator.setTarget(T_HAND_DRYER);
                         break;
                     case R.id.item_object_toilet:
-                        runnableSoundGenerator.setTargetObject(T_TOILET);
+                        runnableSoundGenerator.setTarget(T_TOILET);
                         break;
                 }
 
@@ -307,17 +307,9 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             float[] viewMatrix = new float[16];
             camera.getViewMatrix(viewMatrix, 0);
 
-            // Compute lighting from average intensity of the image.
-            // The first three components are color scaling factors.
-            // The last one is the average pixel intensity in gamma space.
-            final float[] colourCorrectionRgba = new float[4];
-            frame.getLightEstimate().getColorCorrection(colourCorrectionRgba, 0);
-
-            float scaleFactor = 1.f;
-
             if(camera.getTrackingState() == TrackingState.TRACKING &&
-                    runnableSoundGenerator.isTargetObjectSet() &&
-                    !runnableSoundGenerator.isTargetObjectFound())
+                    runnableSoundGenerator.isTargetSet() &&
+                    !runnableSoundGenerator.isTargetFound())
             {
                 runnableSoundGenerator.update(camera, session);
             }
@@ -326,7 +318,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                 Log.w(TAG, "Camera not tracking. ");
             }
 
-            if(runnableSoundGenerator.isTargetObjectSet())
+            if(runnableSoundGenerator.isTargetSet())
             {
                 Bitmap bitmap = backgroundRenderer.getBitmap(width, height);
 
@@ -339,31 +331,35 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                     {
                         int key = barcodes.keyAt(i);
                         final int val = Integer.parseInt(barcodes.get(key).displayValue);
-                        if(runnableSoundGenerator.isUniqueObservation(val))
+
+                        Rect scannerArea = new Rect(scannerView.getLeft(), scannerView.getTop(), scannerView.getRight(), scannerView.getBottom());
+                        if(scannerArea.contains(barcodes.get(key).getBoundingBox()))
                         {
-                            Rect scannerArea = new Rect(scannerView.getLeft(), scannerView.getTop(), scannerView.getRight(), scannerView.getBottom());
-                            if(scannerArea.contains(barcodes.get(key).getBoundingBox()))
-                            {
-                                Log.d(TAG, "New barcode found: " + val);
-                                runnableSoundGenerator.setObservation(val);
-                            }
+                            Log.d(TAG, "Object found: " + val);
+                            runnableSoundGenerator.setObservation(val);
                         }
                     }
                 }
                 else
                 {
-                    runnableSoundGenerator.setObservation(0);
-                }
-
-                if(camera.getTrackingState() == TrackingState.TRACKING)
-                {
-                    runnableSoundGenerator.getTargetAnchor().getPose().toMatrix(anchorMatrix, 0);
-
-                    objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
-                    objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
+                    runnableSoundGenerator.setObservation(O_NOTHING);
                 }
             }
 
+            // Compute lighting from average intensity of the image.
+            // The first three components are color scaling factors.
+            // The last one is the average pixel intensity in gamma space.
+            final float[] colourCorrectionRgba = new float[4];
+            frame.getLightEstimate().getColorCorrection(colourCorrectionRgba, 0);
+
+            float scaleFactor = 1.f;
+            if(camera.getTrackingState() == TrackingState.TRACKING)
+            {
+                runnableSoundGenerator.getTargetAnchor().getPose().toMatrix(anchorMatrix, 0);
+
+                objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
+                objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
+            }
             else
             {
                 Log.w(TAG, "No target set.");

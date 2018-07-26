@@ -39,15 +39,14 @@ public class RunnableSoundGenerator implements Runnable
     private float[] targetAngles;
 
     private boolean targetReached = false;
-    private boolean targetObjectSet = false;
-    private boolean targetObjectFound = false;
+    private boolean targetSet = false;
+    private boolean targetFound = false;
 
-    private long observation = 0;
-    private long targetObject = -1;
+    private long observation = O_NOTHING;
+    private long target = -1;
+    private long state = 0;
 
     private Policy policy;
-
-    private List<Long> listTargetFound;
 
     private ClassMetrics metrics = new ClassMetrics();
 
@@ -56,7 +55,6 @@ public class RunnableSoundGenerator implements Runnable
     public RunnableSoundGenerator(Activity callingActivity)
     {
         this.callingActivity = callingActivity;
-        this.listTargetFound = new ArrayList<>();
         this.vibrator= (Vibrator)callingActivity.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
@@ -101,7 +99,27 @@ public class RunnableSoundGenerator implements Runnable
         metrics.updatePhonePosition(phonePose.getTranslation()[0], phonePose.getTranslation()[1], phonePose.getTranslation()[2]);
         metrics.updatePhoneOrientation(phonePose.getRotationQuaternion()[0], phonePose.getRotationQuaternion()[1], phonePose.getRotationQuaternion()[2], phonePose.getRotationQuaternion()[3]);*/
 
-        long currentState = deco();
+        // Get phone's current rotation angles and convert to pan/tilt angles
+        // Start by rotating camera vector by quaternion (camera vector = -z)
+        ClassHelpers.mQuaternion phoneRotationQuaternion = new ClassHelpers.mQuaternion(phonePose.getRotationQuaternion());
+        phoneRotationQuaternion.normalise();
+        ClassHelpers.mVector cameraVector = new ClassHelpers.mVector(0.f, 0.f, -1.f);
+        cameraVector.rotateByQuaternion(phoneRotationQuaternion);
+        cameraVector.normalise();
+
+        // Get Euler angles from vector wrt axis system
+        // pitch = tilt, yaw = pan
+        float[] phoneRotationAngles = cameraVector.getEuler();
+        float pan = phoneRotationAngles[2];
+        float tilt = phoneRotationAngles[1];
+        long observation = this.observation;
+
+        // Get current state
+        long currentState = decodeState(pan, tilt, observation);
+        if(currentState != state)
+        {
+            state = currentState;
+        }
     }
 
     public void update(Camera camera, Session session)
@@ -117,18 +135,12 @@ public class RunnableSoundGenerator implements Runnable
         metrics.writeWifi();
     }
 
-    public long encodeState(float fpan, float ftilt, long obs)
+    public long decodeState(float fpan, float ftilt, long obs)
     {
         Log.d(TAG, String.format("Pan %f Tilt %f obs %d", fpan, ftilt, obs));
 
         int pan = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(fpan) + 90) / ANGLE_INTERVAL);
         int tilt = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(ftilt) + 90) / ANGLE_INTERVAL);
-
-        /*if(obs == -1)
-        {
-            Random rand = new Random();
-            obs = rand.nextInt(24);
-        }*/
 
         long state = 0;
         long multiplier = 1;
@@ -139,27 +151,36 @@ public class RunnableSoundGenerator implements Runnable
         multiplier *= GRID_SIZE;
         state += (multiplier * obs);
 
-        Log.d(TAG, String.format("Pan %d Tilt %d obs %d State: %d", pan, tilt, obs, state));
-
         return state;
     }
 
-    public void setTargetObject(long target)
+    public long[] encodeState(long state)
+    {
+        long[] stateVector = new long[3];
+        stateVector[0] = state % GRID_SIZE;
+        state /= GRID_SIZE;
+        stateVector[1] = state % GRID_SIZE;
+        state /= GRID_SIZE;
+        stateVector[2] = state;
+
+        return stateVector;
+    }
+
+    public void setTarget(long target)
     {
         policy = new Policy((int)target);
-        listTargetFound = new ArrayList<>();
 
-        this.targetObject = target;
-        this.targetObjectSet = true;
+        this.target = target;
+        this.targetSet = true;
         this.targetReached = true;
-        this.targetObjectFound = false;
+        this.targetFound = false;
 
         metrics.updateTarget(target);
     }
 
     public void setNewTarget(Session session)
     {
-        ClassHelpers.mVector targetV = new ClassHelpers.mVector(0.f, 0.f, 1.f);
+/*        ClassHelpers.mVector targetV = new ClassHelpers.mVector(0.f, 0.f, 1.f);
         targetV.normalise();
         targetV.rotateByQuaternion(phonePose.getRotationQuaternion());
         targetV.normalise();
@@ -216,12 +237,16 @@ public class RunnableSoundGenerator implements Runnable
 
         Log.d(TAG, String.valueOf(action));
         Log.d(TAG, "post: " + targetPose.toString());
-        Log.d(TAG, String.format("new target (post): %f %f %f", targetX, targetY, targetZ));
+        Log.i(TAG, String.format("new target (post): %f %f %f", targetX, targetY, targetZ));
 
-        Log.i(TAG, String.format("Current state: %d", encodeState(angles[2], angles[1], targetObject)));
+        long[] curState = decodeState(encodeState(angles[1], angles[2], observation));
+        long[] nextState = decodeState(encodeState(targetY, targetX, targetObject));
+        Log.i(TAG, String.format("Current state: %d", encodeState(angles[1], angles[2], observation)));
+        Log.i(TAG, String.format("%d %d %d", curState[0], curState[1], curState[2]));
         Log.i(TAG, String.format("Next state: %d", encodeState(targetY, targetX, targetObject)));
+        Log.i(TAG, String.format("%d %d %d", nextState[0], nextState[1], nextState[2]));
 
-        /*callingActivity.runOnUiThread(new Runnable()
+        *//*callingActivity.runOnUiThread(new Runnable()
         {
             @Override
             public void run()
@@ -281,27 +306,12 @@ public class RunnableSoundGenerator implements Runnable
         return pitch;
     }
 
-    public boolean isTargetObjectSet() { return this.targetObjectSet; }
-    public boolean isTargetObjectFound() { return this.targetObjectFound; }
-    public Anchor getTargetAnchor() { return this.anchorTarget; }
-    public long getTargetObject() { return this.targetObject; }
-    public boolean isUniqueObservation(long nObs) { return !listTargetFound.contains(nObs); }
-
     public void setObservation(final long observation)
     {
+        this.observation = observation;
         metrics.updateObservation(observation);
-        if(!listTargetFound.contains(observation))
-        {
-            listTargetFound.add(observation);
-            this.observation = observation;
-        }
-        else
-        {
-            this.observation = 0;
-        }
-        metrics.updateTargetObservation(this.observation);
 
-        if(observation != 0 && observation != -1)
+        if(observation != O_NOTHING && observation != -1)
         {
             callingActivity.runOnUiThread(new Runnable()
             {
@@ -345,12 +355,20 @@ public class RunnableSoundGenerator implements Runnable
                     {
                         val = "Table";
                     }
+                    else
+                    {
+                        val = "Unknown";
+                    }
                     Toast.makeText(callingActivity, val, Toast.LENGTH_SHORT).show();
                 }
             });
         }
     }
 
+    public boolean isTargetSet() { return this.targetSet; }
+    public boolean isTargetFound() { return this.targetFound; }
+    public Anchor getTargetAnchor() { return this.anchorTarget; }
+    public long getTarget() { return this.target; }
     public void setFrame(Frame frame) { this.frame = frame; }
 
     class Policy
@@ -358,14 +376,6 @@ public class RunnableSoundGenerator implements Runnable
         private static final int O_DOOR = 12;
         private static final int O_LAPTOP = 18;
         private static final int O_CHAIR = 8;
-
-        private static final int O_KETTLE = 24;
-        private static final int O_REFRIGERATOR = 35;
-        private static final int O_MICROWAVE = 29;
-
-        private static final int O_SINK = 37;
-        private static final int O_TOILET = 41;
-        private static final int O_HAND_DRYER = 23;
 
         private static final int A_UP = 0;
         private static final int A_DOWN = 1;
@@ -390,24 +400,6 @@ public class RunnableSoundGenerator implements Runnable
                 case O_CHAIR:
                     this.fileName += "chair.txt";
                     break;
-/*                case O_KETTLE:
-                    this.fileName += "kettle.txt";
-                    break;
-                case O_REFRIGERATOR:
-                    this.fileName += "refrigerator.txt";
-                    break;
-                case O_MICROWAVE:
-                    this.fileName += "microwave.txt";
-                    break;
-                case O_SINK:
-                    this.fileName += "sink.txt";
-                    break;
-                case O_TOILET:
-                    this.fileName += "toilet.txt";
-                    break;
-                case O_HAND_DRYER:
-                    this.fileName += "hand_dryer.txt";
-                    break;*/
             }
 
             BufferedReader reader = null;
