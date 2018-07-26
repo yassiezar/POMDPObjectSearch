@@ -81,11 +81,11 @@ public class RunnableSoundGenerator implements Runnable
 
         // Get current state and generate new waypoint if agent is in new state or sees new object
         long currentState = decodeState(cameraPan, cameraTilt, newCameraObservation);
-        Log.i(TAG, String.format("current state %d waypoint state %d", currentState, waypointState));
+        Log.d(TAG, String.format("current state %d waypoint state %d", currentState, waypointState));
         if(equalPositionState(currentState, waypointState) || newCameraObservation != prevCameraObservation)
         {
             long action = policy.getAction(currentState);
-            Log.i(TAG, String.format("Object found or found waypoint, action: %d", action));
+            Log.d(TAG, String.format("Object found or found waypoint, action: %d", action));
             waypointPose = getNewWaypoint(phonePose, currentState, action);
             waypointAnchor = session.createAnchor(waypointPose);
             prevCameraObservation = newCameraObservation;
@@ -370,13 +370,12 @@ public class RunnableSoundGenerator implements Runnable
                 String line;
                 while ((line = reader.readLine()) != null)
                 {
+                    Log.i(TAG, line);
                     int space1 = line.indexOf('\t');
                     int space2 = line.indexOf('\t', space1 + 1);
 
                     if(line.charAt(space2 + 1) != '1')
-                    {
-                        continue;
-                    }
+                    { }
 
                     int key = Integer.parseInt(line.substring(0, space1));
                     int value = Integer.parseInt(line.substring(space1+1, space2));
