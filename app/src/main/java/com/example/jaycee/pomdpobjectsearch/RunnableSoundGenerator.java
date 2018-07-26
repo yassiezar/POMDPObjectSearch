@@ -20,6 +20,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class RunnableSoundGenerator implements Runnable
 {
@@ -365,12 +367,20 @@ public class RunnableSoundGenerator implements Runnable
             BufferedReader reader = null;
             try
             {
+                Pattern pattern = Pattern.compile("(\\d+)\\s(\\d)\\s(1.0|0.25)");
                 reader = new BufferedReader(new InputStreamReader(callingActivity.getResources().getAssets().open(fileName)));
 
                 String line;
                 while ((line = reader.readLine()) != null)
                 {
-                    Log.i(TAG, line);
+                    Matcher matcher = pattern.matcher(line);
+                    if(matcher.find())
+                    {
+                        Log.i(TAG, matcher.group());
+                    }
+
+                    /* TODO: take regex matches and place action into dict. Sample randomly if prob is not 1.0 */
+
                     int space1 = line.indexOf('\t');
                     int space2 = line.indexOf('\t', space1 + 1);
 
