@@ -24,7 +24,7 @@ import java.util.Random;
 public class RunnableSoundGenerator implements Runnable
 {
     private static final String TAG = RunnableSoundGenerator.class.getSimpleName();
-    private static final long ANGLE_INTERVAL = 15;
+    private static final long ANGLE_INTERVAL = 30;
     private static final long GRID_SIZE = 12;
 
     private static final int O_NOTHING = 0;
@@ -54,6 +54,7 @@ public class RunnableSoundGenerator implements Runnable
     {
         this.callingActivity = callingActivity;
         this.vibrator= (Vibrator)callingActivity.getSystemService(Context.VIBRATOR_SERVICE);
+        waypointPose = new Pose(new float[] {0.f, 0.f, -1.f}, new float[] {0.f, 0.f, 0.f, 1.f});
     }
 
     @Override
@@ -83,8 +84,8 @@ public class RunnableSoundGenerator implements Runnable
         Log.i(TAG, String.format("current state %d waypoint state %d", currentState, waypointState));
         if(equalPositionState(currentState, waypointState) || newCameraObservation != prevCameraObservation)
         {
-            Log.i(TAG, "Object found or found waypoint");
             long action = policy.getAction(currentState);
+            Log.i(TAG, String.format("Object found or found waypoint, action: %d", action));
             waypointPose = getNewWaypoint(phonePose, currentState, action);
             waypointAnchor = session.createAnchor(waypointPose);
             prevCameraObservation = newCameraObservation;
@@ -186,29 +187,44 @@ public class RunnableSoundGenerator implements Runnable
         float[] wayPointTranslation = new float[3];
         long[] state = encodeState(s);
 
+        // Assume the current waypoint is where the camera is pointing.
+        // Reasonable since this function only called when pointing to new target
+        ClassHelpers.mVector waypointVector = getRotation(phonePose);
+        waypointVector.x /= waypointVector.z;
+        waypointVector.y /= waypointVector.z;
+        waypointVector.z /= waypointVector.z;
+
         if(action == Policy.A_LEFT)
         {
-            wayPointTranslation[0] = phonePose.getTranslation()[0] - 1.f*(float)Math.atan(Math.toRadians(ANGLE_INTERVAL));
-            wayPointTranslation[1] = phonePose.getTranslation()[1];
+            wayPointTranslation[0] = waypointVector.x - 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
+            //wayPointTranslation[0] = phonePose.getTranslation()[0] - 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
+            //wayPointTranslation[1] = phonePose.getTranslation()[1];
+            wayPointTranslation[1] = waypointVector.y;
             state[0] += 1;
         }
         if(action == Policy.A_RIGHT)
         {
-            wayPointTranslation[0] = phonePose.getTranslation()[0] + 1.f*(float)Math.atan(Math.toRadians(ANGLE_INTERVAL));
-            wayPointTranslation[1] = phonePose.getTranslation()[1];
+            wayPointTranslation[0] = waypointVector.x + 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
+            //wayPointTranslation[0] = phonePose.getTranslation()[0] + 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
+            //wayPointTranslation[1] = phonePose.getTranslation()[1];
+            wayPointTranslation[1] = waypointVector.y;
             state[0] -= 1;
         }
 
         if(action == Policy.A_UP)
         {
-            wayPointTranslation[0] = phonePose.getTranslation()[0];
-            wayPointTranslation[1] = phonePose.getTranslation()[1] + 1.f*(float)Math.atan(Math.toRadians(ANGLE_INTERVAL));
+            //wayPointTranslation[0] = phonePose.getTranslation()[0];
+            wayPointTranslation[0] = waypointVector.x;
+            wayPointTranslation[1] = waypointVector.y + 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
+            //wayPointTranslation[1] = phonePose.getTranslation()[1] + 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
             state[1] -= 1;
         }
         if(action == Policy.A_DOWN)
         {
-            wayPointTranslation[0] = phonePose.getTranslation()[0];
-            wayPointTranslation[1] = phonePose.getTranslation()[1] - 1.f*(float)Math.atan(Math.toRadians(ANGLE_INTERVAL));
+            //wayPointTranslation[0] = phonePose.getTranslation()[0];
+            wayPointTranslation[0] = waypointVector.x;
+            wayPointTranslation[1] = waypointVector.y - 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
+            //wayPointTranslation[1] = phonePose.getTranslation()[1] - 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
             state[1] += 1;
         }
 

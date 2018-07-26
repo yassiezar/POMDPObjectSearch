@@ -91,7 +91,7 @@ public class ClassHelpers
 
     public static class mVector
     {
-        float x, y, z;
+        public float x, y, z;
 
         public mVector(float x, float y, float z)
         {
