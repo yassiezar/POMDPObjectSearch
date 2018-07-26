@@ -34,18 +34,14 @@ public class RunnableSoundGenerator implements Runnable
     private Pose phonePose;
     private Pose waypointPose;
     private Anchor waypointAnchor;
-    private Frame frame;
     private Session session;
 
-    private float[] targetAngles;
-
-    private boolean targetReached = false;
     private boolean targetSet = false;
     private boolean targetFound = false;
 
     private long observation = O_NOTHING;
     private long target = -1;
-    private long state = 0;
+    private long waypointState = decodeState(5, 5, O_NOTHING);
 
     private Policy policy;
 
@@ -56,52 +52,13 @@ public class RunnableSoundGenerator implements Runnable
     public RunnableSoundGenerator(Activity callingActivity)
     {
         this.callingActivity = callingActivity;
+        this.waypointAnchor = session.createAnchor(waypointPose);
         this.vibrator= (Vibrator)callingActivity.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     @Override
     public void run()
     {
-/*        ClassHelpers.mQuaternion phoneQ = new ClassHelpers.mQuaternion(phonePose.getRotationQuaternion());
-        phoneQ.normalise();
-
-        ClassHelpers.mVector cameraVector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
-        cameraVector.normalise();
-        cameraVector.rotateByQuaternion(phoneQ);
-        cameraVector.normalise();
-
-        float[] target = new float[]{targetPose.getTranslation()[0] + (targetPose.getTranslation()[2] - phonePose.getTranslation()[2])*((float)Math.sin(cameraVector.getEuler()[2])), targetPose.getTranslation()[1], targetPose.getTranslation()[2]};
-
-        Log.d(TAG, String.format("pan: %f tilt: %f", Math.abs(cameraVector.getEuler()[2] - targetAngles[2]), Math.abs(cameraVector.getEuler()[1] - targetAngles[1])));
-
-        if(Math.abs(cameraVector.getEuler()[2] - targetAngles[2]) <= 0.15 &&            // 0.13 =~ 7.5deg
-                Math.abs(cameraVector.getEuler()[1] - targetAngles[1]) <= 0.15)
-        {
-            Log.i(TAG, "Target reached");
-            targetReached = true;
-        }
-
-        float gain = 1.f;
-        Log.d(TAG, String.format("Target + Observation: %d %d", targetObject, observation));
-        if(observation == targetObject)
-        {
-            Log.i(TAG, "Target found");
-            targetObjectFound = true;
-            targetObjectSet = false;
-            listTargetFound = new ArrayList<>();
-            targetObject = -1;
-            observation = 0;
-            vibrator.vibrate(500);
-            gain = 0.f;
-        }
-        JNIBridge.playSound(target, phonePose.getTranslation(), gain, getPitch(cameraVector.getEuler()[1] - targetAngles[1]));
-
-        metrics.updateTimestamp(frame.getTimestamp());
-        metrics.updatePhonePosition(phonePose.getTranslation()[0], phonePose.getTranslation()[1], phonePose.getTranslation()[2]);
-        metrics.updatePhoneOrientation(phonePose.getRotationQuaternion()[0], phonePose.getRotationQuaternion()[1], phonePose.getRotationQuaternion()[2], phonePose.getRotationQuaternion()[3]);*/
-
-        // Get phone's current rotation angles and convert to pan/tilt angles
-        // Start by rotating camera vector by quaternion (camera vector = -z)
         float gain = 1.f;
         if(observation == target)
         {
@@ -119,15 +76,14 @@ public class RunnableSoundGenerator implements Runnable
         float cameraPan = phoneRotationAngles[2];
         float cameraTilt = phoneRotationAngles[1];
         long cameraObservation = this.observation;
-        Log.i(TAG, phonePose.toString());
 
         // Get current state
         long currentState = decodeState(cameraPan, cameraTilt, cameraObservation);
-        if(currentState != state)
+        Log.i(TAG, String.format("current state %d waypoint state %d", currentState, waypointState));
+        if(currentState == waypointState)
         {
-            state = currentState;
             long action = policy.getAction(currentState);
-            waypointPose = getNewWaypoint(phonePose, action);
+            waypointPose = getNewWaypoint(phonePose, currentState, action);
             waypointAnchor = session.createAnchor(waypointPose);
         }
         ClassHelpers.mVector waypointVector = getRotation(waypointPose);
@@ -148,6 +104,8 @@ public class RunnableSoundGenerator implements Runnable
 
     public ClassHelpers.mVector getRotation(Pose pose)
     {
+        // Get rotation angles and convert to pan/tilt angles
+        // Start by rotating vector by quaternion (camera vector = -z)
         ClassHelpers.mQuaternion phoneRotationQuaternion = new ClassHelpers.mQuaternion(pose.getRotationQuaternion());
         phoneRotationQuaternion.normalise();
         ClassHelpers.mVector vector = new ClassHelpers.mVector(0.f, 0.f, -1.f);
@@ -163,6 +121,20 @@ public class RunnableSoundGenerator implements Runnable
         int pan = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(-fpan) + 90) / ANGLE_INTERVAL);
         int tilt = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(-ftilt) + 90) / ANGLE_INTERVAL);
 
+        long state = 0;
+        long multiplier = 1;
+
+        state += (multiplier * pan);
+        multiplier *= GRID_SIZE;
+        state += (multiplier * tilt);
+        multiplier *= GRID_SIZE;
+        state += (multiplier * obs);
+
+        return state;
+    }
+
+    public long decodeState(long pan, long tilt, long obs)
+    {
         long state = 0;
         long multiplier = 1;
 
@@ -193,134 +165,47 @@ public class RunnableSoundGenerator implements Runnable
 
         this.target = target;
         this.targetSet = true;
-        this.targetReached = true;
         this.targetFound = false;
 
         metrics.updateTarget(target);
     }
 
-    public Pose getNewWaypoint(Pose phonePose, long action)
+    public Pose getNewWaypoint(Pose phonePose, long s, long action)
     {
         float[] wayPointTranslation = new float[3];
+        long[] state = encodeState(s);
 
         if(action == Policy.A_LEFT)
         {
             wayPointTranslation[0] = phonePose.getTranslation()[0] - 1.f*(float)Math.atan(Math.toRadians(ANGLE_INTERVAL));
             wayPointTranslation[1] = phonePose.getTranslation()[1];
+            state[0] += 1;
         }
         if(action == Policy.A_RIGHT)
         {
             wayPointTranslation[0] = phonePose.getTranslation()[0] + 1.f*(float)Math.atan(Math.toRadians(ANGLE_INTERVAL));
             wayPointTranslation[1] = phonePose.getTranslation()[1];
+            state[0] -= 1;
         }
 
         if(action == Policy.A_UP)
         {
             wayPointTranslation[0] = phonePose.getTranslation()[0];
             wayPointTranslation[1] = phonePose.getTranslation()[1] + 1.f*(float)Math.atan(Math.toRadians(ANGLE_INTERVAL));
+            state[1] -= 1;
         }
-        if(action == Policy.A_UP)
+        if(action == Policy.A_DOWN)
         {
             wayPointTranslation[0] = phonePose.getTranslation()[0];
             wayPointTranslation[1] = phonePose.getTranslation()[1] - 1.f*(float)Math.atan(Math.toRadians(ANGLE_INTERVAL));
+            state[1] += 1;
         }
+
+        waypointState = decodeState(state[0], state[1], state[2]);
 
         wayPointTranslation[2] = phonePose.getTranslation()[2] - 1.f;
 
         return new Pose(wayPointTranslation, phonePose.getRotationQuaternion());
-
-/*        ClassHelpers.mVector targetV = new ClassHelpers.mVector(0.f, 0.f, 1.f);
-        targetV.normalise();
-        targetV.rotateByQuaternion(phonePose.getRotationQuaternion());
-        targetV.normalise();
-
-        float[] angles = targetV.getEuler();
-
-        Log.d(TAG, "Pre: " + phonePose.toString());
-        Log.d(TAG, String.format("current direction (pre): %f %f %f", angles[0], angles[1], angles[2]));
-
-        final int action = policy.getAction(encodeState(angles[2], angles[1], observation));
-        ClassHelpers.mQuaternion rotationR;
-        switch(action)
-        {
-            case Policy.A_UP:
-                rotationR = new ClassHelpers.mQuaternion(1.f, 0.f, 0.f, (float)Math.toRadians(ANGLE_INTERVAL));
-                break;
-            case Policy.A_DOWN:
-                rotationR = new ClassHelpers.mQuaternion(-1.f, 0.f, 0.f, (float)Math.toRadians(ANGLE_INTERVAL));
-                break;
-            case Policy.A_LEFT:
-                rotationR = new ClassHelpers.mQuaternion(0.f,1.f, 0.f, (float)Math.toRadians(ANGLE_INTERVAL));
-                break;
-            case Policy.A_RIGHT:
-                rotationR = new ClassHelpers.mQuaternion(0.f,-1.f, 0.f, (float)Math.toRadians(ANGLE_INTERVAL));
-                break;
-            default:
-                rotationR = new ClassHelpers.mQuaternion(0.f, 0.f, 0.f, 0.f);
-        }
-        rotationR.normalise();
-
-        ClassHelpers.mVector cameraVector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
-        cameraVector.normalise();
-
-        cameraVector.rotateByQuaternion(rotationR);
-        cameraVector.normalise();
-
-        targetAngles = cameraVector.getEuler();
-        targetAngles[0] = angles[0];
-        targetAngles[1] += angles[1];
-        targetAngles[2] += angles[2];
-
-        ClassHelpers.mQuaternion phoneQ = new ClassHelpers.mQuaternion(phonePose.getRotationQuaternion());
-        phoneQ.multiply(rotationR);
-        phoneQ.normalise();
-
-        float targetX = phonePose.getTranslation()[0] + (float)Math.sin(targetAngles[2]);
-        float targetY = phonePose.getTranslation()[1] + (float)Math.sin(targetAngles[1]);
-        float targetZ = phonePose.getTranslation()[2] - 1.f;
-
-        metrics.updateTargetPosition(targetX, targetY, targetZ);
-
-        targetPose = new Pose(new float[] {targetX, targetY, targetZ}, phoneQ.getQuaternionAsFloat());
-        anchorTarget = session.createAnchor(targetPose);
-
-        Log.d(TAG, String.valueOf(action));
-        Log.d(TAG, "post: " + targetPose.toString());
-        Log.i(TAG, String.format("new target (post): %f %f %f", targetX, targetY, targetZ));
-
-        long[] curState = decodeState(encodeState(angles[1], angles[2], observation));
-        long[] nextState = decodeState(encodeState(targetY, targetX, targetObject));
-        Log.i(TAG, String.format("Current state: %d", encodeState(angles[1], angles[2], observation)));
-        Log.i(TAG, String.format("%d %d %d", curState[0], curState[1], curState[2]));
-        Log.i(TAG, String.format("Next state: %d", encodeState(targetY, targetX, targetObject)));
-        Log.i(TAG, String.format("%d %d %d", nextState[0], nextState[1], nextState[2]));
-
-        *//*callingActivity.runOnUiThread(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                String sAction = "";
-                if(action == 0)
-                {
-                    sAction = "up";
-                }
-                if(action == 1)
-                {
-                    sAction = "down";
-                }
-                if(action == 2)
-                {
-                    sAction = "left";
-                }
-                if(action == 3)
-                {
-                    sAction = "right";
-                }
-
-                Toast.makeText(callingActivity, sAction, Toast.LENGTH_SHORT).show();
-            }
-        });*/
     }
 
     public float getPitch(double tilt)
@@ -418,7 +303,6 @@ public class RunnableSoundGenerator implements Runnable
     public boolean isTargetFound() { return this.targetFound; }
     public Anchor getWaypointAnchor() { return this.waypointAnchor; }
     public long getTarget() { return this.target; }
-    public void setFrame(Frame frame) { this.frame = frame; }
 
     class Policy
     {
