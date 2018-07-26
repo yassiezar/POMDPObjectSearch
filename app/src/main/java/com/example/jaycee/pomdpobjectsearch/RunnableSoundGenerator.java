@@ -32,9 +32,10 @@ public class RunnableSoundGenerator implements Runnable
     private Activity callingActivity;
 
     private Pose phonePose;
-    private Pose targetPose;
-    private Anchor anchorTarget;
+    private Pose waypointPose;
+    private Anchor waypointAnchor;
     private Frame frame;
+    private Session session;
 
     private float[] targetAngles;
 
@@ -101,46 +102,66 @@ public class RunnableSoundGenerator implements Runnable
 
         // Get phone's current rotation angles and convert to pan/tilt angles
         // Start by rotating camera vector by quaternion (camera vector = -z)
-        ClassHelpers.mQuaternion phoneRotationQuaternion = new ClassHelpers.mQuaternion(phonePose.getRotationQuaternion());
-        phoneRotationQuaternion.normalise();
-        ClassHelpers.mVector cameraVector = new ClassHelpers.mVector(0.f, 0.f, -1.f);
-        cameraVector.rotateByQuaternion(phoneRotationQuaternion);
-        cameraVector.normalise();
+        float gain = 1.f;
+        if(observation == target)
+        {
+            Log.i(TAG, "Target found");
+            targetFound = true;
+            targetSet = false;
+            vibrator.vibrate(350);
+            gain = 0.f;
+        }
 
         // Get Euler angles from vector wrt axis system
         // pitch = tilt, yaw = pan
+        ClassHelpers.mVector cameraVector = getRotation(phonePose);
         float[] phoneRotationAngles = cameraVector.getEuler();
-        float pan = phoneRotationAngles[2];
-        float tilt = phoneRotationAngles[1];
-        long observation = this.observation;
+        float cameraPan = phoneRotationAngles[2];
+        float cameraTilt = phoneRotationAngles[1];
+        long cameraObservation = this.observation;
+        Log.i(TAG, phonePose.toString());
 
         // Get current state
-        long currentState = decodeState(pan, tilt, observation);
+        long currentState = decodeState(cameraPan, cameraTilt, cameraObservation);
         if(currentState != state)
         {
             state = currentState;
+            long action = policy.getAction(currentState);
+            waypointPose = getNewWaypoint(phonePose, action);
+            waypointAnchor = session.createAnchor(waypointPose);
         }
+        ClassHelpers.mVector waypointVector = getRotation(waypointPose);
+        float[] waypointRotationAngles = waypointVector.getEuler();
+        float waypointTilt = waypointRotationAngles[1];
+
+        JNIBridge.playSound(waypointPose.getTranslation(), phonePose.getTranslation(), gain, getPitch(cameraTilt - waypointTilt));
     }
 
     public void update(Camera camera, Session session)
     {
         phonePose = camera.getDisplayOrientedPose();
-        if(targetReached || observation != O_NOTHING)
-        {
-            targetReached = false;
-            setNewTarget(session);
-        }
+        metrics.writeWifi();
+        this.session = session;
 
         this.run();
-        metrics.writeWifi();
+    }
+
+    public ClassHelpers.mVector getRotation(Pose pose)
+    {
+        ClassHelpers.mQuaternion phoneRotationQuaternion = new ClassHelpers.mQuaternion(pose.getRotationQuaternion());
+        phoneRotationQuaternion.normalise();
+        ClassHelpers.mVector vector = new ClassHelpers.mVector(0.f, 0.f, -1.f);
+        vector.rotateByQuaternion(phoneRotationQuaternion);
+        vector.normalise();
+
+        return vector;
     }
 
     public long decodeState(float fpan, float ftilt, long obs)
     {
-        Log.d(TAG, String.format("Pan %f Tilt %f obs %d", fpan, ftilt, obs));
-
-        int pan = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(fpan) + 90) / ANGLE_INTERVAL);
-        int tilt = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(ftilt) + 90) / ANGLE_INTERVAL);
+        // Origin is top right, not bottom left
+        int pan = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(-fpan) + 90) / ANGLE_INTERVAL);
+        int tilt = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(-ftilt) + 90) / ANGLE_INTERVAL);
 
         long state = 0;
         long multiplier = 1;
@@ -178,8 +199,36 @@ public class RunnableSoundGenerator implements Runnable
         metrics.updateTarget(target);
     }
 
-    public void setNewTarget(Session session)
+    public Pose getNewWaypoint(Pose phonePose, long action)
     {
+        float[] wayPointTranslation = new float[3];
+
+        if(action == Policy.A_LEFT)
+        {
+            wayPointTranslation[0] = phonePose.getTranslation()[0] - 1.f*(float)Math.atan(Math.toRadians(ANGLE_INTERVAL));
+            wayPointTranslation[1] = phonePose.getTranslation()[1];
+        }
+        if(action == Policy.A_RIGHT)
+        {
+            wayPointTranslation[0] = phonePose.getTranslation()[0] + 1.f*(float)Math.atan(Math.toRadians(ANGLE_INTERVAL));
+            wayPointTranslation[1] = phonePose.getTranslation()[1];
+        }
+
+        if(action == Policy.A_UP)
+        {
+            wayPointTranslation[0] = phonePose.getTranslation()[0];
+            wayPointTranslation[1] = phonePose.getTranslation()[1] + 1.f*(float)Math.atan(Math.toRadians(ANGLE_INTERVAL));
+        }
+        if(action == Policy.A_UP)
+        {
+            wayPointTranslation[0] = phonePose.getTranslation()[0];
+            wayPointTranslation[1] = phonePose.getTranslation()[1] - 1.f*(float)Math.atan(Math.toRadians(ANGLE_INTERVAL));
+        }
+
+        wayPointTranslation[2] = phonePose.getTranslation()[2] - 1.f;
+
+        return new Pose(wayPointTranslation, phonePose.getRotationQuaternion());
+
 /*        ClassHelpers.mVector targetV = new ClassHelpers.mVector(0.f, 0.f, 1.f);
         targetV.normalise();
         targetV.rotateByQuaternion(phonePose.getRotationQuaternion());
@@ -367,7 +416,7 @@ public class RunnableSoundGenerator implements Runnable
 
     public boolean isTargetSet() { return this.targetSet; }
     public boolean isTargetFound() { return this.targetFound; }
-    public Anchor getTargetAnchor() { return this.anchorTarget; }
+    public Anchor getWaypointAnchor() { return this.waypointAnchor; }
     public long getTarget() { return this.target; }
     public void setFrame(Frame frame) { this.frame = frame; }
 

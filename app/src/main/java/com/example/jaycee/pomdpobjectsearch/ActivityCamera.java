@@ -355,7 +355,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             float scaleFactor = 1.f;
             if(camera.getTrackingState() == TrackingState.TRACKING)
             {
-                runnableSoundGenerator.getTargetAnchor().getPose().toMatrix(anchorMatrix, 0);
+                runnableSoundGenerator.getWaypointAnchor().getPose().toMatrix(anchorMatrix, 0);
 
                 objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
                 objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
