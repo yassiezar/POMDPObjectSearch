@@ -87,7 +87,7 @@ public class RunnableSoundGenerator implements Runnable
         long currentState = decodeState(cameraPan, cameraTilt, newCameraObservation);
         long[] currentStateArr = encodeState(currentState);
         long[] waypointArr = encodeState(waypointState);
-        Log.d(TAG, String.format("current pan %d tilt %d obs %d ", currentStateArr[0], currentStateArr[1], currentStateArr[2]));
+        Log.i(TAG, String.format("current pan %d tilt %d obs %d ", currentStateArr[0], currentStateArr[1], currentStateArr[2]));
         Log.d(TAG, String.format("waypoint pan %d tilt %d obs %d", waypointArr[0], waypointArr[1], waypointArr[2]));
         Log.i(TAG, String.format("Current state %d Waypoint state %d", currentState, waypointState));
         if(equalPositionState(currentState, waypointState) || newCameraObservation != prevCameraObservation)
@@ -349,7 +349,6 @@ public class RunnableSoundGenerator implements Runnable
         private static final int A_DOWN = 1;
         private static final int A_LEFT = 2;
         private static final int A_RIGHT = 3;
-
 
         private String fileName = "MDPPolicies/sarsa_";
 
