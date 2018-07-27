@@ -18,7 +18,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -347,7 +349,8 @@ public class RunnableSoundGenerator implements Runnable
 
         private String fileName = "MDPPolicies/sarsa_";
 
-        private SparseIntArray policy = new SparseIntArray();
+        // private SparseIntArray policy = new SparseIntArray();
+        private Map<Long, ArrayList<Long>> policy = new HashMap<>();
 
         public Policy(int target)
         {
@@ -373,24 +376,19 @@ public class RunnableSoundGenerator implements Runnable
                 String line;
                 while ((line = reader.readLine()) != null)
                 {
+                    // Save all non-zero prob actions into a hashmap to sample from later
                     Matcher matcher = pattern.matcher(line);
                     if(matcher.find())
                     {
-                        Log.i(TAG, matcher.group());
+                        if(Double.valueOf(matcher.group(3)) > 0.0)
+                        {
+                            long state = Long.valueOf(matcher.group(1));
+                            long action = Long.valueOf(matcher.group(2));
+
+                            policy.putIfAbsent(state, new ArrayList<Long>());
+                            policy.get(state).add(action);
+                        }
                     }
-
-                    /* TODO: take regex matches and place action into dict. Sample randomly if prob is not 1.0 */
-
-                    int space1 = line.indexOf('\t');
-                    int space2 = line.indexOf('\t', space1 + 1);
-
-                    if(line.charAt(space2 + 1) != '1')
-                    { }
-
-                    int key = Integer.parseInt(line.substring(0, space1));
-                    int value = Integer.parseInt(line.substring(space1+1, space2));
-
-                    policy.put(key, value);
                 }
             }
             catch (IOException e)
@@ -413,9 +411,14 @@ public class RunnableSoundGenerator implements Runnable
             }
         }
 
-        public int getAction(long state)
+        public long getAction(long state)
         {
-            return policy.get((int)state);
+            Random rand = new Random();
+
+            int nActions = policy.get(state).size();
+            long action = policy.get(state).get(rand.nextInt(nActions-1));
+
+            return action;
         }
     }
 }
