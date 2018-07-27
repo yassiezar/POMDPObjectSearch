@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 public class RunnableSoundGenerator implements Runnable
 {
     private static final String TAG = RunnableSoundGenerator.class.getSimpleName();
-    private static final long ANGLE_INTERVAL = 30;
+    private static final long ANGLE_INTERVAL = 15;
     private static final long GRID_SIZE = 12;
 
     private static final int O_NOTHING = 0;
@@ -85,11 +85,15 @@ public class RunnableSoundGenerator implements Runnable
 
         // Get current state and generate new waypoint if agent is in new state or sees new object
         long currentState = decodeState(cameraPan, cameraTilt, newCameraObservation);
-        Log.d(TAG, String.format("current state %d waypoint state %d", currentState, waypointState));
+        long[] currentStateArr = encodeState(currentState);
+        long[] waypointArr = encodeState(waypointState);
+        Log.d(TAG, String.format("current pan %d tilt %d obs %d ", currentStateArr[0], currentStateArr[1], currentStateArr[2]));
+        Log.d(TAG, String.format("waypoint pan %d tilt %d obs %d", waypointArr[0], waypointArr[1], waypointArr[2]));
+        Log.i(TAG, String.format("Current state %d Waypoint state %d", currentState, waypointState));
         if(equalPositionState(currentState, waypointState) || newCameraObservation != prevCameraObservation)
         {
             long action = policy.getAction(currentState);
-            Log.d(TAG, String.format("Object found or found waypoint, action: %d", action));
+            Log.i(TAG, String.format("Object found or found waypoint, action: %d", action));
             waypointPose = getNewWaypoint(phonePose, currentState, action);
             waypointAnchor = session.createAnchor(waypointPose);
             prevCameraObservation = newCameraObservation;
@@ -349,7 +353,6 @@ public class RunnableSoundGenerator implements Runnable
 
         private String fileName = "MDPPolicies/sarsa_";
 
-        // private SparseIntArray policy = new SparseIntArray();
         private Map<Long, ArrayList<Long>> policy = new HashMap<>();
 
         public Policy(int target)
