@@ -3,7 +3,6 @@ package com.example.jaycee.pomdpobjectsearch;
 import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Camera;
-import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 
@@ -11,7 +10,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Vibrator;
 import android.util.Log;
-import android.util.SparseIntArray;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -19,7 +17,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -28,7 +25,7 @@ import java.util.regex.Pattern;
 public class RunnableSoundGenerator implements Runnable
 {
     private static final String TAG = RunnableSoundGenerator.class.getSimpleName();
-    private static final long ANGLE_INTERVAL = 15;
+    private static final long ANGLE_INTERVAL = 30;
     private static final long GRID_SIZE = 12;
 
     private static final int O_NOTHING = 0;
@@ -131,8 +128,10 @@ public class RunnableSoundGenerator implements Runnable
     public long decodeState(float fpan, float ftilt, long obs)
     {
         // Origin is top right, not bottom left
-        int pan = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(-fpan) + 90+ANGLE_INTERVAL) / ANGLE_INTERVAL);
-        int tilt = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(-ftilt) + 90+ANGLE_INTERVAL) / ANGLE_INTERVAL);
+        // int pan = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(-fpan) + 90+ANGLE_INTERVAL) / ANGLE_INTERVAL);
+        // int tilt = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(-ftilt) + 90+ANGLE_INTERVAL) / ANGLE_INTERVAL);
+        int pan = (int)(-Math.round(Math.toDegrees(-fpan) / ANGLE_INTERVAL) + GRID_SIZE/2 - 1);
+        int tilt = (int)(-Math.round(Math.toDegrees(-ftilt) / ANGLE_INTERVAL) + GRID_SIZE/2 - 1);
 
         long state = 0;
         long multiplier = 1;
