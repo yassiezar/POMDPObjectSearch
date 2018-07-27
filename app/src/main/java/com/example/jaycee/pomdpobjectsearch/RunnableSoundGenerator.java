@@ -416,9 +416,7 @@ public class RunnableSoundGenerator implements Runnable
             Random rand = new Random();
 
             int nActions = policy.get(state).size();
-            long action = policy.get(state).get(rand.nextInt(nActions-1));
-
-            return action;
+            return policy.get(state).get(rand.nextInt(nActions));
         }
     }
 }
