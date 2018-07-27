@@ -87,7 +87,8 @@ public class RunnableSoundGenerator implements Runnable
         long currentState = decodeState(cameraPan, cameraTilt, newCameraObservation);
         long[] currentStateArr = encodeState(currentState);
         long[] waypointArr = encodeState(waypointState);
-        Log.d(TAG, String.format("current pan %d tilt %d obs %d ", currentStateArr[0], currentStateArr[1], currentStateArr[2]));
+        Log.i(TAG, String.format("current pan %d tilt %d obs %d ", currentStateArr[0], currentStateArr[1], currentStateArr[2]));
+        Log.i(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
         Log.d(TAG, String.format("waypoint pan %d tilt %d obs %d", waypointArr[0], waypointArr[1], waypointArr[2]));
         Log.i(TAG, String.format("Current state %d Waypoint state %d", currentState, waypointState));
         if(equalPositionState(currentState, waypointState) || newCameraObservation != prevCameraObservation)
@@ -130,8 +131,8 @@ public class RunnableSoundGenerator implements Runnable
     public long decodeState(float fpan, float ftilt, long obs)
     {
         // Origin is top right, not bottom left
-        int pan = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(-fpan) + 90) / ANGLE_INTERVAL);
-        int tilt = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(-ftilt) + 90) / ANGLE_INTERVAL);
+        int pan = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(-fpan) + 90+ANGLE_INTERVAL) / ANGLE_INTERVAL);
+        int tilt = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(-ftilt) + 90+ANGLE_INTERVAL) / ANGLE_INTERVAL);
 
         long state = 0;
         long multiplier = 1;
