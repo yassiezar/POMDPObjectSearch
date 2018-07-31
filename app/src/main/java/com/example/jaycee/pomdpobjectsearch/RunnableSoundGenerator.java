@@ -85,11 +85,10 @@ public class RunnableSoundGenerator implements Runnable
         long currentState = decodeState(cameraPan, cameraTilt, newCameraObservation);
         long[] currentStateArr = encodeState(currentState);
         long[] waypointArr = encodeState(waypointState);
-        Log.i(TAG, String.format("current pan %d tilt %d obs %d ", currentStateArr[0], currentStateArr[1], currentStateArr[2]));
-        Log.i(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
-        Log.d(TAG, String.format("waypoint pan %d tilt %d obs %d", waypointArr[0], waypointArr[1], waypointArr[2]));
-        Log.i(TAG, String.format("Current state %d Waypoint state %d", currentState, waypointState));
-        if(equalPositionState(currentState, waypointState) || newCameraObservation != prevCameraObservation)
+        Log.d(TAG, String.format("current pan %d tilt %d obs %d ", currentStateArr[0], currentStateArr[1], currentStateArr[2]));
+        Log.d(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
+        Log.d(TAG, String.format("Current state %d Waypoint state %d", currentState, waypointState));
+        if(equalPositionState(currentState, waypointState) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
         {
             long action = policy.getAction(currentState);
             Log.i(TAG, String.format("Object found or found waypoint, action: %d", action));
@@ -101,7 +100,10 @@ public class RunnableSoundGenerator implements Runnable
         float[] waypointRotationAngles = waypointVector.getEuler();
         float waypointTilt = waypointRotationAngles[1];
 
-        JNIBridge.playSound(waypointPose.getTranslation(), phonePose.getTranslation(), gain, getPitch(cameraTilt - waypointTilt));
+        // float tiltRequired = (float)Math.atan2(cameraVector.y - waypointVector.y, cameraVector.z - waypointVector.z);
+        // Log.i(TAG, String.format("Tilt required %f", tiltRequired));
+
+        JNIBridge.playSound(waypointPose.getTranslation(), phonePose.getTranslation(), gain, getPitch(waypointTilt - cameraTilt));
     }
 
     public void update(Camera camera, Session session)
@@ -132,7 +134,6 @@ public class RunnableSoundGenerator implements Runnable
 
         vector.x -= offsetVector.x;
         vector.y -= offsetVector.y;
-        // vector.z -= offsetVector.z;
 
         return vector;
     }
@@ -140,8 +141,6 @@ public class RunnableSoundGenerator implements Runnable
     public long decodeState(float fpan, float ftilt, long obs)
     {
         // Origin is top right, not bottom left
-        // int pan = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(-fpan) + 90+ANGLE_INTERVAL) / ANGLE_INTERVAL);
-        // int tilt = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(-ftilt) + 90+ANGLE_INTERVAL) / ANGLE_INTERVAL);
         int pan = (int)(-Math.round(Math.toDegrees(-fpan) / ANGLE_INTERVAL) + GRID_SIZE/2 - 1);
         int tilt = (int)(-Math.round(Math.toDegrees(-ftilt) / ANGLE_INTERVAL) + GRID_SIZE/2 - 1);
 
