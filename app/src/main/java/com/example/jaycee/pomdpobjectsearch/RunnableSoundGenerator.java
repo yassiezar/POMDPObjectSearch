@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 public class RunnableSoundGenerator implements Runnable
 {
     private static final String TAG = RunnableSoundGenerator.class.getSimpleName();
-    private static final long ANGLE_INTERVAL = 30;
+    private static final long ANGLE_INTERVAL = 12;
     private static final long GRID_SIZE = 12;
 
     private static final int O_NOTHING = 0;
