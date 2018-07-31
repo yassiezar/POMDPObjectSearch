@@ -164,6 +164,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                         break;
                 }
 
+                runnableSoundGenerator.setOffsetPose(frame.getAndroidSensorPose());
                 item.setCheckable(true);
 
                 drawerLayout.closeDrawers();
@@ -362,7 +363,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             }
             else
             {
-                Log.w(TAG, "Camera not tracking or target not set. ");
+                Log.w(TAG, "Camera not tracking or target not set       . ");
             }
 
             // Compute lighting from average intensity of the image.
