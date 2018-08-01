@@ -32,6 +32,7 @@ public class RunnableSoundGenerator implements Runnable
     private static final long GRID_SIZE = 12;
 
     private static final int O_NOTHING = 0;
+    private static final int O_DESK = 11;
 
     private Activity callingActivity;
 
@@ -46,7 +47,7 @@ public class RunnableSoundGenerator implements Runnable
     private long observation = O_NOTHING;
     private long prevCameraObservation = O_NOTHING;
     private long target = -1;
-    private long waypointState = decodeState(6, 6, O_NOTHING);
+    private long waypointState = decodeState(6, 6, O_DESK);
 
     private Policy policy;
 
@@ -205,34 +206,26 @@ public class RunnableSoundGenerator implements Runnable
         if(action == Policy.A_LEFT)
         {
             wayPointTranslation[0] = waypointVector.x - 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
-            //wayPointTranslation[0] = phonePose.getTranslation()[0] - 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
-            //wayPointTranslation[1] = phonePose.getTranslation()[1];
             wayPointTranslation[1] = waypointVector.y;
             state[0] += 1;
         }
         if(action == Policy.A_RIGHT)
         {
             wayPointTranslation[0] = waypointVector.x + 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
-            //wayPointTranslation[0] = phonePose.getTranslation()[0] + 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
-            //wayPointTranslation[1] = phonePose.getTranslation()[1];
             wayPointTranslation[1] = waypointVector.y;
             state[0] -= 1;
         }
 
         if(action == Policy.A_UP)
         {
-            //wayPointTranslation[0] = phonePose.getTranslation()[0];
             wayPointTranslation[0] = waypointVector.x;
             wayPointTranslation[1] = waypointVector.y + 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
-            //wayPointTranslation[1] = phonePose.getTranslation()[1] + 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
             state[1] -= 1;
         }
         if(action == Policy.A_DOWN)
         {
-            //wayPointTranslation[0] = phonePose.getTranslation()[0];
             wayPointTranslation[0] = waypointVector.x;
             wayPointTranslation[1] = waypointVector.y - 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
-            //wayPointTranslation[1] = phonePose.getTranslation()[1] - 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
             state[1] += 1;
         }
 
@@ -287,7 +280,7 @@ public class RunnableSoundGenerator implements Runnable
                 @Override
                 public void run()
                 {
-                    String val = "";
+                    String val;
                     if(observation == 13)
                     {
                         val = "Door handle";
@@ -336,8 +329,8 @@ public class RunnableSoundGenerator implements Runnable
 
     public boolean isTargetSet() { return this.targetSet; }
     public boolean isTargetFound() { return this.targetFound; }
-    public Anchor getWaypointAnchor() { return this.waypointAnchor; }
     public long getTarget() { return this.target; }
+    public Anchor getWaypointAnchor() { return this.waypointAnchor; }
 
     class Policy
     {
@@ -372,6 +365,7 @@ public class RunnableSoundGenerator implements Runnable
             BufferedReader reader = null;
             try
             {
+                // Extract policy state-action pairs from text file using regex
                 Pattern pattern = Pattern.compile("(\\d+)\\s(\\d)\\s(1.0|0.25)");
                 reader = new BufferedReader(new InputStreamReader(callingActivity.getResources().getAssets().open(fileName)));
 
@@ -415,6 +409,7 @@ public class RunnableSoundGenerator implements Runnable
 
         public long getAction(long state)
         {
+            // Draw random action from action set from policy
             Random rand = new Random();
 
             int nActions = policy.get(state).size();
