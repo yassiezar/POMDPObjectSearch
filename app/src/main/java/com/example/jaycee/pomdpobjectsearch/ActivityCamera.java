@@ -61,14 +61,6 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     private static final int T_LAPTOP = 18;
     private static final int T_CHAIR = 8;
 
-    private static final int T_KETTLE = 24;
-    private static final int T_REFRIGERATOR = 35;
-    private static final int T_MICROWAVE = 29;
-
-    private static final int T_SINK = 37;
-    private static final int T_TOILET = 41;
-    private static final int T_HAND_DRYER = 23;
-
     private Session session;
     private Frame frame;
 
@@ -124,14 +116,18 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                         if(!drawObjects)
                         {
                             Log.i(TAG, "Pressed");
-                            try {
+                            try
+                            {
                                 Pose devicePose = frame.getAndroidSensorPose();
 
-                                for (ARObject object : objectList) {
+                                for (ARObject object : objectList)
+                                {
                                     object.getRotatedObject(devicePose);
                                     session.createAnchor(object.getRotatedPose());
                                 }
-                            } catch (Exception e) {
+                            }
+                            catch (Exception e)
+                            {
                                 Log.e(TAG, "Exception on adding AR anchors: " + e);
                             }
                             drawObjects = true;
@@ -299,7 +295,8 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         try
         {
             backgroundRenderer.createOnGlThread(this);
-            objectRenderer.createOnGlThread(this, "models/andy.obj", "models/andy.png");
+            //objectRenderer.createOnGlThread(this, "models/andy.obj", "models/andy.png");
+            objectRenderer.createOnGlThread(this, "models/ball/soccer_ball.obj", "models/ball/PlatonicSurface_Color.jpg");
             objectRenderer.setMaterialProperties(0.f, 2.f, 0.5f, 6.f);
         }
         catch(IOException e)
