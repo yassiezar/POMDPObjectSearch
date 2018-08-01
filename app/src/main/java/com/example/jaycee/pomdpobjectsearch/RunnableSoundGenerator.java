@@ -29,6 +29,7 @@ public class RunnableSoundGenerator implements Runnable
     private static final long GRID_SIZE = 12;
 
     private static final int O_NOTHING = 0;
+    private static final int O_DESK = 11;
 
     private Activity callingActivity;
 
@@ -44,7 +45,7 @@ public class RunnableSoundGenerator implements Runnable
     private long observation = O_NOTHING;
     private long prevCameraObservation = O_NOTHING;
     private long target = -1;
-    private long waypointState = decodeState(6, 6, O_NOTHING);
+    private long waypointState = decodeState(6, 6, O_DESK);
 
     private Policy policy;
 
@@ -290,7 +291,7 @@ public class RunnableSoundGenerator implements Runnable
                 @Override
                 public void run()
                 {
-                    String val = "";
+                    String val;
                     if(observation == 13)
                     {
                         val = "Door handle";
@@ -340,8 +341,8 @@ public class RunnableSoundGenerator implements Runnable
     public void setOffsetPose(Pose pose) { this.offsetPose = pose; }
     public boolean isTargetSet() { return this.targetSet; }
     public boolean isTargetFound() { return this.targetFound; }
-    public Anchor getWaypointAnchor() { return this.waypointAnchor; }
     public long getTarget() { return this.target; }
+    public Anchor getWaypointAnchor() { return this.waypointAnchor; }
 
     class Policy
     {
@@ -353,7 +354,6 @@ public class RunnableSoundGenerator implements Runnable
         private static final int A_DOWN = 1;
         private static final int A_LEFT = 2;
         private static final int A_RIGHT = 3;
-
 
         private String fileName = "MDPPolicies/sarsa_";
 
@@ -377,6 +377,7 @@ public class RunnableSoundGenerator implements Runnable
             BufferedReader reader = null;
             try
             {
+                // Extract policy state-action pairs from text file using regex
                 Pattern pattern = Pattern.compile("(\\d+)\\s(\\d)\\s(1.0|0.25)");
                 reader = new BufferedReader(new InputStreamReader(callingActivity.getResources().getAssets().open(fileName)));
 
@@ -420,6 +421,7 @@ public class RunnableSoundGenerator implements Runnable
 
         public long getAction(long state)
         {
+            // Draw random action from action set from policy
             Random rand = new Random();
 
             int nActions = policy.get(state).size();
