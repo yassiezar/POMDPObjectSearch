@@ -30,6 +30,7 @@ public class RunnableSoundGenerator implements Runnable
 
     private static final int O_NOTHING = 0;
     private static final int O_DESK = 11;
+    private static final int O_KEYBOARD = 6;
 
     private Activity callingActivity;
 
@@ -45,13 +46,14 @@ public class RunnableSoundGenerator implements Runnable
     private long observation = O_NOTHING;
     private long prevCameraObservation = O_NOTHING;
     private long target = -1;
-    private long waypointState = decodeState(6, 6, O_DESK);
+    private long waypointState = decodeState(5, 5, O_KEYBOARD);
 
     private Policy policy;
 
     private ClassMetrics metrics = new ClassMetrics();
 
     private Vibrator vibrator;
+    private Toast toast;
 
     public RunnableSoundGenerator(Activity callingActivity)
     {
@@ -85,11 +87,11 @@ public class RunnableSoundGenerator implements Runnable
         // Get current state and generate new waypoint if agent is in new state or sees new object
         long currentState = decodeState(cameraPan, cameraTilt, newCameraObservation);
         long[] currentStateArr = encodeState(currentState);
-        long[] waypointArr = encodeState(waypointState);
+        //long[] waypointArr = encodeState(waypointState);
         Log.d(TAG, String.format("current pan %d tilt %d obs %d ", currentStateArr[0], currentStateArr[1], currentStateArr[2]));
         Log.d(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
-        Log.d(TAG, String.format("Current state %d Waypoint state %d", currentState, waypointState));
-        if(equalPositionState(currentState, waypointState) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
+        Log.i(TAG, String.format("Current state %d Waypoint state %d", currentState, waypointState));
+        if(equalPositionState(currentState, waypointState) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING && newCameraObservation != currentStateArr[2]))
         {
             long action = policy.getAction(currentState);
             Log.i(TAG, String.format("Object found or found waypoint, action: %d", action));
@@ -332,7 +334,13 @@ public class RunnableSoundGenerator implements Runnable
                     {
                         val = "Unknown";
                     }
-                    Toast.makeText(callingActivity, val, Toast.LENGTH_SHORT).show();
+
+                    if(toast != null)
+                    {
+                        toast.cancel();
+                    }
+                    toast = Toast.makeText(callingActivity, val, Toast.LENGTH_SHORT);
+                    toast.show();
                 }
             });
         }
