@@ -163,5 +163,10 @@ public class ClassHelpers
 
             return new float[] {(float)roll, (float)pitch, (float)yaw};
         }
+
+        public float[] asFloat()
+        {
+            return new float[] {-this.x, this.y, this.z};
+        }
     }
 }

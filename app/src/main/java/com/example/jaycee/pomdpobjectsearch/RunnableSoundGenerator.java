@@ -103,7 +103,7 @@ public class RunnableSoundGenerator implements Runnable
         // float tiltRequired = (float)Math.atan2(cameraVector.y - waypointVector.y, cameraVector.z - waypointVector.z);
         // Log.i(TAG, String.format("Tilt required %f", tiltRequired));
 
-        JNIBridge.playSound(waypointPose.getTranslation(), phonePose.getTranslation(), gain, getPitch(waypointTilt - cameraTilt));
+        JNIBridge.playSound(waypointPose.getTranslation(), cameraVector.asFloat(), gain, getPitch(waypointTilt - cameraTilt));
     }
 
     public void update(Camera camera, Session session)
