@@ -100,6 +100,13 @@ public class ClassHelpers
             this.z = z;
         }
 
+        public mVector(float[] centre)
+        {
+            this.x = centre[0];
+            this.y = centre[1];
+            this.z = centre[2];
+        }
+
         public void rotateByQuaternion(mQuaternion q)
         {
             float x = (1 - 2 * q.y * q.y - 2 * q.z * q.z) * this.x +

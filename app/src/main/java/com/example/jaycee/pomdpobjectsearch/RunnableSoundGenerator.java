@@ -3,7 +3,6 @@ package com.example.jaycee.pomdpobjectsearch;
 import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Camera;
-import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 
@@ -11,7 +10,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Vibrator;
 import android.util.Log;
-import android.util.SparseIntArray;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -19,7 +17,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -38,6 +35,7 @@ public class RunnableSoundGenerator implements Runnable
 
     private Pose phonePose;
     private Pose waypointPose;
+    private Pose offsetPose;
     private Anchor waypointAnchor;
     private Session session;
 
@@ -88,10 +86,10 @@ public class RunnableSoundGenerator implements Runnable
         long currentState = decodeState(cameraPan, cameraTilt, newCameraObservation);
         long[] currentStateArr = encodeState(currentState);
         long[] waypointArr = encodeState(waypointState);
-        Log.i(TAG, String.format("current pan %d tilt %d obs %d ", currentStateArr[0], currentStateArr[1], currentStateArr[2]));
-        Log.d(TAG, String.format("waypoint pan %d tilt %d obs %d", waypointArr[0], waypointArr[1], waypointArr[2]));
-        Log.i(TAG, String.format("Current state %d Waypoint state %d", currentState, waypointState));
-        if(equalPositionState(currentState, waypointState) || newCameraObservation != prevCameraObservation)
+        Log.d(TAG, String.format("current pan %d tilt %d obs %d ", currentStateArr[0], currentStateArr[1], currentStateArr[2]));
+        Log.d(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
+        Log.d(TAG, String.format("Current state %d Waypoint state %d", currentState, waypointState));
+        if(equalPositionState(currentState, waypointState) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
         {
             long action = policy.getAction(currentState);
             Log.i(TAG, String.format("Object found or found waypoint, action: %d", action));
@@ -103,7 +101,10 @@ public class RunnableSoundGenerator implements Runnable
         float[] waypointRotationAngles = waypointVector.getEuler();
         float waypointTilt = waypointRotationAngles[1];
 
-        JNIBridge.playSound(waypointPose.getTranslation(), phonePose.getTranslation(), gain, getPitch(cameraTilt - waypointTilt));
+        // float tiltRequired = (float)Math.atan2(cameraVector.y - waypointVector.y, cameraVector.z - waypointVector.z);
+        // Log.i(TAG, String.format("Tilt required %f", tiltRequired));
+
+        JNIBridge.playSound(waypointPose.getTranslation(), phonePose.getTranslation(), gain, getPitch(waypointTilt - cameraTilt));
     }
 
     public void update(Camera camera, Session session)
@@ -125,14 +126,24 @@ public class RunnableSoundGenerator implements Runnable
         vector.rotateByQuaternion(phoneRotationQuaternion);
         vector.normalise();
 
+        // Add initial offset pose
+        ClassHelpers.mQuaternion offsetRotationQuaternion = new ClassHelpers.mQuaternion(offsetPose.getRotationQuaternion());
+        offsetRotationQuaternion.normalise();
+        ClassHelpers.mVector offsetVector = new ClassHelpers.mVector(0.f, 0.f, -1.f);
+        offsetVector.rotateByQuaternion(offsetRotationQuaternion);
+        offsetVector.normalise();
+
+        vector.x -= offsetVector.x;
+        vector.y -= offsetVector.y;
+
         return vector;
     }
 
     public long decodeState(float fpan, float ftilt, long obs)
     {
         // Origin is top right, not bottom left
-        int pan = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(-fpan) + 90) / ANGLE_INTERVAL);
-        int tilt = (int)(GRID_SIZE - (int)Math.round(Math.toDegrees(-ftilt) + 90) / ANGLE_INTERVAL);
+        int pan = (int)(-Math.round(Math.toDegrees(-fpan) / ANGLE_INTERVAL) + GRID_SIZE/2 - 1);
+        int tilt = (int)(-Math.round(Math.toDegrees(-ftilt) / ANGLE_INTERVAL) + GRID_SIZE/2 - 1);
 
         long state = 0;
         long multiplier = 1;
@@ -327,6 +338,7 @@ public class RunnableSoundGenerator implements Runnable
         }
     }
 
+    public void setOffsetPose(Pose pose) { this.offsetPose = pose; }
     public boolean isTargetSet() { return this.targetSet; }
     public boolean isTargetFound() { return this.targetFound; }
     public long getTarget() { return this.target; }

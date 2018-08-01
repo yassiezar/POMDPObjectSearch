@@ -19,6 +19,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
@@ -31,6 +32,7 @@ import com.google.android.gms.vision.barcode.BarcodeDetector;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Frame;
+import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
@@ -68,6 +70,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     private static final int T_HAND_DRYER = 23;
 
     private Session session;
+    private Frame frame;
 
     private GLSurfaceView surfaceView;
     private View scannerView;
@@ -80,8 +83,11 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
 
     private RunnableSoundGenerator runnableSoundGenerator;
 
+    private ArrayList<ARObject> objectList;
+
     private boolean requestARCoreInstall = true;
     private boolean viewportChanged = false;
+    private boolean drawObjects = false;
 
     private int width, height;
 
@@ -106,6 +112,36 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         surfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
         surfaceView.setRenderer(this);
         surfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+        surfaceView.setOnTouchListener(new View.OnTouchListener()
+        {
+            @Override
+            public boolean onTouch(View v, MotionEvent event)
+            {
+                switch(event.getAction())
+                {
+                    case (MotionEvent.ACTION_DOWN):
+                    {
+                        if(!drawObjects)
+                        {
+                            Log.i(TAG, "Pressed");
+                            try {
+                                Pose devicePose = frame.getAndroidSensorPose();
+
+                                for (ARObject object : objectList) {
+                                    object.getRotatedObject(devicePose);
+                                    session.createAnchor(object.getRotatedPose());
+                                }
+                            } catch (Exception e) {
+                                Log.e(TAG, "Exception on adding AR anchors: " + e);
+                            }
+                            drawObjects = true;
+                        }
+                        else drawObjects = false;
+                    }
+                }
+                return true;
+            }
+        });
 
         drawerLayout = findViewById(R.id.layout_drawer_objects);
         NavigationView navigationView = findViewById(R.id.navigation_view_objects);
@@ -126,28 +162,9 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                     case R.id.item_object_chair:
                         runnableSoundGenerator.setTarget(T_CHAIR);
                         break;
-
-                    case R.id.item_object_kettle:
-                        runnableSoundGenerator.setTarget(T_KETTLE);
-                        break;
-                    case R.id.item_object_refrigerator:
-                        runnableSoundGenerator.setTarget(T_REFRIGERATOR);
-                        break;
-                    case R.id.item_object_microwave:
-                        runnableSoundGenerator.setTarget(T_MICROWAVE);
-                        break;
-
-                    case R.id.item_object_sink:
-                        runnableSoundGenerator.setTarget(T_SINK);
-                        break;
-                    case R.id.item_object_hand_dryer:
-                        runnableSoundGenerator.setTarget(T_HAND_DRYER);
-                        break;
-                    case R.id.item_object_toilet:
-                        runnableSoundGenerator.setTarget(T_TOILET);
-                        break;
                 }
 
+                runnableSoundGenerator.setOffsetPose(frame.getAndroidSensorPose());
                 item.setCheckable(true);
 
                 drawerLayout.closeDrawers();
@@ -160,6 +177,38 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
 
         detector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.ALL_FORMATS).build();
         runnableSoundGenerator = new RunnableSoundGenerator(this);
+
+        // Create and add objects to list
+        objectList = new ArrayList<>();
+
+        objectList.add(new ARObject(0, 3, "Door"));
+        objectList.add(new ARObject(1, 3, "Door"));
+        objectList.add(new ARObject(5, 3, "Window"));
+        objectList.add(new ARObject(6, 3, "Window"));
+        objectList.add(new ARObject(10, 3, "Door"));
+        objectList.add(new ARObject(11, 3, "Door"));
+
+        objectList.add(new ARObject(0, 4, "Door Handle"));
+        objectList.add(new ARObject(1, 4, "Door Handle"));
+        objectList.add(new ARObject(5, 4, "Monitor"));
+        objectList.add(new ARObject(6, 4, "Monitor"));
+        objectList.add(new ARObject(8, 4, "Bookcase"));
+        objectList.add(new ARObject(9, 4, "Bookcase"));
+        objectList.add(new ARObject(10, 4, "Door Handle"));
+        objectList.add(new ARObject(11, 4, "Door Handle"));
+
+        objectList.add(new ARObject(0,5, "Chair"));
+        objectList.add(new ARObject(3,5, "Mouse"));
+        objectList.add(new ARObject(4,5, "Mug"));
+        objectList.add(new ARObject(5,5, "Keyboard"));
+        objectList.add(new ARObject(6,5, "Laptop"));
+        objectList.add(new ARObject(7,5, "Office Supplies"));
+        objectList.add(new ARObject(8,5, "Book"));
+        objectList.add(new ARObject(9,5, "Book"));
+        objectList.add(new ARObject(11,5, "Chair"));
+
+        objectList.add(new ARObject(5, 6, "Table"));
+        objectList.add(new ARObject(6, 6, "Desk"));
     }
 
     @Override
@@ -295,7 +344,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         session.setCameraTextureName(backgroundRenderer.getTextureId());
         try
         {
-            Frame frame = session.update();
+            frame = session.update();
             Camera camera = frame.getCamera();
 
             backgroundRenderer.draw(frame);
@@ -314,7 +363,25 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             }
             else
             {
-                Log.w(TAG, "Camera not tracking. ");
+                Log.w(TAG, "Camera not tracking or target not set       . ");
+            }
+
+            // Compute lighting from average intensity of the image.
+            // The first three components are color scaling factors.
+            // The last one is the average pixel intensity in gamma space.
+            final float[] colourCorrectionRgba = new float[4];
+            frame.getLightEstimate().getColorCorrection(colourCorrectionRgba, 0);
+
+            float scaleFactor = 1.f;
+
+            if(camera.getTrackingState() == TrackingState.TRACKING && drawObjects)
+            {
+                for(ARObject object : objectList)
+                {
+                    object.getRotatedPose().toMatrix(anchorMatrix, 0);
+                    objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
+                    objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
+                }
             }
 
             if(runnableSoundGenerator.isTargetSet())
@@ -344,13 +411,6 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                     runnableSoundGenerator.setObservation(O_NOTHING);
                 }
 
-                // Compute lighting from average intensity of the image.
-                // The first three components are color scaling factors.
-                // The last one is the average pixel intensity in gamma space.
-                final float[] colourCorrectionRgba = new float[4];
-                frame.getLightEstimate().getColorCorrection(colourCorrectionRgba, 0);
-
-                float scaleFactor = 1.f;
                 if(camera.getTrackingState() == TrackingState.TRACKING)
                 {
                     runnableSoundGenerator.getWaypointAnchor().getPose().toMatrix(anchorMatrix, 0);
