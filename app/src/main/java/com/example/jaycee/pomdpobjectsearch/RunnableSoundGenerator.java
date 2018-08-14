@@ -31,14 +31,11 @@ public class RunnableSoundGenerator implements Runnable
     private static final int O_DESK = 11;
     private static final int O_LAPTOP = 5;
 
-    private static final int NUM_OBJECTS = 9;
-    private static final int MAX_STEPS = 10;
-    private static final int HISTORY_LEN = 256;
 
     private Activity callingActivity;
 
     private Pose phonePose;
-    private Pose waypointPose;
+    private Waypoint waypoint = new Waypoint();
     private Pose offsetPose;
     private Anchor waypointAnchor;
     private Session session;
@@ -46,17 +43,14 @@ public class RunnableSoundGenerator implements Runnable
     private boolean targetSet = false;
     private boolean targetFound = false;
 
-    private long[] historyObservations = new long[256];
     private long observation = O_NOTHING;
     private long prevCameraObservation = O_NOTHING;
-    private long steps = 0;
-    private long history = 1;
     private long target = -1;
-    private long waypointState = decodeState(0, 0, 0);                     /* TODO: Set proper intital condition */
 
     private Policy policy;
 
     private ClassMetrics metrics = new ClassMetrics();
+    private State state = new State();
 
     private Vibrator vibrator;
     private Toast toast;
@@ -65,7 +59,6 @@ public class RunnableSoundGenerator implements Runnable
     {
         this.callingActivity = callingActivity;
         this.vibrator= (Vibrator)callingActivity.getSystemService(Context.VIBRATOR_SERVICE);
-        waypointPose = new Pose(new float[] {0.f, 0.f, -1.f}, new float[] {0.f, 0.f, 0.f, 1.f});
     }
 
     @Override
@@ -91,30 +84,27 @@ public class RunnableSoundGenerator implements Runnable
         long newCameraObservation = this.observation;
 
         // Get current state and generate new waypoint if agent is in new state or sees new object
-        long currentState = decodeState(newCameraObservation, steps, history);
-        long[] currentStateArr = encodeState(currentState);
+        //long[] currentStateArr = state.getEncodedState();
         //long[] waypointArr = encodeState(waypointState);
-        Log.i(TAG, String.format("current pan %d tilt %d obs %d ", currentStateArr[0], currentStateArr[1], currentStateArr[2]));
+        //Log.i(TAG, String.format("current pan %d tilt %d obs %d ", currentStateArr[0], currentStateArr[1], currentStateArr[2]));
         Log.d(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
-        Log.i(TAG, String.format("Current state %d Waypoint state %d", currentState, waypointState));
-        if(equalPositionState(currentState, waypointState) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))// && newCameraObservation != currentStateArr[2]))
+        if(waypoint.waypointReached(cameraPan, cameraTilt) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
         {
-            long action = policy.getAction(currentState);
+            long action = policy.getAction(state);
             Log.i(TAG, String.format("Object found or found waypoint, action: %d", action));
-            waypointPose = getNewWaypoint(phonePose, currentState, action);
-            waypointAnchor = session.createAnchor(waypointPose);
+            waypoint.updateWaypoint(phonePose, state, action);
+            waypointAnchor = session.createAnchor(waypoint.getPose());
             prevCameraObservation = newCameraObservation;
-            steps += 1;
-            history *= primeObservation(newCameraObservation);
+            state.addObservation(newCameraObservation);
         }
-        ClassHelpers.mVector waypointVector = getRotation(waypointPose, false);
+        ClassHelpers.mVector waypointVector = getRotation(waypoint.getPose(), false);
         float[] waypointRotationAngles = waypointVector.getEuler();
         float waypointTilt = waypointRotationAngles[1];
 
         // float tiltRequired = (float)Math.atan2(cameraVector.y - waypointVector.y, cameraVector.z - waypointVector.z);
         // Log.i(TAG, String.format("Tilt required %f", tiltRequired));
 
-        JNIBridge.playSound(waypointPose.getTranslation(), cameraVector.asFloat(), gain, getPitch(waypointTilt - cameraTilt));
+        JNIBridge.playSound(waypoint.getPose().getTranslation(), cameraVector.asFloat(), gain, getPitch(waypointTilt - cameraTilt));
     }
 
     public void update(Camera camera, Session session)
@@ -126,7 +116,7 @@ public class RunnableSoundGenerator implements Runnable
         this.run();
     }
 
-    private ClassHelpers.mVector getRotation(Pose pose, boolean waypointPose)
+    private ClassHelpers.mVector getRotation(Pose pose, boolean isWaypointPose)
     {
         // Get rotation angles and convert to pan/tilt angles
         // Start by rotating vector by quaternion (camera vector = -z)
@@ -143,65 +133,13 @@ public class RunnableSoundGenerator implements Runnable
         offsetVector.rotateByQuaternion(offsetRotationQuaternion);
         offsetVector.normalise();
 
-        if(!waypointPose)
+        if(!isWaypointPose)
         {
             vector.x -= offsetVector.x;
             vector.y -= offsetVector.y;
         }
 
         return vector;
-    }
-
-/*    public long decodeState(float fpan, float ftilt, long obs)
-    {
-        // Origin is top right, not bottom left
-        int pan = (int)(-Math.round(Math.toDegrees(-fpan) / ANGLE_INTERVAL) + GRID_SIZE/2 - 1);
-        int tilt = (int)(-Math.round(Math.toDegrees(-ftilt) / ANGLE_INTERVAL) + GRID_SIZE/2 - 1);
-
-        long state = 0;
-        long multiplier = 1;
-
-        state += (multiplier * pan);
-        multiplier *= GRID_SIZE;
-        state += (multiplier * tilt);
-        multiplier *= GRID_SIZE;
-        state += (multiplier * obs);
-
-        return state;
-    }*/
-
-    private long decodeState(long obs, long steps, long history)
-    {
-        long state = 0;
-        long multiplier = 1;
-
-        state += (multiplier * obs);
-        multiplier *= NUM_OBJECTS;
-        state += (multiplier * steps);
-        multiplier *= MAX_STEPS;
-        state += (multiplier * history);
-
-        return state;
-    }
-
-    private long[] encodeState(long state)
-    {
-        long[] stateVector = new long[3];
-        stateVector[0] = state % NUM_OBJECTS;
-        state /= NUM_OBJECTS;
-        stateVector[1] = state % MAX_STEPS;
-        state /= MAX_STEPS;
-        stateVector[2] = state % HISTORY_LEN;
-
-        return stateVector;
-    }
-
-    private boolean equalPositionState(long s1, long s2)
-    {
-        long[] state1 = encodeState(s1);
-        long[] state2 = encodeState(s2);
-
-        return (state1[0] == state2[0]) && (state1[1] == state2[1]);
     }
 
     public void setTarget(long target)
@@ -213,53 +151,6 @@ public class RunnableSoundGenerator implements Runnable
         this.targetFound = false;
 
         metrics.updateTarget(target);
-    }
-
-    private Pose getNewWaypoint(Pose phonePose, long s, long action)
-    {
-        float[] wayPointTranslation = new float[3];
-        long[] state = encodeState(s);
-
-        // Assume the current waypoint is where the camera is pointing.
-        // Reasonable since this function only called when pointing to new target
-        ClassHelpers.mVector waypointVector = getRotation(phonePose, true);
-        waypointVector.x /= waypointVector.z;
-        waypointVector.y /= waypointVector.z;
-        waypointVector.z /= waypointVector.z;
-
-        if(action == Policy.A_LEFT)
-        {
-            wayPointTranslation[0] = waypointVector.x - 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
-            wayPointTranslation[1] = waypointVector.y;
-            state[0] += 1;
-        }
-        if(action == Policy.A_RIGHT)
-        {
-            wayPointTranslation[0] = waypointVector.x + 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
-            wayPointTranslation[1] = waypointVector.y;
-            state[0] -= 1;
-        }
-
-        if(action == Policy.A_UP)
-        {
-            wayPointTranslation[0] = waypointVector.x;
-            wayPointTranslation[1] = waypointVector.y + 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
-            state[1] -= 1;
-        }
-        if(action == Policy.A_DOWN)
-        {
-            wayPointTranslation[0] = waypointVector.x;
-            wayPointTranslation[1] = waypointVector.y - 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
-            state[1] += 1;
-        }
-
-        waypointState = decodeState(state[0], state[1], state[2]);
-
-        // wayPointTranslation[0] = phonePose.getTranslation()[0] - 1.f;
-        // wayPointTranslation[1] = phonePose.getTranslation()[1] - 1.f;
-        wayPointTranslation[2] = phonePose.getTranslation()[2] - 1.f;
-
-        return new Pose(wayPointTranslation, phonePose.getRotationQuaternion());
     }
 
     private float getPitch(double tilt)
@@ -365,9 +256,200 @@ public class RunnableSoundGenerator implements Runnable
     public long getTarget() { return this.target; }
     public Anchor getWaypointAnchor() { return this.waypointAnchor; }
 
+    class Waypoint
+    {
+        private Pose pose;
+
+        Waypoint()
+        {
+            pose = new Pose(new float[] {0.f, 0.f, -1.f}, new float[] {0.f, 0.f, 0.f, 1.f});
+        }
+
+        public Pose getPose() { return pose; }
+
+        public void updateWaypoint(Pose phonePose, State state, long action)
+        {
+            float[] wayPointTranslation = new float[3];
+            long[] stateVector = state.getEncodedState();
+
+            // Assume the current waypoint is where the camera is pointing.
+            // Reasonable since this function only called when pointing to new target
+            ClassHelpers.mVector waypointVector = getRotation(phonePose, true);
+            waypointVector.x /= waypointVector.z;
+            waypointVector.y /= waypointVector.z;
+            waypointVector.z /= waypointVector.z;
+
+            if(action == Policy.A_LEFT)
+            {
+                wayPointTranslation[0] = waypointVector.x - 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
+                wayPointTranslation[1] = waypointVector.y;
+                stateVector[0] += 1;
+            }
+            if(action == Policy.A_RIGHT)
+            {
+                wayPointTranslation[0] = waypointVector.x + 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
+                wayPointTranslation[1] = waypointVector.y;
+                stateVector[0] -= 1;
+            }
+
+            if(action == Policy.A_UP)
+            {
+                wayPointTranslation[0] = waypointVector.x;
+                wayPointTranslation[1] = waypointVector.y + 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
+                stateVector[1] -= 1;
+            }
+            if(action == Policy.A_DOWN)
+            {
+                wayPointTranslation[0] = waypointVector.x;
+                wayPointTranslation[1] = waypointVector.y - 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
+                stateVector[1] += 1;
+            }
+
+            // waypointState = decodeState(state[0], state[1], state[2]);
+
+            // wayPointTranslation[0] = phonePose.getTranslation()[0] - 1.f;
+            // wayPointTranslation[1] = phonePose.getTranslation()[1] - 1.f;
+            wayPointTranslation[2] = phonePose.getTranslation()[2] - 1.f;
+
+            pose = new Pose(wayPointTranslation, phonePose.getRotationQuaternion());
+        }
+
+        private boolean waypointReached(float pan, float tilt)
+        {
+            float x = pose.getTranslation()[0];
+            float y = pose.getTranslation()[1];
+
+            return Math.abs(Math.sin(tilt) - y) < 0.1 && Math.abs(Math.cos(pan) - x) < 0.1;
+        }
+    }
+
     class State
     {
+        private static final int NUM_OBJECTS = 9;
+        private static final int MAX_STEPS = 10;
+        private static final int HISTORY_LEN = 256;
 
+        private static final int S_OBS = 0;
+        private static final int S_STEPS = 1;
+        private static final int S_HISTORY = 2;
+
+        private long state;
+        private long[] stateVector;
+        private long[] primeObservation;
+
+        private long observation = 0;
+        private long steps = 0;
+        private long history = 1;
+
+        State()
+        {
+            state = getDecodedState();
+            stateVector = getEncodedState();
+            primeObservation = generatePrimeProductLookupTable();
+        }
+
+        private long getDecodedState()
+        {
+            long state = 0;
+            long multiplier = 1;
+
+            state += (multiplier * observation);
+            multiplier *= NUM_OBJECTS;
+            state += (multiplier * steps);
+            multiplier *= MAX_STEPS;
+            state += (multiplier * history);
+
+            return state;
+        }
+
+        private long[] getEncodedState()
+        {
+            long[] stateVector = new long[3];
+            stateVector[S_OBS] = state % NUM_OBJECTS;
+            state /= NUM_OBJECTS;
+            stateVector[S_STEPS] = state % MAX_STEPS;
+            state /= MAX_STEPS;
+            stateVector[S_HISTORY] = state % HISTORY_LEN;
+
+            return stateVector;
+        }
+
+        private void addObservation(long observation)
+        {
+            this.observation = observation;
+            this.steps ++;
+            this.history *= primeObservation[(int)observation];
+        }
+
+        long[] generatePrimeProductLookupTable()
+        {
+            // 1 is for O_NOTHING
+            long primeNumbers[] = {2, 3, 5, 7, 11, 13, 17, 19};
+            long[] lookupTable = new long[HISTORY_LEN];
+
+            int n = 8;
+            int k = 0;
+            int tableIndex = 0;
+
+            for(int i = k; i < n+1; i++)
+            {
+                if(i == 0)
+                {
+                    lookupTable[tableIndex++] = 1;
+                    continue;
+                }
+                if(i == 1)
+                {
+                    for(int t = 0; t < 8; t ++)
+                    {
+                        lookupTable[tableIndex++] = primeNumbers[t];
+                    }
+                    continue;
+                }
+
+                for(int t = 1; t <= choose(n, i); t++)
+                {
+                    int[] combination = generateCombination(n, i, t);
+                    int product = 1;
+                    for(int x = 0; x < i; x++)
+                    {
+                        product *= primeNumbers[combination[x]-1];
+                    }
+                    lookupTable[tableIndex++] = product;
+                }
+            }
+
+            return lookupTable;
+        }
+
+        int[] generateCombination(int n, int p, int t)
+        {
+            int[] combination = new int[p];
+            int i, r, k = 0;
+            for(i = 0; i < p-1; i++)
+            {
+                combination[i] = ((i != 0) ? combination[i-1] : 0);
+                do {
+                    combination[i] ++;
+                    r = choose(n - combination[i], p - (i + 1));
+                    k += r;
+                } while(k < t);
+                k -= r;
+            }
+            combination[p-1] = combination[p-2] + t - k;
+
+            return combination;
+        }
+
+        int choose(int n, int k)
+        {
+            // Base Cases
+            if (k==0 || k==n)
+                return 1;
+
+            // Recur
+            return  choose(n-1, k-1) + choose(n-1, k);
+        }
     }
 
     class Policy
@@ -445,10 +527,11 @@ public class RunnableSoundGenerator implements Runnable
             }
         }
 
-        long getAction(long state)
+        long getAction(State state)
         {
             // Draw random action from action set from policy
             Random rand = new Random();
+            long s = state.getDecodedState();
 
             int nActions = policy.get(state).size();
             return policy.get(state).get(rand.nextInt(nActions));
