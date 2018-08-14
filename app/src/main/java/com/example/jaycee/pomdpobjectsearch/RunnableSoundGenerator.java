@@ -427,7 +427,7 @@ public class RunnableSoundGenerator implements Runnable
             }
         }
 
-        public long getAction(long state)
+        long getAction(long state)
         {
             // Draw random action from action set from policy
             Random rand = new Random();
