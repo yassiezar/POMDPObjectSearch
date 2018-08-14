@@ -78,7 +78,7 @@ public class RunnableSoundGenerator implements Runnable
 
         // Get Euler angles from vector wrt axis system
         // pitch = tilt, yaw = pan
-        ClassHelpers.mVector cameraVector = getRotation(phonePose);
+        ClassHelpers.mVector cameraVector = getRotation(phonePose, false);
         float[] phoneRotationAngles = cameraVector.getEuler();
         float cameraPan = phoneRotationAngles[2];
         float cameraTilt = phoneRotationAngles[1];
@@ -88,10 +88,10 @@ public class RunnableSoundGenerator implements Runnable
         long currentState = decodeState(cameraPan, cameraTilt, newCameraObservation);
         long[] currentStateArr = encodeState(currentState);
         //long[] waypointArr = encodeState(waypointState);
-        Log.d(TAG, String.format("current pan %d tilt %d obs %d ", currentStateArr[0], currentStateArr[1], currentStateArr[2]));
+        Log.i(TAG, String.format("current pan %d tilt %d obs %d ", currentStateArr[0], currentStateArr[1], currentStateArr[2]));
         Log.d(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
         Log.i(TAG, String.format("Current state %d Waypoint state %d", currentState, waypointState));
-        if(equalPositionState(currentState, waypointState) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING && newCameraObservation != currentStateArr[2]))
+        if(equalPositionState(currentState, waypointState) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))// && newCameraObservation != currentStateArr[2]))
         {
             long action = policy.getAction(currentState);
             Log.i(TAG, String.format("Object found or found waypoint, action: %d", action));
@@ -99,7 +99,7 @@ public class RunnableSoundGenerator implements Runnable
             waypointAnchor = session.createAnchor(waypointPose);
             prevCameraObservation = newCameraObservation;
         }
-        ClassHelpers.mVector waypointVector = getRotation(waypointPose);
+        ClassHelpers.mVector waypointVector = getRotation(waypointPose, false);
         float[] waypointRotationAngles = waypointVector.getEuler();
         float waypointTilt = waypointRotationAngles[1];
 
@@ -118,7 +118,7 @@ public class RunnableSoundGenerator implements Runnable
         this.run();
     }
 
-    public ClassHelpers.mVector getRotation(Pose pose)
+    public ClassHelpers.mVector getRotation(Pose pose, boolean waypointPose)
     {
         // Get rotation angles and convert to pan/tilt angles
         // Start by rotating vector by quaternion (camera vector = -z)
@@ -135,8 +135,11 @@ public class RunnableSoundGenerator implements Runnable
         offsetVector.rotateByQuaternion(offsetRotationQuaternion);
         offsetVector.normalise();
 
-        vector.x -= offsetVector.x;
-        vector.y -= offsetVector.y;
+        if(!waypointPose)
+        {
+            vector.x -= offsetVector.x;
+            vector.y -= offsetVector.y;
+        }
 
         return vector;
     }
@@ -211,7 +214,7 @@ public class RunnableSoundGenerator implements Runnable
 
         // Assume the current waypoint is where the camera is pointing.
         // Reasonable since this function only called when pointing to new target
-        ClassHelpers.mVector waypointVector = getRotation(phonePose);
+        ClassHelpers.mVector waypointVector = getRotation(phonePose, true);
         waypointVector.x /= waypointVector.z;
         waypointVector.y /= waypointVector.z;
         waypointVector.z /= waypointVector.z;
@@ -244,6 +247,8 @@ public class RunnableSoundGenerator implements Runnable
 
         waypointState = decodeState(state[0], state[1], state[2]);
 
+        // wayPointTranslation[0] = phonePose.getTranslation()[0] - 1.f;
+        // wayPointTranslation[1] = phonePose.getTranslation()[1] - 1.f;
         wayPointTranslation[2] = phonePose.getTranslation()[2] - 1.f;
 
         return new Pose(wayPointTranslation, phonePose.getRotationQuaternion());
