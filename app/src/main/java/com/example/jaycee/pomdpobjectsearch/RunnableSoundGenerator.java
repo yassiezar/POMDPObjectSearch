@@ -34,7 +34,7 @@ public class RunnableSoundGenerator implements Runnable
     private Activity callingActivity;
 
     private Pose phonePose;
-    private Waypoint waypoint = new Waypoint();
+    private Waypoint waypoint;
     private Pose offsetPose;
     private Anchor waypointAnchor;
     private Session session;
@@ -111,6 +111,16 @@ public class RunnableSoundGenerator implements Runnable
         phonePose = camera.getDisplayOrientedPose();
         metrics.writeWifi();
         this.session = session;
+
+        if(waypoint == null)
+        {
+            waypoint = new Waypoint(phonePose);
+        }
+
+        if(waypointAnchor == null)
+        {
+            waypointAnchor = session.createAnchor(waypoint.getPose());
+        }
 
         this.run();
     }
@@ -197,41 +207,37 @@ public class RunnableSoundGenerator implements Runnable
                 public void run()
                 {
                     String val;
-                    if(observation == 13)
-                    {
-                        val = "Door handle";
-                    }
-                    else if(observation == 7)
+                    if(observation == 3)
                     {
                         val = "Mouse";
                     }
-                    else if(observation == 12)
-                    {
-                        val = "Door";
-                    }
-                    else if(observation == 18)
+                    else if(observation == 5)
                     {
                         val = "Laptop";
                     }
-                    else if(observation == 6)
+                    else if(observation == 2)
                     {
                         val = "Keyboard";
                     }
-                    else if(observation == 5)
+                    else if(observation == 1)
                     {
                         val = "Monitor";
                     }
-                    else if(observation == 23)
+                    else if(observation == 8)
                     {
                         val = "Window";
                     }
-                    else if(observation == 11)
+                    else if(observation == 4)
                     {
                         val = "Desk";
                     }
-                    else if(observation == 22)
+                    else if(observation == 6)
                     {
-                        val = "Table";
+                        val = "Mug";
+                    }
+                    else if(observation == 7)
+                    {
+                        val = "Office supplies";
                     }
                     else
                     {
@@ -261,9 +267,10 @@ public class RunnableSoundGenerator implements Runnable
 
         private Pose pose;
 
-        Waypoint()
+        Waypoint(Pose pose)
         {
-            pose = new Pose(new float[] {0.f, 0.f, -1.f}, new float[] {0.f, 0.f, 0.f, 1.f});
+            float[] phoneTranslation = pose.getTranslation();
+            this.pose = new Pose(new float[] {phoneTranslation[0], phoneTranslation[1], phoneTranslation[2] - 1.f}, pose.getRotationQuaternion());
         }
 
         Pose getPose() { return pose; }
@@ -334,6 +341,25 @@ public class RunnableSoundGenerator implements Runnable
         private static final int S_STEPS = 1;
         private static final int S_HISTORY = 2;
 
+        private static final int P_COMPUTER_MONITOR = 2;
+        private static final int P_COMPUTER_KEYBOARD = 3;
+        private static final int P_COMPUTER_MOUSE = 5;
+        private static final int P_DESK = 7;
+        private static final int P_LAPTOP = 11;
+        private static final int P_MUG = 13;
+        private static final int P_OFFICE_SUPPLIES = 17;
+        private static final int P_WINDOW = 19;
+
+        private static final int O_NOTHING = 0;
+        private static final int O_COMPUTER_MONITOR = 1;
+        private static final int O_COMPUTER_KEYBOARD = 2;
+        private static final int O_COMPUTER_MOUSE = 3;
+        private static final int O_DESK = 4;
+        private static final int O_LAPTOP = 5;
+        private static final int O_MUG = 6;
+        private static final int O_OFFICE_SUPPLIES = 7;
+        private static final int O_WINDOW = 8;
+
         private long state;
         private long[] stateVector;
         private long[] primeObservation;
@@ -379,7 +405,24 @@ public class RunnableSoundGenerator implements Runnable
         {
             this.observation = observation;
             this.steps ++;
-            this.history *= primeObservation[(int)observation];
+            if(this.history % getPrimeObservation(observation) != 0)
+            {
+                this.history *= getPrimeObservation(observation);
+            }
+        }
+
+        long getPrimeObservation(long obs)
+        {
+            if(obs == O_COMPUTER_MONITOR) return P_COMPUTER_MONITOR;
+            if(obs == O_COMPUTER_KEYBOARD) return P_COMPUTER_KEYBOARD;
+            if(obs == O_COMPUTER_MOUSE) return P_COMPUTER_MOUSE;
+            if(obs == O_DESK) return P_DESK;
+            if(obs == O_LAPTOP) return P_LAPTOP;
+            if(obs == O_MUG) return P_MUG;
+            if(obs == O_OFFICE_SUPPLIES) return P_OFFICE_SUPPLIES;
+            if(obs == O_WINDOW) return P_WINDOW;
+
+            return 1;
         }
 
         long[] generatePrimeProductLookupTable()

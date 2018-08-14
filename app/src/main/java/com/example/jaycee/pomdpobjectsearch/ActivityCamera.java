@@ -57,9 +57,9 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
 
     private static final int O_NOTHING = 0;
 
-    private static final int T_DOOR = 12;
-    private static final int T_LAPTOP = 18;
-    private static final int T_CHAIR = 8;
+    private static final int T_MUG = 6;
+    private static final int T_LAPTOP = 5;
+    private static final int T_WINDOW = 8;
 
     private Session session;
     private Frame frame;
@@ -149,14 +149,14 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             {
                 switch (item.getItemId())
                 {
-                    case R.id.item_object_door:
-                        runnableSoundGenerator.setTarget(T_DOOR);
+                    case R.id.item_object_mug:
+                        runnableSoundGenerator.setTarget(T_MUG);
                         break;
                     case R.id.item_object_laptop:
                         runnableSoundGenerator.setTarget(T_LAPTOP);
                         break;
-                    case R.id.item_object_chair:
-                        runnableSoundGenerator.setTarget(T_CHAIR);
+                    case R.id.item_object_window:
+                        runnableSoundGenerator.setTarget(T_WINDOW);
                         break;
                 }
 

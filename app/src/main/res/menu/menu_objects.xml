@@ -4,34 +4,14 @@
         <item
             android:title="I AM A HACK" />
         <item
-            android:id="@+id/item_object_door"
-            android:title="Door" />
+            android:id="@+id/item_object_mug"
+            android:title="Mug" />
         <item
             android:id="@+id/item_object_laptop"
             android:title="Laptop" />
         <item
-            android:id="@+id/item_object_chair"
-            android:title="Chair" />
-
-        <item
-            android:id="@+id/item_object_kettle"
-            android:title="Kettle" />
-        <item
-            android:id="@+id/item_object_refrigerator"
-            android:title="Refrigerator" />
-        <item
-            android:id="@+id/item_object_microwave"
-            android:title="Microwave" />
-
-        <item
-            android:id="@+id/item_object_sink"
-            android:title="Sink" />
-        <item
-            android:id="@+id/item_object_toilet"
-            android:title="Toilet" />
-        <item
-            android:id="@+id/item_object_hand_dryer"
-            android:title="Hand Dryer" />
+            android:id="@+id/item_object_window"
+            android:title="Window" />
     </group>
 
 </menu>
