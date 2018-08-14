@@ -26,11 +26,14 @@ public class RunnableSoundGenerator implements Runnable
 {
     private static final String TAG = RunnableSoundGenerator.class.getSimpleName();
     private static final long ANGLE_INTERVAL = 15;
-    private static final long GRID_SIZE = 12;
 
     private static final int O_NOTHING = 0;
     private static final int O_DESK = 11;
-    private static final int O_KEYBOARD = 6;
+    private static final int O_LAPTOP = 5;
+
+    private static final int NUM_OBJECTS = 9;
+    private static final int MAX_STEPS = 10;
+    private static final int HISTORY_LEN = 256;
 
     private Activity callingActivity;
 
@@ -43,10 +46,13 @@ public class RunnableSoundGenerator implements Runnable
     private boolean targetSet = false;
     private boolean targetFound = false;
 
+    private long[] historyObservations = new long[256];
     private long observation = O_NOTHING;
     private long prevCameraObservation = O_NOTHING;
+    private long steps = 0;
+    private long history = 1;
     private long target = -1;
-    private long waypointState = decodeState(5, 5, O_KEYBOARD);
+    private long waypointState = decodeState(0, 0, 0);                     /* TODO: Set proper intital condition */
 
     private Policy policy;
 
@@ -85,7 +91,7 @@ public class RunnableSoundGenerator implements Runnable
         long newCameraObservation = this.observation;
 
         // Get current state and generate new waypoint if agent is in new state or sees new object
-        long currentState = decodeState(cameraPan, cameraTilt, newCameraObservation);
+        long currentState = decodeState(newCameraObservation, steps, history);
         long[] currentStateArr = encodeState(currentState);
         //long[] waypointArr = encodeState(waypointState);
         Log.i(TAG, String.format("current pan %d tilt %d obs %d ", currentStateArr[0], currentStateArr[1], currentStateArr[2]));
@@ -98,6 +104,8 @@ public class RunnableSoundGenerator implements Runnable
             waypointPose = getNewWaypoint(phonePose, currentState, action);
             waypointAnchor = session.createAnchor(waypointPose);
             prevCameraObservation = newCameraObservation;
+            steps += 1;
+            history *= primeObservation(newCameraObservation);
         }
         ClassHelpers.mVector waypointVector = getRotation(waypointPose, false);
         float[] waypointRotationAngles = waypointVector.getEuler();
@@ -118,7 +126,7 @@ public class RunnableSoundGenerator implements Runnable
         this.run();
     }
 
-    public ClassHelpers.mVector getRotation(Pose pose, boolean waypointPose)
+    private ClassHelpers.mVector getRotation(Pose pose, boolean waypointPose)
     {
         // Get rotation angles and convert to pan/tilt angles
         // Start by rotating vector by quaternion (camera vector = -z)
@@ -144,7 +152,7 @@ public class RunnableSoundGenerator implements Runnable
         return vector;
     }
 
-    public long decodeState(float fpan, float ftilt, long obs)
+/*    public long decodeState(float fpan, float ftilt, long obs)
     {
         // Origin is top right, not bottom left
         int pan = (int)(-Math.round(Math.toDegrees(-fpan) / ANGLE_INTERVAL) + GRID_SIZE/2 - 1);
@@ -160,35 +168,35 @@ public class RunnableSoundGenerator implements Runnable
         state += (multiplier * obs);
 
         return state;
-    }
+    }*/
 
-    public long decodeState(long pan, long tilt, long obs)
+    private long decodeState(long obs, long steps, long history)
     {
         long state = 0;
         long multiplier = 1;
 
-        state += (multiplier * pan);
-        multiplier *= GRID_SIZE;
-        state += (multiplier * tilt);
-        multiplier *= GRID_SIZE;
         state += (multiplier * obs);
+        multiplier *= NUM_OBJECTS;
+        state += (multiplier * steps);
+        multiplier *= MAX_STEPS;
+        state += (multiplier * history);
 
         return state;
     }
 
-    public long[] encodeState(long state)
+    private long[] encodeState(long state)
     {
         long[] stateVector = new long[3];
-        stateVector[0] = state % GRID_SIZE;
-        state /= GRID_SIZE;
-        stateVector[1] = state % GRID_SIZE;
-        state /= GRID_SIZE;
-        stateVector[2] = state;
+        stateVector[0] = state % NUM_OBJECTS;
+        state /= NUM_OBJECTS;
+        stateVector[1] = state % MAX_STEPS;
+        state /= MAX_STEPS;
+        stateVector[2] = state % HISTORY_LEN;
 
         return stateVector;
     }
 
-    public boolean equalPositionState(long s1, long s2)
+    private boolean equalPositionState(long s1, long s2)
     {
         long[] state1 = encodeState(s1);
         long[] state2 = encodeState(s2);
@@ -207,7 +215,7 @@ public class RunnableSoundGenerator implements Runnable
         metrics.updateTarget(target);
     }
 
-    public Pose getNewWaypoint(Pose phonePose, long s, long action)
+    private Pose getNewWaypoint(Pose phonePose, long s, long action)
     {
         float[] wayPointTranslation = new float[3];
         long[] state = encodeState(s);
@@ -254,7 +262,7 @@ public class RunnableSoundGenerator implements Runnable
         return new Pose(wayPointTranslation, phonePose.getRotationQuaternion());
     }
 
-    public float getPitch(double tilt)
+    private float getPitch(double tilt)
     {
         float pitch;
         // From config file; HI setting
@@ -357,11 +365,16 @@ public class RunnableSoundGenerator implements Runnable
     public long getTarget() { return this.target; }
     public Anchor getWaypointAnchor() { return this.waypointAnchor; }
 
+    class State
+    {
+
+    }
+
     class Policy
     {
-        private static final int O_DOOR = 12;
-        private static final int O_LAPTOP = 18;
-        private static final int O_CHAIR = 8;
+        private static final int O_MUG = 6;
+        private static final int O_LAPTOP = 4;
+        private static final int O_WINDOW = 8;
 
         private static final int A_UP = 0;
         private static final int A_DOWN = 1;
@@ -376,14 +389,14 @@ public class RunnableSoundGenerator implements Runnable
         {
             switch(target)
             {
-                case O_DOOR:
-                    this.fileName += "door.txt";
+                case O_MUG:
+                    this.fileName += "mug.txt";
                     break;
                 case O_LAPTOP:
                     this.fileName += "laptop.txt";
                     break;
-                case O_CHAIR:
-                    this.fileName += "chair.txt";
+                case O_WINDOW:
+                    this.fileName += "window.txt";
                     break;
             }
 
