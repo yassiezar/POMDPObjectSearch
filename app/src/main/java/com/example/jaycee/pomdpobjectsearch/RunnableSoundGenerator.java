@@ -25,7 +25,6 @@ import java.util.regex.Pattern;
 public class RunnableSoundGenerator implements Runnable
 {
     private static final String TAG = RunnableSoundGenerator.class.getSimpleName();
-    private static final long ANGLE_INTERVAL = 15;
 
     private static final int O_NOTHING = 0;
     private static final int O_DESK = 11;
@@ -258,6 +257,8 @@ public class RunnableSoundGenerator implements Runnable
 
     class Waypoint
     {
+        private static final long ANGLE_INTERVAL = 15;
+
         private Pose pose;
 
         Waypoint()
@@ -265,9 +266,9 @@ public class RunnableSoundGenerator implements Runnable
             pose = new Pose(new float[] {0.f, 0.f, -1.f}, new float[] {0.f, 0.f, 0.f, 1.f});
         }
 
-        public Pose getPose() { return pose; }
+        Pose getPose() { return pose; }
 
-        public void updateWaypoint(Pose phonePose, State state, long action)
+        void updateWaypoint(Pose phonePose, State state, long action)
         {
             float[] wayPointTranslation = new float[3];
             long[] stateVector = state.getEncodedState();
@@ -533,8 +534,8 @@ public class RunnableSoundGenerator implements Runnable
             Random rand = new Random();
             long s = state.getDecodedState();
 
-            int nActions = policy.get(state).size();
-            return policy.get(state).get(rand.nextInt(nActions));
+            int nActions = policy.get(s).size();
+            return policy.get(s).get(rand.nextInt(nActions));
         }
     }
 }
