@@ -30,7 +30,6 @@ public class RunnableSoundGenerator implements Runnable
     private static final int O_DESK = 11;
     private static final int O_LAPTOP = 5;
 
-
     private Activity callingActivity;
 
     private Pose phonePose;
@@ -94,7 +93,7 @@ public class RunnableSoundGenerator implements Runnable
             waypoint.updateWaypoint(phonePose, state, action);
             waypointAnchor = session.createAnchor(waypoint.getPose());
             prevCameraObservation = newCameraObservation;
-            state.addObservation(newCameraObservation);
+            state.addObservation(newCameraObservation, cameraPan, cameraTilt);
         }
         ClassHelpers.mVector waypointVector = getRotation(waypoint.getPose(), false);
         float[] waypointRotationAngles = waypointVector.getEuler();
@@ -333,13 +332,15 @@ public class RunnableSoundGenerator implements Runnable
 
     class State
     {
+        private static final int ANGLE_INTERVAL = 15;
+        private static final int GRID_SIZE = 12;
+
         private static final int NUM_OBJECTS = 9;
         private static final int MAX_STEPS = 10;
-        private static final int HISTORY_LEN = 256;
 
         private static final int S_OBS = 0;
         private static final int S_STEPS = 1;
-        private static final int S_HISTORY = 2;
+        private static final int S_STATE_VISITED = 2;
 
         private static final int P_COMPUTER_MONITOR = 2;
         private static final int P_COMPUTER_KEYBOARD = 3;
@@ -361,18 +362,21 @@ public class RunnableSoundGenerator implements Runnable
         private static final int O_WINDOW = 8;
 
         private long state;
-        private long[] stateVector;
-        private long[] primeObservation;
 
         private long observation = 0;
         private long steps = 0;
-        private long history = 1;
+        private long stateVisted = 0;
+
+        private int[] panHistory = new int[GRID_SIZE];
+        private int[] tiltHistory = new int[GRID_SIZE];
 
         State()
         {
-            state = getDecodedState();
-            stateVector = getEncodedState();
-            primeObservation = generatePrimeProductLookupTable();
+            for(int i = 0; i < GRID_SIZE; i ++)
+            {
+                panHistory[i] = 0;
+                tiltHistory[i] = 0;
+            }
         }
 
         private long getDecodedState()
@@ -384,7 +388,7 @@ public class RunnableSoundGenerator implements Runnable
             multiplier *= NUM_OBJECTS;
             state += (multiplier * steps);
             multiplier *= MAX_STEPS;
-            state += (multiplier * history);
+            state += (multiplier * stateVisted);
 
             return state;
         }
@@ -396,19 +400,25 @@ public class RunnableSoundGenerator implements Runnable
             state /= NUM_OBJECTS;
             stateVector[S_STEPS] = state % MAX_STEPS;
             state /= MAX_STEPS;
-            stateVector[S_HISTORY] = state % HISTORY_LEN;
+            stateVector[S_STATE_VISITED] = state % 2;
 
             return stateVector;
         }
 
-        private void addObservation(long observation)
+        private void addObservation(long observation, float fpan, float ftilt)
         {
+            // Origin is top right, not bottom left
+            int pan = (int) (-Math.round(Math.toDegrees(-fpan) / ANGLE_INTERVAL) + GRID_SIZE / 2 - 1);
+            int tilt = (int) (-Math.round(Math.toDegrees(-ftilt) / ANGLE_INTERVAL) + GRID_SIZE / 2 - 1);
+
             this.observation = observation;
             this.steps ++;
-            if(this.history % getPrimeObservation(observation) != 0)
-            {
-                this.history *= getPrimeObservation(observation);
-            }
+
+            if(panHistory[pan] == 1 && tiltHistory[tilt] == 1) this.stateVisted = 1;
+            else this.stateVisted = 0;
+
+            panHistory[pan] = 1;
+            tiltHistory[tilt] = 1;
         }
 
         long getPrimeObservation(long obs)
@@ -425,7 +435,7 @@ public class RunnableSoundGenerator implements Runnable
             return 1;
         }
 
-        long[] generatePrimeProductLookupTable()
+/*        long[] generatePrimeProductLookupTable()
         {
             // 1 is for O_NOTHING
             long primeNumbers[] = {2, 3, 5, 7, 11, 13, 17, 19};
@@ -493,7 +503,7 @@ public class RunnableSoundGenerator implements Runnable
 
             // Recur
             return  choose(n-1, k-1) + choose(n-1, k);
-        }
+        }*/
     }
 
     class Policy
