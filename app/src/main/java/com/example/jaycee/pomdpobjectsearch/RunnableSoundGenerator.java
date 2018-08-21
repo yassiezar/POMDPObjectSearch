@@ -49,7 +49,7 @@ public class RunnableSoundGenerator implements Runnable
     private Policy policy;
 
     private ClassMetrics metrics = new ClassMetrics();
-    private State state = new State();
+    private State state;
 
     private Vibrator vibrator;
     private Toast toast;
@@ -84,6 +84,8 @@ public class RunnableSoundGenerator implements Runnable
 
         // Get current state and generate new waypoint if agent is in new state or sees new object
         Log.d(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
+        Log.i(TAG, String.format("Object: %d Step: %d Visited: %d", state.getEncodedState()[0], state.getEncodedState()[1], state.getEncodedState()[2]));
+        // if(state.getEncodedState()[State.S_STEPS] == 0) prevCameraObservation = newCameraObservation;
         if(waypoint.waypointReached(cameraPan, cameraTilt) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
         {
             long action = policy.getAction(state);
@@ -100,22 +102,16 @@ public class RunnableSoundGenerator implements Runnable
         JNIBridge.playSound(waypoint.getPose().getTranslation(), cameraVector.asFloat(), gain, getPitch(waypointTilt - cameraTilt));
     }
 
-    public void update(Camera camera, Session session)
+    public void updatePhonePose(Camera camera, Session session)
     {
         phonePose = camera.getDisplayOrientedPose();
-        metrics.writeWifi();
         this.session = session;
 
-        if(waypoint == null)
-        {
-            waypoint = new Waypoint(phonePose);
-        }
+    }
 
-        if(waypointAnchor == null)
-        {
-            waypointAnchor = session.createAnchor(waypoint.getPose());
-        }
-
+    public void update()
+    {
+        metrics.writeWifi();
         this.run();
     }
 
@@ -145,13 +141,26 @@ public class RunnableSoundGenerator implements Runnable
         return vector;
     }
 
-    public void setTarget(long target)
+    public void setTarget(long target, long observation)
     {
         policy = new Policy((int)target);
+        state = new State();
+
+        if(waypoint == null)
+        {
+            waypoint = new Waypoint(phonePose);
+        }
+
+        if(waypointAnchor == null)
+        {
+            waypointAnchor = session.createAnchor(waypoint.getPose());
+        }
 
         this.target = target;
         this.targetSet = true;
         this.targetFound = false;
+
+        prevCameraObservation = observation;
 
         metrics.updateTarget(target);
     }
@@ -307,10 +316,24 @@ public class RunnableSoundGenerator implements Runnable
                 stateVector[1] += 1;
             }
 
-            // waypointState = decodeState(state[0], state[1], state[2]);
+            /* TODO: Wrap the waypoint when it moves out of the 90deg bounds */
+            if(Math.asin(wayPointTranslation[1]) > Math.PI/4)
+            {
+                wayPointTranslation[1] = -(float)Math.sin(Math.sin(Math.PI/4));
+            }
+            if(Math.asin(wayPointTranslation[1]) < -Math.PI/4)
+            {
+                wayPointTranslation[1] = (float)Math.sin(Math.sin(Math.PI/4));
+            }
+            if(Math.asin(wayPointTranslation[0]) > Math.PI/4)
+            {
+                wayPointTranslation[0] = -(float)Math.sin(Math.sin(Math.PI/4));
+            }
+            if(Math.asin(wayPointTranslation[0]) < -Math.PI/4)
+            {
+                wayPointTranslation[0] = (float)Math.sin(Math.sin(Math.PI/4));
+            }
 
-            // wayPointTranslation[0] = phonePose.getTranslation()[0] - 1.f;
-            // wayPointTranslation[1] = phonePose.getTranslation()[1] - 1.f;
             wayPointTranslation[2] = phonePose.getTranslation()[2] - 1.f;
 
             pose = new Pose(wayPointTranslation, phonePose.getRotationQuaternion());
@@ -333,7 +356,7 @@ public class RunnableSoundGenerator implements Runnable
         private static final int GRID_SIZE = 6;
 
         private static final int NUM_OBJECTS = 9;
-        private static final int MAX_STEPS = 10;
+        private static final int MAX_STEPS = 12;
 
         private static final int S_OBS = 0;
         private static final int S_STEPS = 1;
@@ -374,6 +397,8 @@ public class RunnableSoundGenerator implements Runnable
         private long[] getEncodedState()
         {
             long[] stateVector = new long[3];
+            long state = this.state;
+
             stateVector[S_OBS] = state % NUM_OBJECTS;
             state /= NUM_OBJECTS;
             stateVector[S_STEPS] = state % MAX_STEPS;
@@ -385,18 +410,21 @@ public class RunnableSoundGenerator implements Runnable
 
         private void addObservation(long observation, float fpan, float ftilt)
         {
+            Log.i(TAG, "MAKING OBSERVATION");
             // Origin is top right, not bottom left
             int pan = (int) (-Math.round(Math.toDegrees(-fpan) / ANGLE_INTERVAL) + GRID_SIZE / 2 - 1);
             int tilt = (int) (-Math.round(Math.toDegrees(-ftilt) / ANGLE_INTERVAL) + GRID_SIZE / 2 - 1);
 
             this.observation = observation;
-            this.steps ++;
+            if(this.steps != MAX_STEPS-1) this.steps ++;
 
             if(panHistory[pan] == 1 && tiltHistory[tilt] == 1) this.stateVisted = 1;
             else this.stateVisted = 0;
 
             panHistory[pan] = 1;
             tiltHistory[tilt] = 1;
+
+            this.state = getDecodedState();
         }
     }
 
