@@ -57,6 +57,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
 
     private static final int O_NOTHING = 0;
 
+    /* TODO: Make new barcodes to correspond with new values */
     private static final int T_MUG = 6;
     private static final int T_LAPTOP = 5;
     private static final int T_WINDOW = 8;

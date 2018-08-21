@@ -26,8 +26,9 @@ public class RunnableSoundGenerator implements Runnable
 {
     private static final String TAG = RunnableSoundGenerator.class.getSimpleName();
 
+    /* TODO: Make new barcodes to correspond with new values */
     private static final int O_NOTHING = 0;
-    private static final int O_DESK = 11;
+    private static final int O_DESK = 4;
     private static final int O_LAPTOP = 5;
 
     private Activity callingActivity;
@@ -53,7 +54,7 @@ public class RunnableSoundGenerator implements Runnable
     private Vibrator vibrator;
     private Toast toast;
 
-    public RunnableSoundGenerator(Activity callingActivity)
+    RunnableSoundGenerator(Activity callingActivity)
     {
         this.callingActivity = callingActivity;
         this.vibrator= (Vibrator)callingActivity.getSystemService(Context.VIBRATOR_SERVICE);
@@ -82,9 +83,6 @@ public class RunnableSoundGenerator implements Runnable
         long newCameraObservation = this.observation;
 
         // Get current state and generate new waypoint if agent is in new state or sees new object
-        //long[] currentStateArr = state.getEncodedState();
-        //long[] waypointArr = encodeState(waypointState);
-        //Log.i(TAG, String.format("current pan %d tilt %d obs %d ", currentStateArr[0], currentStateArr[1], currentStateArr[2]));
         Log.d(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
         if(waypoint.waypointReached(cameraPan, cameraTilt) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
         {
@@ -98,9 +96,6 @@ public class RunnableSoundGenerator implements Runnable
         ClassHelpers.mVector waypointVector = getRotation(waypoint.getPose(), false);
         float[] waypointRotationAngles = waypointVector.getEuler();
         float waypointTilt = waypointRotationAngles[1];
-
-        // float tiltRequired = (float)Math.atan2(cameraVector.y - waypointVector.y, cameraVector.z - waypointVector.z);
-        // Log.i(TAG, String.format("Tilt required %f", tiltRequired));
 
         JNIBridge.playSound(waypoint.getPose().getTranslation(), cameraVector.asFloat(), gain, getPitch(waypointTilt - cameraTilt));
     }
@@ -193,8 +188,46 @@ public class RunnableSoundGenerator implements Runnable
         return pitch;
     }
 
-    public void setObservation(final long observation)
+    public void setObservation(long observation)
     {
+        /* TODO: Translate between barcode and state encoding for object observations */
+        final String val;
+        if(observation == 3)
+        {
+            val = "Mouse";
+        }
+        else if(observation == 5)
+        {
+            val = "Laptop";
+        }
+        else if(observation == 2)
+        {
+            val = "Keyboard";
+        }
+        else if(observation == 1)
+        {
+            val = "Monitor";
+        }
+        else if(observation == 8)
+        {
+            val = "Window";
+        }
+        else if(observation == 4)
+        {
+            val = "Desk";
+        }
+        else if(observation == 6)
+        {
+            val = "Mug";
+        }
+        else if(observation == 7)
+        {
+            val = "Office supplies";
+        }
+        else
+        {
+            val = "Unknown";
+        }
         this.observation = observation;
         metrics.updateObservation(observation);
 
@@ -205,44 +238,6 @@ public class RunnableSoundGenerator implements Runnable
                 @Override
                 public void run()
                 {
-                    String val;
-                    if(observation == 3)
-                    {
-                        val = "Mouse";
-                    }
-                    else if(observation == 5)
-                    {
-                        val = "Laptop";
-                    }
-                    else if(observation == 2)
-                    {
-                        val = "Keyboard";
-                    }
-                    else if(observation == 1)
-                    {
-                        val = "Monitor";
-                    }
-                    else if(observation == 8)
-                    {
-                        val = "Window";
-                    }
-                    else if(observation == 4)
-                    {
-                        val = "Desk";
-                    }
-                    else if(observation == 6)
-                    {
-                        val = "Mug";
-                    }
-                    else if(observation == 7)
-                    {
-                        val = "Office supplies";
-                    }
-                    else
-                    {
-                        val = "Unknown";
-                    }
-
                     if(toast != null)
                     {
                         toast.cancel();
@@ -326,14 +321,16 @@ public class RunnableSoundGenerator implements Runnable
             float x = pose.getTranslation()[0];
             float y = pose.getTranslation()[1];
 
-            return Math.abs(Math.sin(tilt) - y) < 0.1 && Math.abs(Math.cos(pan) - x) < 0.1;
+            Log.i(TAG, String.format("x: %f y %f", Math.cos(pan+Math.PI/2) - x, Math.sin(-tilt) - y));
+            // Compensate for Z-axis going in negative direction, rotating pan around y-axis
+            return Math.abs(Math.sin(-tilt) - y) < 0.1 && Math.abs(Math.cos(pan+Math.PI/2) - x) < 0.1;
         }
     }
 
     class State
     {
         private static final int ANGLE_INTERVAL = 15;
-        private static final int GRID_SIZE = 12;
+        private static final int GRID_SIZE = 6;
 
         private static final int NUM_OBJECTS = 9;
         private static final int MAX_STEPS = 10;
@@ -341,25 +338,6 @@ public class RunnableSoundGenerator implements Runnable
         private static final int S_OBS = 0;
         private static final int S_STEPS = 1;
         private static final int S_STATE_VISITED = 2;
-
-        private static final int P_COMPUTER_MONITOR = 2;
-        private static final int P_COMPUTER_KEYBOARD = 3;
-        private static final int P_COMPUTER_MOUSE = 5;
-        private static final int P_DESK = 7;
-        private static final int P_LAPTOP = 11;
-        private static final int P_MUG = 13;
-        private static final int P_OFFICE_SUPPLIES = 17;
-        private static final int P_WINDOW = 19;
-
-        private static final int O_NOTHING = 0;
-        private static final int O_COMPUTER_MONITOR = 1;
-        private static final int O_COMPUTER_KEYBOARD = 2;
-        private static final int O_COMPUTER_MOUSE = 3;
-        private static final int O_DESK = 4;
-        private static final int O_LAPTOP = 5;
-        private static final int O_MUG = 6;
-        private static final int O_OFFICE_SUPPLIES = 7;
-        private static final int O_WINDOW = 8;
 
         private long state;
 
@@ -420,96 +398,12 @@ public class RunnableSoundGenerator implements Runnable
             panHistory[pan] = 1;
             tiltHistory[tilt] = 1;
         }
-
-        long getPrimeObservation(long obs)
-        {
-            if(obs == O_COMPUTER_MONITOR) return P_COMPUTER_MONITOR;
-            if(obs == O_COMPUTER_KEYBOARD) return P_COMPUTER_KEYBOARD;
-            if(obs == O_COMPUTER_MOUSE) return P_COMPUTER_MOUSE;
-            if(obs == O_DESK) return P_DESK;
-            if(obs == O_LAPTOP) return P_LAPTOP;
-            if(obs == O_MUG) return P_MUG;
-            if(obs == O_OFFICE_SUPPLIES) return P_OFFICE_SUPPLIES;
-            if(obs == O_WINDOW) return P_WINDOW;
-
-            return 1;
-        }
-
-/*        long[] generatePrimeProductLookupTable()
-        {
-            // 1 is for O_NOTHING
-            long primeNumbers[] = {2, 3, 5, 7, 11, 13, 17, 19};
-            long[] lookupTable = new long[HISTORY_LEN];
-
-            int n = 8;
-            int k = 0;
-            int tableIndex = 0;
-
-            for(int i = k; i < n+1; i++)
-            {
-                if(i == 0)
-                {
-                    lookupTable[tableIndex++] = 1;
-                    continue;
-                }
-                if(i == 1)
-                {
-                    for(int t = 0; t < 8; t ++)
-                    {
-                        lookupTable[tableIndex++] = primeNumbers[t];
-                    }
-                    continue;
-                }
-
-                for(int t = 1; t <= choose(n, i); t++)
-                {
-                    int[] combination = generateCombination(n, i, t);
-                    int product = 1;
-                    for(int x = 0; x < i; x++)
-                    {
-                        product *= primeNumbers[combination[x]-1];
-                    }
-                    lookupTable[tableIndex++] = product;
-                }
-            }
-
-            return lookupTable;
-        }
-
-        int[] generateCombination(int n, int p, int t)
-        {
-            int[] combination = new int[p];
-            int i, r, k = 0;
-            for(i = 0; i < p-1; i++)
-            {
-                combination[i] = ((i != 0) ? combination[i-1] : 0);
-                do {
-                    combination[i] ++;
-                    r = choose(n - combination[i], p - (i + 1));
-                    k += r;
-                } while(k < t);
-                k -= r;
-            }
-            combination[p-1] = combination[p-2] + t - k;
-
-            return combination;
-        }
-
-        int choose(int n, int k)
-        {
-            // Base Cases
-            if (k==0 || k==n)
-                return 1;
-
-            // Recur
-            return  choose(n-1, k-1) + choose(n-1, k);
-        }*/
     }
 
     class Policy
     {
         private static final int O_MUG = 6;
-        private static final int O_LAPTOP = 4;
+        private static final int O_LAPTOP = 5;
         private static final int O_WINDOW = 8;
 
         private static final int A_UP = 0;
