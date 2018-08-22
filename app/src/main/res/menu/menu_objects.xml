@@ -4,11 +4,26 @@
         <item
             android:title="I AM A HACK" />
         <item
-            android:id="@+id/item_object_mug"
-            android:title="Mug" />
+            android:id="@+id/item_object_monitor"
+            android:title="Computer Monitor" />
+        <item
+            android:id="@+id/item_object_mouse"
+            android:title="Computer Mouse" />
+        <item
+            android:id="@+id/item_object_keyboard"
+            android:title="Computer Keyboard" />
+        <item
+            android:id="@+id/item_object_desk"
+            android:title="Desk" />
         <item
             android:id="@+id/item_object_laptop"
             android:title="Laptop" />
+        <item
+            android:id="@+id/item_object_mug"
+            android:title="Mug" />
+        <item
+            android:id="@+id/item_object_office_supplies"
+            android:title="Office Supplies" />
         <item
             android:id="@+id/item_object_window"
             android:title="Window" />

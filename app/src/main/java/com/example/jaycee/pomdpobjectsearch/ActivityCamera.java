@@ -58,8 +58,13 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     private static final int O_NOTHING = 0;
 
     /* TODO: Make new barcodes to correspond with new values */
-    private static final int T_MUG = 6;
+    private static final int T_COMPUTER_MONITOR = 1;
+    private static final int T_COMPUTER_MOUSE = 3;
+    private static final int T_COMPUTER_KEYBOARD = 2;
+    private static final int T_DESK = 4;
     private static final int T_LAPTOP = 5;
+    private static final int T_MUG = 6;
+    private static final int T_OFFICE_SUPPLIES = 7;
     private static final int T_WINDOW = 8;
 
     private Session session;
@@ -155,6 +160,21 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                         break;
                     case R.id.item_object_laptop:
                         runnableSoundGenerator.setTarget(T_LAPTOP, scanBarcode());
+                        break;
+                    case R.id.item_object_desk:
+                        runnableSoundGenerator.setTarget(T_DESK, scanBarcode());
+                        break;
+                    case R.id.item_object_office_supplies:
+                        runnableSoundGenerator.setTarget(T_OFFICE_SUPPLIES, scanBarcode());
+                        break;
+                    case R.id.item_object_keyboard:
+                        runnableSoundGenerator.setTarget(T_COMPUTER_KEYBOARD, scanBarcode());
+                        break;
+                    case R.id.item_object_monitor:
+                        runnableSoundGenerator.setTarget(T_COMPUTER_MONITOR, scanBarcode());
+                        break;
+                    case R.id.item_object_mouse:
+                        runnableSoundGenerator.setTarget(T_COMPUTER_MOUSE, scanBarcode());
                         break;
                     case R.id.item_object_window:
                         runnableSoundGenerator.setTarget(T_WINDOW, scanBarcode());

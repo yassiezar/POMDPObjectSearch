@@ -26,7 +26,6 @@ public class RunnableSoundGenerator implements Runnable
 {
     private static final String TAG = RunnableSoundGenerator.class.getSimpleName();
 
-    /* TODO: Make new barcodes to correspond with new values */
     private static final int O_NOTHING = 0;
     private static final int O_DESK = 4;
     private static final int O_LAPTOP = 5;
@@ -85,7 +84,6 @@ public class RunnableSoundGenerator implements Runnable
         // Get current state and generate new waypoint if agent is in new state or sees new object
         Log.d(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
         Log.i(TAG, String.format("Object: %d Step: %d Visited: %d", state.getEncodedState()[0], state.getEncodedState()[1], state.getEncodedState()[2]));
-        // if(state.getEncodedState()[State.S_STEPS] == 0) prevCameraObservation = newCameraObservation;
         if(waypoint.waypointReached(cameraPan, cameraTilt) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
         {
             long action = policy.getAction(state);
@@ -106,7 +104,6 @@ public class RunnableSoundGenerator implements Runnable
     {
         phonePose = camera.getDisplayOrientedPose();
         this.session = session;
-
     }
 
     public void update()
@@ -316,7 +313,7 @@ public class RunnableSoundGenerator implements Runnable
                 stateVector[1] += 1;
             }
 
-            /* TODO: Wrap the waypoint when it moves out of the 90deg bounds */
+            // Wrap the world
             if(Math.asin(wayPointTranslation[1]) > Math.PI/4)
             {
                 wayPointTranslation[1] = -(float)Math.sin(Math.sin(Math.PI/4));
@@ -410,7 +407,6 @@ public class RunnableSoundGenerator implements Runnable
 
         private void addObservation(long observation, float fpan, float ftilt)
         {
-            Log.i(TAG, "MAKING OBSERVATION");
             // Origin is top right, not bottom left
             int pan = (int) (-Math.round(Math.toDegrees(-fpan) / ANGLE_INTERVAL) + GRID_SIZE / 2 - 1);
             int tilt = (int) (-Math.round(Math.toDegrees(-ftilt) / ANGLE_INTERVAL) + GRID_SIZE / 2 - 1);
@@ -509,6 +505,11 @@ public class RunnableSoundGenerator implements Runnable
             Random rand = new Random();
             long s = state.getDecodedState();
 
+            if(policy.get(s) == null)
+            {
+                Log.w(TAG, "Undefined state, executing random action");
+                return rand.nextInt(4);
+            }
             int nActions = policy.get(s).size();
             return policy.get(s).get(rand.nextInt(nActions));
         }
