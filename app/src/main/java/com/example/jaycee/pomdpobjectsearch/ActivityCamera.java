@@ -57,8 +57,14 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
 
     private static final int O_NOTHING = 0;
 
-    private static final int T_MUG = 6;
+    /* TODO: Make new barcodes to correspond with new values */
+    private static final int T_COMPUTER_MONITOR = 1;
+    private static final int T_COMPUTER_MOUSE = 3;
+    private static final int T_COMPUTER_KEYBOARD = 2;
+    private static final int T_DESK = 4;
     private static final int T_LAPTOP = 5;
+    private static final int T_MUG = 6;
+    private static final int T_OFFICE_SUPPLIES = 7;
     private static final int T_WINDOW = 8;
 
     private Session session;
@@ -150,13 +156,28 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                 switch (item.getItemId())
                 {
                     case R.id.item_object_mug:
-                        runnableSoundGenerator.setTarget(T_MUG);
+                        runnableSoundGenerator.setTarget(T_MUG, scanBarcode());
                         break;
                     case R.id.item_object_laptop:
-                        runnableSoundGenerator.setTarget(T_LAPTOP);
+                        runnableSoundGenerator.setTarget(T_LAPTOP, scanBarcode());
+                        break;
+                    case R.id.item_object_desk:
+                        runnableSoundGenerator.setTarget(T_DESK, scanBarcode());
+                        break;
+                    case R.id.item_object_office_supplies:
+                        runnableSoundGenerator.setTarget(T_OFFICE_SUPPLIES, scanBarcode());
+                        break;
+                    case R.id.item_object_keyboard:
+                        runnableSoundGenerator.setTarget(T_COMPUTER_KEYBOARD, scanBarcode());
+                        break;
+                    case R.id.item_object_monitor:
+                        runnableSoundGenerator.setTarget(T_COMPUTER_MONITOR, scanBarcode());
+                        break;
+                    case R.id.item_object_mouse:
+                        runnableSoundGenerator.setTarget(T_COMPUTER_MOUSE, scanBarcode());
                         break;
                     case R.id.item_object_window:
-                        runnableSoundGenerator.setTarget(T_WINDOW);
+                        runnableSoundGenerator.setTarget(T_WINDOW, scanBarcode());
                         break;
                 }
 
@@ -352,17 +373,6 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             float[] viewMatrix = new float[16];
             camera.getViewMatrix(viewMatrix, 0);
 
-            if(camera.getTrackingState() == TrackingState.TRACKING &&
-                    runnableSoundGenerator.isTargetSet() &&
-                    !runnableSoundGenerator.isTargetFound())
-            {
-                runnableSoundGenerator.update(camera, session);
-            }
-            else
-            {
-                Log.w(TAG, "Camera not tracking or target not set       . ");
-            }
-
             // Compute lighting from average intensity of the image.
             // The first three components are color scaling factors.
             // The last one is the average pixel intensity in gamma space.
@@ -381,32 +391,10 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                 }
             }
 
+            runnableSoundGenerator.updatePhonePose(camera, session);
             if(runnableSoundGenerator.isTargetSet())
             {
-                Bitmap bitmap = backgroundRenderer.getBitmap(width, height);
-
-                com.google.android.gms.vision.Frame bitmapFrame = new com.google.android.gms.vision.Frame.Builder().setBitmap(bitmap).build();
-                SparseArray<Barcode> barcodes = detector.detect(bitmapFrame);
-
-                if(barcodes.size() > 0)
-                {
-                    for(int i = 0; i < barcodes.size(); i ++)
-                    {
-                        int key = barcodes.keyAt(i);
-                        final int val = Integer.parseInt(barcodes.get(key).displayValue);
-
-                        Rect scannerArea = new Rect(scannerView.getLeft(), scannerView.getTop(), scannerView.getRight(), scannerView.getBottom());
-                        if(scannerArea.contains(barcodes.get(key).getBoundingBox()))
-                        {
-                            Log.d(TAG, "Object found: " + val);
-                            runnableSoundGenerator.setObservation(val);
-                        }
-                    }
-                }
-                else
-                {
-                    runnableSoundGenerator.setObservation(O_NOTHING);
-                }
+                runnableSoundGenerator.setObservation(scanBarcode());
 
                 if(camera.getTrackingState() == TrackingState.TRACKING)
                 {
@@ -420,6 +408,18 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                     Log.w(TAG, "No target set.");
                 }
             }
+
+            if(camera.getTrackingState() == TrackingState.TRACKING &&
+                    runnableSoundGenerator.isTargetSet() &&
+                    !runnableSoundGenerator.isTargetFound())
+            {
+                runnableSoundGenerator.update();
+            }
+            else
+            {
+                Log.w(TAG, "Camera not tracking or target not set       . ");
+            }
+
         }
         catch(CameraNotAvailableException e)
         {
@@ -429,6 +429,33 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         {
             Log.e(TAG, "Exception on OpenGL thread: " + t);
         }
+    }
+
+    public int scanBarcode()
+    {
+        Bitmap bitmap = backgroundRenderer.getBitmap(width, height);
+
+        com.google.android.gms.vision.Frame bitmapFrame = new com.google.android.gms.vision.Frame.Builder().setBitmap(bitmap).build();
+        SparseArray<Barcode> barcodes = detector.detect(bitmapFrame);
+
+        int val = O_NOTHING;
+
+        if(barcodes.size() > 0)
+        {
+            for(int i = 0; i < barcodes.size(); i ++)
+            {
+                int key = barcodes.keyAt(i);
+
+                Rect scannerArea = new Rect(scannerView.getLeft(), scannerView.getTop(), scannerView.getRight(), scannerView.getBottom());
+                if(scannerArea.contains(barcodes.get(key).getBoundingBox()))
+                {
+                    val = Integer.parseInt(barcodes.get(key).displayValue);
+                    Log.d(TAG, "Object found: " + val);
+                }
+            }
+        }
+
+        return val;
     }
 
     @Override
