@@ -22,7 +22,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererBackground;
 import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererObject;
@@ -70,7 +69,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     private Session session;
     private Frame frame;
 
-    private GLSurfaceView surfaceView;
+    private MyGLSurfaceView surfaceView;
     private View scannerView;
     private DrawerLayout drawerLayout;
 
@@ -104,7 +103,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
 
-        surfaceView = findViewById(R.id.surfaceview);
+        surfaceView = (MyGLSurfaceView)findViewById(R.id.surfaceview);
         surfaceView.setPreserveEGLContextOnPause(true);
         surfaceView.setEGLContextClientVersion(2);
         surfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);

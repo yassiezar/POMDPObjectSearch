@@ -8,6 +8,7 @@ import com.google.ar.core.Session;
 
 import android.app.Activity;
 import android.content.Context;
+import android.opengl.GLSurfaceView;
 import android.os.Vibrator;
 import android.util.Log;
 import android.widget.Toast;
