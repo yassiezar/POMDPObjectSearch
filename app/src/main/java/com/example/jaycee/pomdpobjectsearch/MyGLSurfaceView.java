@@ -19,6 +19,7 @@ public class MyGLSurfaceView extends GLSurfaceView implements SurfaceHolder.Call
     {
         super(context);
         getHolder().addCallback(this);
+        getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         setFocusable(true);
     }
 

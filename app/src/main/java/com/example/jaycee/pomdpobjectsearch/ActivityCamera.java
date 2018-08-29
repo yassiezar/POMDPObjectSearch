@@ -25,6 +25,7 @@ import android.view.WindowManager;
 
 import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererBackground;
 import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererObject;
+import com.example.jaycee.pomdpobjectsearch.rendering.GLRenderer;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
@@ -47,14 +48,12 @@ import java.util.ArrayList;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.Renderer
+public class ActivityCamera extends AppCompatActivity
 {
     private static final String TAG = ActivityCamera.class.getSimpleName();
 
     private static final int CAMERA_PERMISSION_CODE = 0;
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
-
-    private static final int O_NOTHING = 0;
 
     /* TODO: Make new barcodes to correspond with new values */
     private static final int T_COMPUTER_MONITOR = 1;
@@ -70,25 +69,18 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     private Frame frame;
 
     private MyGLSurfaceView surfaceView;
-    private View scannerView;
+    // private View scannerView;
     private DrawerLayout drawerLayout;
+    private GLRenderer renderer;
 
-    private final ClassRendererBackground backgroundRenderer = new ClassRendererBackground();
-    private final ClassRendererObject objectRenderer = new ClassRendererObject();
-
-    private BarcodeDetector detector;
+    // private BarcodeDetector detector;
 
     private RunnableSoundGenerator runnableSoundGenerator;
 
-    private ArrayList<ARObject> objectList;
+    // private ArrayList<ARObject> objectList;
 
     private boolean requestARCoreInstall = true;
-    private boolean viewportChanged = false;
-    private boolean drawObjects = false;
-
-    private int width, height;
-
-    private final float[] anchorMatrix = new float[16];
+    // private boolean drawObjects = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -103,13 +95,15 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
 
+        renderer = new GLRenderer(this);
+
         surfaceView = findViewById(R.id.surfaceview);
         surfaceView.setPreserveEGLContextOnPause(true);
         surfaceView.setEGLContextClientVersion(2);
         surfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
-        surfaceView.setRenderer(this);
+        surfaceView.setRenderer(renderer);
         surfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
-        surfaceView.setOnTouchListener(new View.OnTouchListener()
+        /*surfaceView.setOnTouchListener(new View.OnTouchListener()
         {
             @Override
             public boolean onTouch(View v, MotionEvent event)
@@ -142,7 +136,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                 }
                 return true;
             }
-        });
+        });*/
 
         drawerLayout = findViewById(R.id.layout_drawer_objects);
         NavigationView navigationView = findViewById(R.id.navigation_view_objects);
@@ -152,31 +146,32 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item)
             {
+                int obs = renderer.scanBarcode();
                 switch (item.getItemId())
                 {
                     case R.id.item_object_mug:
-                        runnableSoundGenerator.setTarget(T_MUG, scanBarcode());
+                        runnableSoundGenerator.setTarget(T_MUG, obs);
                         break;
                     case R.id.item_object_laptop:
-                        runnableSoundGenerator.setTarget(T_LAPTOP, scanBarcode());
+                        runnableSoundGenerator.setTarget(T_LAPTOP, obs);
                         break;
                     case R.id.item_object_desk:
-                        runnableSoundGenerator.setTarget(T_DESK, scanBarcode());
+                        runnableSoundGenerator.setTarget(T_DESK, obs);
                         break;
                     case R.id.item_object_office_supplies:
-                        runnableSoundGenerator.setTarget(T_OFFICE_SUPPLIES, scanBarcode());
+                        runnableSoundGenerator.setTarget(T_OFFICE_SUPPLIES, obs);
                         break;
                     case R.id.item_object_keyboard:
-                        runnableSoundGenerator.setTarget(T_COMPUTER_KEYBOARD, scanBarcode());
+                        runnableSoundGenerator.setTarget(T_COMPUTER_KEYBOARD, obs);
                         break;
                     case R.id.item_object_monitor:
-                        runnableSoundGenerator.setTarget(T_COMPUTER_MONITOR, scanBarcode());
+                        runnableSoundGenerator.setTarget(T_COMPUTER_MONITOR, obs);
                         break;
                     case R.id.item_object_mouse:
-                        runnableSoundGenerator.setTarget(T_COMPUTER_MOUSE, scanBarcode());
+                        runnableSoundGenerator.setTarget(T_COMPUTER_MOUSE, obs);
                         break;
                     case R.id.item_object_window:
-                        runnableSoundGenerator.setTarget(T_WINDOW, scanBarcode());
+                        runnableSoundGenerator.setTarget(T_WINDOW, obs);
                         break;
                 }
 
@@ -189,13 +184,10 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             }
         });
 
-        scannerView = findViewById(R.id.view_scanner);
-
-        detector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.ALL_FORMATS).build();
         runnableSoundGenerator = new RunnableSoundGenerator(this);
 
         // Create and add objects to list
-        objectList = new ArrayList<>();
+        /*objectList = new ArrayList<>();
 
         objectList.add(new ARObject(0, 3, "Door"));
         objectList.add(new ARObject(1, 3, "Door"));
@@ -224,7 +216,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         objectList.add(new ARObject(11,5, "Chair"));
 
         objectList.add(new ARObject(5, 6, "Table"));
-        objectList.add(new ARObject(6, 6, "Desk"));
+        objectList.add(new ARObject(6, 6, "Desk"));*/
     }
 
     @Override
@@ -251,6 +243,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                     return;
                 }
                 session = new Session(this);
+                renderer.setSession(session);
             }
             catch(UnavailableUserDeclinedInstallationException | UnavailableArcoreNotInstalledException  e)
             {
@@ -308,157 +301,6 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     }
 
     @Override
-    public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig)
-    {
-        GLES20.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-
-        try
-        {
-            backgroundRenderer.createOnGlThread(this);
-            objectRenderer.createOnGlThread(this, "models/andy.obj", "models/andy.png");
-            // objectRenderer.createOnGlThread(this, "models/ball/soccer_ball.obj", "models/ball/PlatonicSurface_Color.jpg");
-            objectRenderer.setMaterialProperties(0.f, 2.f, 0.5f, 6.f);
-        }
-        catch(IOException e)
-        {
-            Log.e(TAG, "Failed to read asset file. ", e);
-        }
-    }
-
-    @Override
-    public void onSurfaceChanged(GL10 gl10, int width, int height)
-    {
-        viewportChanged = true;
-        this.width = width;
-        this.height = height;
-        GLES20.glViewport(0, 0, width, height);
-    }
-
-    @Override
-    public void onDrawFrame(GL10 gl10)
-    {
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-
-        if(session == null)
-        {
-            return;
-        }
-
-        if(viewportChanged)
-        {
-            try
-            {
-                viewportChanged = false;
-                int displayRotation = this.getSystemService(WindowManager.class).getDefaultDisplay().getRotation();
-                session.setDisplayGeometry(displayRotation, width, height);
-            }
-            catch(NullPointerException e)
-            {
-                Log.e(TAG, "defaultDisplay exception: " + e);
-            }
-        }
-
-        session.setCameraTextureName(backgroundRenderer.getTextureId());
-        try
-        {
-            frame = session.update();
-            Camera camera = frame.getCamera();
-
-            backgroundRenderer.draw(frame);
-
-            float[] projectionMatrix = new float[16];
-            camera.getProjectionMatrix(projectionMatrix, 0, 0.1f, 100.0f);
-
-            float[] viewMatrix = new float[16];
-            camera.getViewMatrix(viewMatrix, 0);
-
-            // Compute lighting from average intensity of the image.
-            // The first three components are color scaling factors.
-            // The last one is the average pixel intensity in gamma space.
-            final float[] colourCorrectionRgba = new float[4];
-            frame.getLightEstimate().getColorCorrection(colourCorrectionRgba, 0);
-
-            float scaleFactor = 1.f;
-
-            if(camera.getTrackingState() == TrackingState.TRACKING && drawObjects)
-            {
-                for(ARObject object : objectList)
-                {
-                    object.getRotatedPose().toMatrix(anchorMatrix, 0);
-                    objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
-                    objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
-                }
-            }
-
-            runnableSoundGenerator.updatePhonePose(camera, session);
-            if(runnableSoundGenerator.isTargetSet())
-            {
-                runnableSoundGenerator.setObservation(scanBarcode());
-
-                if(camera.getTrackingState() == TrackingState.TRACKING)
-                {
-                    runnableSoundGenerator.getWaypointAnchor().getPose().toMatrix(anchorMatrix, 0);
-
-                    objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
-                    objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
-                }
-                else
-                {
-                    Log.w(TAG, "No target set.");
-                }
-            }
-
-            if(camera.getTrackingState() == TrackingState.TRACKING &&
-                    runnableSoundGenerator.isTargetSet() &&
-                    !runnableSoundGenerator.isTargetFound())
-            {
-                runnableSoundGenerator.setTimestamp(frame.getTimestamp());
-                runnableSoundGenerator.update();
-            }
-            else
-            {
-                Log.w(TAG, "Camera not tracking or target not set       . ");
-            }
-
-        }
-        catch(CameraNotAvailableException e)
-        {
-            Log.e(TAG, "Camera not available: " + e);
-        }
-        catch(Throwable t)
-        {
-            Log.e(TAG, "Exception on OpenGL thread: " + t);
-        }
-    }
-
-    public int scanBarcode()
-    {
-        Bitmap bitmap = backgroundRenderer.getBitmap(width, height);
-
-        com.google.android.gms.vision.Frame bitmapFrame = new com.google.android.gms.vision.Frame.Builder().setBitmap(bitmap).build();
-        SparseArray<Barcode> barcodes = detector.detect(bitmapFrame);
-
-        int val = O_NOTHING;
-
-        if(barcodes.size() > 0)
-        {
-            for(int i = 0; i < barcodes.size(); i ++)
-            {
-                int key = barcodes.keyAt(i);
-
-                Rect scannerArea = new Rect(scannerView.getLeft(), scannerView.getTop(), scannerView.getRight(), scannerView.getBottom());
-                if(scannerArea.contains(barcodes.get(key).getBoundingBox()))
-                {
-                    val = Integer.parseInt(barcodes.get(key).displayValue);
-                    Log.d(TAG, "Object found: " + val);
-                }
-            }
-        }
-
-        return val;
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
         switch (item.getItemId())
@@ -478,5 +320,10 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     public void requestCameraPermission()
     {
         ActivityCompat.requestPermissions(this, new String[] {CAMERA_PERMISSION}, CAMERA_PERMISSION_CODE);
+    }
+
+    public RunnableSoundGenerator getRunnableSoundGenerator()
+    {
+        return runnableSoundGenerator;
     }
 }
