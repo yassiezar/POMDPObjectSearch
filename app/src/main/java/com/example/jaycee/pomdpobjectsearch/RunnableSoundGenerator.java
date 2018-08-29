@@ -95,10 +95,11 @@ public class RunnableSoundGenerator implements Runnable
             prevCameraObservation = newCameraObservation;
             state.addObservation(newCameraObservation, cameraPan, cameraTilt);
         }
-        ClassHelpers.mVector waypointVector = getRotation(waypoint.getPose(), false);
-        float[] waypointRotationAngles = waypointVector.getEuler();
-        float waypointTilt = waypointRotationAngles[1];
 
+        Pose waypointPose = waypoint.getPose();
+        float waypointTilt = (float)Math.asin(-waypointPose.getTranslation()[1]);
+
+        Log.d(TAG, String.format("Waypoint tilt: %f Phone tilt: %f Pitch: %f", waypointTilt, cameraTilt, getPitch(waypointTilt - cameraTilt)));
         JNIBridge.playSound(waypoint.getPose().getTranslation(), cameraVector.asFloat(), gain, getPitch(waypointTilt - cameraTilt));
 
         // Update final params

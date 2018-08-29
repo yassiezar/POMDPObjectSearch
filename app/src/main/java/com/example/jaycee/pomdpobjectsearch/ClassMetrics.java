@@ -84,7 +84,7 @@ public class ClassMetrics
         private String serverIdAddress = "10.42.0.1";
         private int connectionPort = 6666;
 
-        public WifiDataSend() { }
+        WifiDataSend() { }
 
         @Override
         protected Void doInBackground(String... strings)
