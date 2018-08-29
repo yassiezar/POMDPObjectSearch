@@ -29,7 +29,7 @@ public class RunnableSoundGenerator implements Runnable
 
     private static final int O_NOTHING = 0;
 
-    private Activity callingActivity;
+    private Context context;
 
     private Pose phonePose;
     private Waypoint waypoint;
@@ -53,10 +53,10 @@ public class RunnableSoundGenerator implements Runnable
     private Vibrator vibrator;
     private Toast toast;
 
-    RunnableSoundGenerator(Activity callingActivity)
+    RunnableSoundGenerator(Context context)
     {
-        this.callingActivity = callingActivity;
-        this.vibrator= (Vibrator)callingActivity.getSystemService(Context.VIBRATOR_SERVICE);
+        this.context = context;
+        this.vibrator= (Vibrator)context.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     @Override
@@ -249,7 +249,7 @@ public class RunnableSoundGenerator implements Runnable
 
         if(observation != O_NOTHING && observation != -1)
         {
-            callingActivity.runOnUiThread(new Runnable()
+            ((Activity)context).runOnUiThread(new Runnable()
             {
                 @Override
                 public void run()
@@ -258,7 +258,7 @@ public class RunnableSoundGenerator implements Runnable
                     {
                         toast.cancel();
                     }
-                    toast = Toast.makeText(callingActivity, val, Toast.LENGTH_SHORT);
+                    toast = Toast.makeText(context, val, Toast.LENGTH_SHORT);
                     toast.show();
                 }
             });
@@ -470,7 +470,7 @@ public class RunnableSoundGenerator implements Runnable
             {
                 // Extract policy state-action pairs from text file using regex
                 Pattern pattern = Pattern.compile("(\\d+)\\s(\\d)\\s(1.0|0.25)");
-                reader = new BufferedReader(new InputStreamReader(callingActivity.getResources().getAssets().open(fileName)));
+                reader = new BufferedReader(new InputStreamReader(context.getResources().getAssets().open(fileName)));
 
                 String line;
                 while ((line = reader.readLine()) != null)

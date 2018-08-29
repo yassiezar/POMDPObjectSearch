@@ -25,7 +25,6 @@ import android.view.WindowManager;
 
 import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererBackground;
 import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererObject;
-import com.example.jaycee.pomdpobjectsearch.rendering.GLRenderer;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
@@ -71,11 +70,10 @@ public class ActivityCamera extends AppCompatActivity
     private MyGLSurfaceView surfaceView;
     // private View scannerView;
     private DrawerLayout drawerLayout;
-    private GLRenderer renderer;
 
     // private BarcodeDetector detector;
 
-    private RunnableSoundGenerator runnableSoundGenerator;
+    // private RunnableSoundGenerator runnableSoundGenerator;
 
     // private ArrayList<ARObject> objectList;
 
@@ -95,14 +93,8 @@ public class ActivityCamera extends AppCompatActivity
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
 
-        renderer = new GLRenderer(this);
-
         surfaceView = findViewById(R.id.surfaceview);
-        surfaceView.setPreserveEGLContextOnPause(true);
-        surfaceView.setEGLContextClientVersion(2);
-        surfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
-        surfaceView.setRenderer(renderer);
-        surfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+        surfaceView.setBarcodeView(findViewById(R.id.view_scanner));
         /*surfaceView.setOnTouchListener(new View.OnTouchListener()
         {
             @Override
@@ -146,36 +138,36 @@ public class ActivityCamera extends AppCompatActivity
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item)
             {
-                int obs = renderer.scanBarcode();
+                int obs = surfaceView.scanBarcode();
                 switch (item.getItemId())
                 {
                     case R.id.item_object_mug:
-                        runnableSoundGenerator.setTarget(T_MUG, obs);
+                        surfaceView.setTarget(T_MUG);
                         break;
                     case R.id.item_object_laptop:
-                        runnableSoundGenerator.setTarget(T_LAPTOP, obs);
+                        surfaceView.setTarget(T_LAPTOP);
                         break;
                     case R.id.item_object_desk:
-                        runnableSoundGenerator.setTarget(T_DESK, obs);
+                        surfaceView.setTarget(T_DESK);
                         break;
                     case R.id.item_object_office_supplies:
-                        runnableSoundGenerator.setTarget(T_OFFICE_SUPPLIES, obs);
+                        surfaceView.setTarget(T_OFFICE_SUPPLIES);
                         break;
                     case R.id.item_object_keyboard:
-                        runnableSoundGenerator.setTarget(T_COMPUTER_KEYBOARD, obs);
+                        surfaceView.setTarget(T_COMPUTER_KEYBOARD);
                         break;
                     case R.id.item_object_monitor:
-                        runnableSoundGenerator.setTarget(T_COMPUTER_MONITOR, obs);
+                        surfaceView.setTarget(T_COMPUTER_MONITOR);
                         break;
                     case R.id.item_object_mouse:
-                        runnableSoundGenerator.setTarget(T_COMPUTER_MOUSE, obs);
+                        surfaceView.setTarget(T_COMPUTER_MOUSE);
                         break;
                     case R.id.item_object_window:
-                        runnableSoundGenerator.setTarget(T_WINDOW, obs);
+                        surfaceView.setTarget(T_WINDOW);
                         break;
                 }
 
-                runnableSoundGenerator.setOffsetPose(frame.getAndroidSensorPose());
+                surfaceView.setOffsetPose(frame.getAndroidSensorPose());
                 item.setCheckable(true);
 
                 drawerLayout.closeDrawers();
@@ -184,7 +176,7 @@ public class ActivityCamera extends AppCompatActivity
             }
         });
 
-        runnableSoundGenerator = new RunnableSoundGenerator(this);
+        // runnableSoundGenerator = new RunnableSoundGenerator(this);
 
         // Create and add objects to list
         /*objectList = new ArrayList<>();
@@ -243,7 +235,7 @@ public class ActivityCamera extends AppCompatActivity
                     return;
                 }
                 session = new Session(this);
-                renderer.setSession(session);
+                surfaceView.setSession(session);
             }
             catch(UnavailableUserDeclinedInstallationException | UnavailableArcoreNotInstalledException  e)
             {
@@ -320,10 +312,5 @@ public class ActivityCamera extends AppCompatActivity
     public void requestCameraPermission()
     {
         ActivityCompat.requestPermissions(this, new String[] {CAMERA_PERMISSION}, CAMERA_PERMISSION_CODE);
-    }
-
-    public RunnableSoundGenerator getRunnableSoundGenerator()
-    {
-        return runnableSoundGenerator;
     }
 }

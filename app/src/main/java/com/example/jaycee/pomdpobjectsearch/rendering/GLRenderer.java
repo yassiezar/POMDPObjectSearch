@@ -1,4 +1,4 @@
-package com.example.jaycee.pomdpobjectsearch.rendering;
+/*package com.example.jaycee.pomdpobjectsearch.rendering;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -124,7 +124,7 @@ public class GLRenderer  implements GLSurfaceView.Renderer
 
             float scaleFactor = 1.f;
 
-            /*if(camera.getTrackingState() == TrackingState.TRACKING && drawObjects)
+            *//*if(camera.getTrackingState() == TrackingState.TRACKING && drawObjects)
             {
                 for(ARObject object : objectList)
                 {
@@ -132,7 +132,7 @@ public class GLRenderer  implements GLSurfaceView.Renderer
                     objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
                     objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
                 }
-            }*/
+            }*//*
 
             RunnableSoundGenerator runnableSoundGenerator = context.getRunnableSoundGenerator();
             runnableSoundGenerator.updatePhonePose(camera, session);
@@ -208,4 +208,4 @@ public class GLRenderer  implements GLSurfaceView.Renderer
     }
 
     public void setSession(Session session) { this.session = session; }
-}
+}*/
