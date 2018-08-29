@@ -74,6 +74,7 @@ public class GLRenderer  implements GLSurfaceView.Renderer
         viewportChanged = true;
         this.width = width;
         this.height = height;
+        Log.i(TAG, "MAde it here");
         GLES20.glViewport(0, 0, width, height);
     }
 

@@ -55,18 +55,20 @@ public class MyGLSurfaceView extends GLSurfaceView implements SurfaceHolder.Call
         }
     }
 
-
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
     {
         if(camera != null)
         {
             Camera.Parameters parameters = camera.getParameters();
+
             parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+
             List<Camera.Size> previewSizes = parameters.getSupportedPreviewSizes();
             Camera.Size previewSize = previewSizes.get(0);
             parameters.setPreviewSize(previewSize.width, previewSize.height);
             requestLayout();
+
             camera.setParameters(parameters);
             camera.setDisplayOrientation(90);
 
