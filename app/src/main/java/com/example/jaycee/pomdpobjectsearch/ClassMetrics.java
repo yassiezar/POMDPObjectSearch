@@ -3,6 +3,8 @@ package com.example.jaycee.pomdpobjectsearch;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.google.ar.core.Pose;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -21,13 +23,13 @@ public class ClassMetrics
     private double targetX, targetY, targetZ;
     private double phoneX, phoneY, phoneZ;
     private double phoneQx, phoneQy, phoneQz, phoneQw;
-    private long observation, targetObservation, target;
+    private long observation, target, state;
 
     public void writeWifi()
     {
         String wifiString = String.valueOf(timestamp) + DELIMITER +
                 String.valueOf(observation) + DELIMITER +
-                String.valueOf(targetObservation) + DELIMITER +
+                String.valueOf(state) + DELIMITER +
                 String.valueOf(target) + DELIMITER +
                 String.valueOf(targetX) + DELIMITER +
                 String.valueOf(targetY) + DELIMITER +
@@ -43,42 +45,43 @@ public class ClassMetrics
         if(dataStreamer == null ||
                 dataStreamer.getStatus() != AsyncTask.Status.RUNNING)
         {
-            //dataStreamer = new WifiDataSend();
-            //dataStreamer.execute(wifiString);
+            dataStreamer = new WifiDataSend();
+            dataStreamer.execute(wifiString);
         }
     }
 
     public void updateTimestamp(double timestamp) { this.timestamp = timestamp; }
+    public void updateState(long state) { this.state = state; }
 
-    public void updateTargetPosition(double x, double y, double z)
+    public void updateTargetPosition(Pose pose)
     {
-        targetX = x;
-        targetY = y;
-        targetZ = z;
+        float[] position = pose.getTranslation();
+        targetX = position[0];
+        targetY = position[1];
+        targetZ = position[2];
     }
 
-    public void updatePhonePosition(double x, double y, double z)
+    public void updatePhonePose(Pose pose)
     {
-        phoneX = x;
-        phoneY = y;
-        phoneZ = z;
-    }
+        float[] position = pose.getTranslation();
+        float[] orientation = pose.getRotationQuaternion();
 
-    public void updatePhoneOrientation(double x, double y, double z, double w)
-    {
-        phoneQx = x;
-        phoneQy = y;
-        phoneQz = z;
-        phoneQw = w;
+        phoneX = position[0];
+        phoneY = position[1];
+        phoneZ = position[2];
+
+        phoneQx = orientation[0];
+        phoneQy = orientation[1];
+        phoneQz = orientation[2];
+        phoneQw = orientation[3];
     }
 
     public void updateObservation(long observation) { this.observation = observation; }
-    public void updateTargetObservation(long targetObs) { this.targetObservation = targetObs; }
     public void updateTarget (long target) { this.target = target; }
 
     private static class WifiDataSend extends AsyncTask<String, Void, Void>
     {
-        private String serverIdAddress = "10.5.42.29";
+        private String serverIdAddress = "10.43.0.1";
         private int connectionPort = 6666;
 
         public WifiDataSend() { }

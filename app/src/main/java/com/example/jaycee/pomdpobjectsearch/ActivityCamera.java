@@ -413,6 +413,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                     runnableSoundGenerator.isTargetSet() &&
                     !runnableSoundGenerator.isTargetFound())
             {
+                runnableSoundGenerator.setTimestamp(frame.getTimestamp());
                 runnableSoundGenerator.update();
             }
             else

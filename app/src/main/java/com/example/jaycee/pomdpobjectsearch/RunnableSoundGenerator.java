@@ -27,8 +27,6 @@ public class RunnableSoundGenerator implements Runnable
     private static final String TAG = RunnableSoundGenerator.class.getSimpleName();
 
     private static final int O_NOTHING = 0;
-    private static final int O_DESK = 4;
-    private static final int O_LAPTOP = 5;
 
     private Activity callingActivity;
 
@@ -44,6 +42,7 @@ public class RunnableSoundGenerator implements Runnable
     private long observation = O_NOTHING;
     private long prevCameraObservation = O_NOTHING;
     private long target = -1;
+    private long timestamp = 0;
 
     private Policy policy;
 
@@ -88,8 +87,11 @@ public class RunnableSoundGenerator implements Runnable
         {
             long action = policy.getAction(state);
             Log.i(TAG, String.format("Object found or found waypoint, action: %d", action));
+
             waypoint.updateWaypoint(phonePose, state, action);
             waypointAnchor = session.createAnchor(waypoint.getPose());
+            metrics.updateTargetPosition(waypoint.getPose());
+
             prevCameraObservation = newCameraObservation;
             state.addObservation(newCameraObservation, cameraPan, cameraTilt);
         }
@@ -98,17 +100,24 @@ public class RunnableSoundGenerator implements Runnable
         float waypointTilt = waypointRotationAngles[1];
 
         JNIBridge.playSound(waypoint.getPose().getTranslation(), cameraVector.asFloat(), gain, getPitch(waypointTilt - cameraTilt));
+
+        // Update final params
+        metrics.updateState(state.getDecodedState());
+        metrics.updateTimestamp(timestamp);
+        // Write to WiFi
+        metrics.writeWifi();
     }
 
     public void updatePhonePose(Camera camera, Session session)
     {
         phonePose = camera.getDisplayOrientedPose();
+        metrics.updatePhonePose(phonePose);
+
         this.session = session;
     }
 
     public void update()
     {
-        metrics.writeWifi();
         this.run();
     }
 
@@ -196,7 +205,6 @@ public class RunnableSoundGenerator implements Runnable
 
     public void setObservation(long observation)
     {
-        /* TODO: Translate between barcode and state encoding for object observations */
         final String val;
         if(observation == 3)
         {
@@ -256,6 +264,7 @@ public class RunnableSoundGenerator implements Runnable
     }
 
     public void setOffsetPose(Pose pose) { this.offsetPose = pose; }
+    public void setTimestamp(long timestamp) {this.timestamp = timestamp; }
     public boolean isTargetSet() { return this.targetSet; }
     public boolean isTargetFound() { return this.targetFound; }
     public long getTarget() { return this.target; }

@@ -5,7 +5,7 @@ import socket, datetime, atexit
 def get_filename():
     return datetime.datetime.now().strftime("%Y-%m-%d_%I:%M:%S")	
 
-host = "10.5.42.29"
+host = "10.43.0.1"
 port = 6666
 
 print (host)
