@@ -36,6 +36,7 @@ public class MyGLSurfaceView extends GLSurfaceView implements SurfaceHolder.Call
 
     private Camera camera;
     private View barcodeView;
+    private Frame frame;
 
     private Context context;
 
@@ -80,7 +81,8 @@ public class MyGLSurfaceView extends GLSurfaceView implements SurfaceHolder.Call
     @Override
     public void surfaceCreated(SurfaceHolder holder)
     {
-        try
+        super.surfaceCreated(holder);
+/*        try
         {
             camera = Camera.open();
             camera.setPreviewDisplay(holder);
@@ -90,22 +92,23 @@ public class MyGLSurfaceView extends GLSurfaceView implements SurfaceHolder.Call
             camera.release();
             camera = null;
             Log.e(TAG, "failed to open Camera: "+ e);
-        }
+        }*/
     }
 
     public void surfaceDestroyed(SurfaceHolder holder) {
         // Surface will be destroyed when we return, so stop the preview.
-        if (camera != null)
+/*        if (camera != null)
         {
             // Call stopPreview() to stop updating the preview surface.
             camera.stopPreview();
-        }
+        }*/
     }
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
     {
-        if(camera != null)
+        super.surfaceChanged(holder, format, width, height);
+/*        if(camera != null)
         {
             Camera.Parameters parameters = camera.getParameters();
 
@@ -120,14 +123,13 @@ public class MyGLSurfaceView extends GLSurfaceView implements SurfaceHolder.Call
             camera.setDisplayOrientation(90);
 
             camera.startPreview();
-        }
+        }*/
     }
 
-    public int scanBarcode() { return renderer.scanBarcode(); }
     public void setSession(Session session) { renderer.setSession(session); }
     public void setBarcodeView(View barcodeView) { this.barcodeView = barcodeView; }
     public void setTarget(int target) { runnableSoundGenerator.setTarget(target, renderer.scanBarcode()); }
-    public void setOffsetPose(Pose pose) { runnableSoundGenerator.setOffsetPose(pose); }
+    public void setOffsetPose() { runnableSoundGenerator.setOffsetPose(frame.getAndroidSensorPose()); }
 
     class GLRenderer implements GLSurfaceView.Renderer
     {
@@ -203,7 +205,7 @@ public class MyGLSurfaceView extends GLSurfaceView implements SurfaceHolder.Call
             session.setCameraTextureName(backgroundRenderer.getTextureId());
             try
             {
-                Frame frame = session.update();
+                frame = session.update();
                 com.google.ar.core.Camera camera = frame.getCamera();
 
                 backgroundRenderer.draw(frame);
@@ -221,16 +223,6 @@ public class MyGLSurfaceView extends GLSurfaceView implements SurfaceHolder.Call
                 frame.getLightEstimate().getColorCorrection(colourCorrectionRgba, 0);
 
                 float scaleFactor = 1.f;
-
-            /*if(camera.getTrackingState() == TrackingState.TRACKING && drawObjects)
-            {
-                for(ARObject object : objectList)
-                {
-                    object.getRotatedPose().toMatrix(anchorMatrix, 0);
-                    objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
-                    objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
-                }
-            }*/
 
                 runnableSoundGenerator.updatePhonePose(camera, session);
                 if(runnableSoundGenerator.isTargetSet())

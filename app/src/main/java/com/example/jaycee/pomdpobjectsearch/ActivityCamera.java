@@ -65,7 +65,6 @@ public class ActivityCamera extends AppCompatActivity
     private static final int T_WINDOW = 8;
 
     private Session session;
-    private Frame frame;
 
     private MyGLSurfaceView surfaceView;
     // private View scannerView;
@@ -138,7 +137,6 @@ public class ActivityCamera extends AppCompatActivity
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item)
             {
-                int obs = surfaceView.scanBarcode();
                 switch (item.getItemId())
                 {
                     case R.id.item_object_mug:
@@ -167,7 +165,7 @@ public class ActivityCamera extends AppCompatActivity
                         break;
                 }
 
-                surfaceView.setOffsetPose(frame.getAndroidSensorPose());
+                surfaceView.setOffsetPose();
                 item.setCheckable(true);
 
                 drawerLayout.closeDrawers();
@@ -175,40 +173,6 @@ public class ActivityCamera extends AppCompatActivity
                 return true;
             }
         });
-
-        // runnableSoundGenerator = new RunnableSoundGenerator(this);
-
-        // Create and add objects to list
-        /*objectList = new ArrayList<>();
-
-        objectList.add(new ARObject(0, 3, "Door"));
-        objectList.add(new ARObject(1, 3, "Door"));
-        objectList.add(new ARObject(5, 3, "Window"));
-        objectList.add(new ARObject(6, 3, "Window"));
-        objectList.add(new ARObject(10, 3, "Door"));
-        objectList.add(new ARObject(11, 3, "Door"));
-
-        objectList.add(new ARObject(0, 4, "Door Handle"));
-        objectList.add(new ARObject(1, 4, "Door Handle"));
-        objectList.add(new ARObject(5, 4, "Monitor"));
-        objectList.add(new ARObject(6, 4, "Monitor"));
-        objectList.add(new ARObject(8, 4, "Bookcase"));
-        objectList.add(new ARObject(9, 4, "Bookcase"));
-        objectList.add(new ARObject(10, 4, "Door Handle"));
-        objectList.add(new ARObject(11, 4, "Door Handle"));
-
-        objectList.add(new ARObject(0,5, "Chair"));
-        objectList.add(new ARObject(3,5, "Mouse"));
-        objectList.add(new ARObject(4,5, "Mug"));
-        objectList.add(new ARObject(5,5, "Keyboard"));
-        objectList.add(new ARObject(6,5, "Laptop"));
-        objectList.add(new ARObject(7,5, "Office Supplies"));
-        objectList.add(new ARObject(8,5, "Book"));
-        objectList.add(new ARObject(9,5, "Book"));
-        objectList.add(new ARObject(11,5, "Chair"));
-
-        objectList.add(new ARObject(5, 6, "Table"));
-        objectList.add(new ARObject(6, 6, "Desk"));*/
     }
 
     @Override
