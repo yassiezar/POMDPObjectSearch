@@ -322,8 +322,8 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         try
         {
             backgroundRenderer.createOnGlThread(this);
-            objectRenderer.createOnGlThread(this, "models/andy.obj", "models/andy.png");
-            // objectRenderer.createOnGlThread(this, "models/ball/soccer_ball.obj", "models/ball/PlatonicSurface_Color.jpg");
+            objectRenderer.createOnGlThread(this, "models/arrow/Arrow.obj", "models/arrow/Arrow_S.tga");
+            // objectRenderer.createOnGlThread(this, "models/andy.obj", "models/andy.png");
             objectRenderer.setMaterialProperties(0.f, 2.f, 0.5f, 6.f);
         }
         catch(IOException e)
@@ -411,7 +411,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                 }
                 else
                 {
-                    Log.w(TAG, "No target set.");
+                    Log.d(TAG, "No target set.");
                 }
             }
 
@@ -423,7 +423,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             }
             else
             {
-                Log.w(TAG, "Camera not tracking or target not set       . ");
+                Log.d(TAG, "Camera not tracking or target not set. ");
             }
 
         }
@@ -439,6 +439,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
 
     public int scanBarcode()
     {
+        /* TODO: Only scan centre of screen */
         Bitmap bitmap = backgroundRenderer.getBitmap(width, height);
 
         com.google.android.gms.vision.Frame bitmapFrame = new com.google.android.gms.vision.Frame.Builder().setBitmap(bitmap).build();

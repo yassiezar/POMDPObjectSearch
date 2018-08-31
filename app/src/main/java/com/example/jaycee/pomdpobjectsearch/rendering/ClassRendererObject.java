@@ -1,13 +1,16 @@
 package com.example.jaycee.pomdpobjectsearch.rendering;
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLES30;
 import android.opengl.GLUtils;
 import android.opengl.Matrix;
+import android.util.Log;
 
+import com.example.jaycee.pomdpobjectsearch.TGAReader;
 import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
 
 import de.javagl.obj.Obj;
@@ -15,6 +18,10 @@ import de.javagl.obj.ObjData;
 import de.javagl.obj.ObjReader;
 import de.javagl.obj.ObjUtils;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -107,9 +114,19 @@ public class ClassRendererObject
 
         ClassShaderUtil.checkGLError(TAG, "Program parameters");
 
-        // Read the texture.
-        Bitmap textureBitmap =
-                BitmapFactory.decodeStream(context.getAssets().open(diffuseTextureAssetName));
+        InputStream fis = context.getAssets().open(diffuseTextureAssetName);
+        byte [] buffer = new byte[fis.available()];
+        context.getAssets().open(diffuseTextureAssetName).read(buffer);
+
+        int [] pixels = TGAReader.read(buffer, TGAReader.ARGB);
+        int width = TGAReader.getWidth(buffer);
+        int height = TGAReader.getHeight(buffer);
+
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(pixels.length*4);
+        byteBuffer.order(ByteOrder.nativeOrder());
+        IntBuffer intBuffer = byteBuffer.asIntBuffer();
+        intBuffer.put(pixels);
+
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glGenTextures(textures.length, textures, 0);
@@ -118,12 +135,12 @@ public class ClassRendererObject
         GLES20.glTexParameteri(
                 GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR_MIPMAP_LINEAR);
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-        //GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGB, 2048, 2048, 0, GLES30.GL_RGB, GLES30.GL_UNSIGNED_BYTE, textureBitmap);
-        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, textureBitmap, 0);
+        GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA, width, height, 0, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, byteBuffer);
+        // GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, textureBitmap, 0);
         GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
 
-        textureBitmap.recycle();
+        //textureBitmap.recycle();
 
         ClassShaderUtil.checkGLError(TAG, "Texture loading");
 
@@ -201,6 +218,7 @@ public class ClassRendererObject
         scaleMatrix[0] = scaleFactor;
         scaleMatrix[5] = scaleFactor;
         scaleMatrix[10] = scaleFactor;
+        scaleMatrix[15] = scaleFactor;
         Matrix.multiplyMM(this.modelMatrix, 0, modelMatrix, 0, scaleMatrix, 0);
     }
 

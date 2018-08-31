@@ -27,8 +27,6 @@ public class RunnableSoundGenerator implements Runnable
     private static final String TAG = RunnableSoundGenerator.class.getSimpleName();
 
     private static final int O_NOTHING = 0;
-    private static final int O_DESK = 4;
-    private static final int O_LAPTOP = 5;
 
     private Activity callingActivity;
 
@@ -330,6 +328,7 @@ public class RunnableSoundGenerator implements Runnable
             {
                 wayPointTranslation[0] = (float)Math.sin(Math.sin(Math.PI/4));
             }
+            Log.i(TAG, String.format("Current pan: %f Current tilt: %f", Math.asin(wayPointTranslation[0]), Math.asin(wayPointTranslation[1])));
 
             wayPointTranslation[2] = phonePose.getTranslation()[2] - 1.f;
 
