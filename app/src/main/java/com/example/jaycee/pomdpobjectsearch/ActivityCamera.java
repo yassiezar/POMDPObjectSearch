@@ -31,6 +31,7 @@ import com.google.android.gms.vision.barcode.BarcodeDetector;
 
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Camera;
+import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
@@ -252,6 +253,11 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                     return;
                 }
                 session = new Session(this);
+
+                // Set config settings
+                Config conf = new Config(session);
+                conf.setFocusMode(Config.FocusMode.AUTO);
+                session.configure(conf);
             }
             catch(UnavailableUserDeclinedInstallationException | UnavailableArcoreNotInstalledException  e)
             {
