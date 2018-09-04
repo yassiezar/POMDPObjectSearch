@@ -1,27 +1,17 @@
 package com.example.jaycee.pomdpobjectsearch.rendering;
 
 import android.content.Context;
-import android.content.res.AssetFileDescriptor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLES30;
-import android.opengl.GLUtils;
 import android.opengl.Matrix;
-import android.util.Log;
 
 import com.example.jaycee.pomdpobjectsearch.TGAReader;
-import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
 
 import de.javagl.obj.Obj;
 import de.javagl.obj.ObjData;
 import de.javagl.obj.ObjReader;
 import de.javagl.obj.ObjUtils;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -30,9 +20,9 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
-public class ClassRendererObject
+public class ObjectRenderer
 {
-    private static final String TAG = ClassRendererObject.class.getSimpleName();
+    private static final String TAG = ObjectRenderer.class.getSimpleName();
 
     private static final String VERTEX_SHADER_NAME = "shaders/object.vert";
     private static final String FRAGMENT_SHADER_NAME = "shaders/object.frag";
@@ -81,14 +71,14 @@ public class ClassRendererObject
     private final float[] modelViewProjectionMatrix = new float[16];
     private final float[] viewLightDirection = new float[4];
 
-    public ClassRendererObject() {}
+    public ObjectRenderer() {}
 
     public void createOnGlThread(Context context, String objAssetName, String diffuseTextureAssetName) throws IOException
     {
         final int vertexShader =
-                ClassShaderUtil.loadGLShader(TAG, context, GLES20.GL_VERTEX_SHADER, VERTEX_SHADER_NAME);
+                ShaderUtils.loadGLShader(TAG, context, GLES20.GL_VERTEX_SHADER, VERTEX_SHADER_NAME);
         final int fragmentShader =
-                ClassShaderUtil.loadGLShader(TAG, context, GLES20.GL_FRAGMENT_SHADER, FRAGMENT_SHADER_NAME);
+                ShaderUtils.loadGLShader(TAG, context, GLES20.GL_FRAGMENT_SHADER, FRAGMENT_SHADER_NAME);
 
         program = GLES20.glCreateProgram();
         GLES20.glAttachShader(program, vertexShader);
@@ -96,7 +86,7 @@ public class ClassRendererObject
         GLES20.glLinkProgram(program);
         GLES20.glUseProgram(program);
 
-        ClassShaderUtil.checkGLError(TAG, "Program creation");
+        ShaderUtils.checkGLError(TAG, "Program creation");
 
         modelViewUniform = GLES20.glGetUniformLocation(program, "u_ModelView");
         modelViewProjectionUniform = GLES20.glGetUniformLocation(program, "u_ModelViewProjection");
@@ -112,7 +102,7 @@ public class ClassRendererObject
         colourCorrectionParameterUniform =
                 GLES20.glGetUniformLocation(program, "u_ColorCorrectionParameters");
 
-        ClassShaderUtil.checkGLError(TAG, "Program parameters");
+        ShaderUtils.checkGLError(TAG, "Program parameters");
 
         InputStream fis = context.getAssets().open(diffuseTextureAssetName);
         byte [] buffer = new byte[fis.available()];
@@ -142,7 +132,7 @@ public class ClassRendererObject
 
         //textureBitmap.recycle();
 
-        ClassShaderUtil.checkGLError(TAG, "Texture loading");
+        ShaderUtils.checkGLError(TAG, "Texture loading");
 
         // Read the obj file.
         InputStream objInputStream = context.getAssets().open(objAssetName);
@@ -203,7 +193,7 @@ public class ClassRendererObject
                 GLES20.GL_ELEMENT_ARRAY_BUFFER, 2 * indexCount, indices, GLES20.GL_STATIC_DRAW);
         GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, 0);
 
-        ClassShaderUtil.checkGLError(TAG, "OBJ buffer load");
+        ShaderUtils.checkGLError(TAG, "OBJ buffer load");
 
         Matrix.setIdentityM(modelMatrix, 0);
     }
@@ -232,7 +222,7 @@ public class ClassRendererObject
 
     public void draw(float[] cameraView, float[] cameraPerspective, float[] colourCorrectionRgba)
     {
-        ClassShaderUtil.checkGLError(TAG, "Before draw");
+        ShaderUtils.checkGLError(TAG, "Before draw");
 
         // Build the ModelView and ModelViewProjection matrices
         // for calculating object position and light.
@@ -317,7 +307,7 @@ public class ClassRendererObject
 
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
 
-        ClassShaderUtil.checkGLError(TAG, "After draw");
+        ShaderUtils.checkGLError(TAG, "After draw");
     }
 
     private static void normalizeVec3(float[] v)

@@ -22,10 +22,11 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Toast;
 
-import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererBackground;
-import com.example.jaycee.pomdpobjectsearch.rendering.ClassRendererObject;
+import com.example.jaycee.pomdpobjectsearch.rendering.ARObject;
+import com.example.jaycee.pomdpobjectsearch.rendering.BackgroundRenderer;
+import com.example.jaycee.pomdpobjectsearch.rendering.ObjectRenderer;
+import com.example.jaycee.pomdpobjectsearch.rendering.SurfaceRenderer;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
@@ -49,7 +50,7 @@ import java.util.ArrayList;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.Renderer
+public class ActivityCamera extends AppCompatActivity
 {
     private static final String TAG = ActivityCamera.class.getSimpleName();
 
@@ -71,24 +72,21 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
     private Session session;
     private Frame frame;
 
-    private GLSurfaceView surfaceView;
+    private CameraSurface surfaceView;
     private View scannerView;
     private DrawerLayout drawerLayout;
 
-    private final ClassRendererBackground backgroundRenderer = new ClassRendererBackground();
-    private final ClassRendererObject objectRenderer = new ClassRendererObject();
+    private SurfaceRenderer renderer;
 
     private BarcodeDetector detector;
 
-    private RunnableSoundGenerator runnableSoundGenerator;
+    private SoundGenerator soundGenerator;
 
     private ArrayList<ARObject> objectList;
 
     private boolean requestARCoreInstall = true;
-    private boolean viewportChanged = false;
     private boolean drawObjects = false;
 
-    private int width, height;
 
     private final float[] anchorMatrix = new float[16];
 
@@ -106,11 +104,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
 
         surfaceView = findViewById(R.id.surfaceview);
-        surfaceView.setPreserveEGLContextOnPause(true);
-        surfaceView.setEGLContextClientVersion(2);
-        surfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
-        surfaceView.setRenderer(this);
-        surfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+        renderer = new SurfaceRenderer(this, surfaceView);
         surfaceView.setOnTouchListener(new View.OnTouchListener()
         {
             @Override
@@ -157,32 +151,32 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                 switch (item.getItemId())
                 {
                     case R.id.item_object_mug:
-                        runnableSoundGenerator.setTarget(T_MUG, scanBarcode());
+                        soundGenerator.setTarget(T_MUG, scanBarcode());
                         break;
                     case R.id.item_object_laptop:
-                        runnableSoundGenerator.setTarget(T_LAPTOP, scanBarcode());
+                        soundGenerator.setTarget(T_LAPTOP, scanBarcode());
                         break;
                     case R.id.item_object_desk:
-                        runnableSoundGenerator.setTarget(T_DESK, scanBarcode());
+                        soundGenerator.setTarget(T_DESK, scanBarcode());
                         break;
                     case R.id.item_object_office_supplies:
-                        runnableSoundGenerator.setTarget(T_OFFICE_SUPPLIES, scanBarcode());
+                        soundGenerator.setTarget(T_OFFICE_SUPPLIES, scanBarcode());
                         break;
                     case R.id.item_object_keyboard:
-                        runnableSoundGenerator.setTarget(T_COMPUTER_KEYBOARD, scanBarcode());
+                        soundGenerator.setTarget(T_COMPUTER_KEYBOARD, scanBarcode());
                         break;
                     case R.id.item_object_monitor:
-                        runnableSoundGenerator.setTarget(T_COMPUTER_MONITOR, scanBarcode());
+                        soundGenerator.setTarget(T_COMPUTER_MONITOR, scanBarcode());
                         break;
                     case R.id.item_object_mouse:
-                        runnableSoundGenerator.setTarget(T_COMPUTER_MOUSE, scanBarcode());
+                        soundGenerator.setTarget(T_COMPUTER_MOUSE, scanBarcode());
                         break;
                     case R.id.item_object_window:
-                        runnableSoundGenerator.setTarget(T_WINDOW, scanBarcode());
+                        soundGenerator.setTarget(T_WINDOW, scanBarcode());
                         break;
                 }
 
-                runnableSoundGenerator.setOffsetPose(frame.getAndroidSensorPose());
+                soundGenerator.setOffsetPose(frame.getAndroidSensorPose());
                 item.setCheckable(true);
 
                 drawerLayout.closeDrawers();
@@ -194,7 +188,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         scannerView = findViewById(R.id.view_scanner);
 
         detector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.ALL_FORMATS).build();
-        runnableSoundGenerator = new RunnableSoundGenerator(this);
+        soundGenerator = new SoundGenerator(this);
 
         // Create and add objects to list
         objectList = new ArrayList<>();
@@ -296,6 +290,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             return;
         }
 
+        surfaceView.setSession(session);
         surfaceView.onResume();
 
         boolean initSound = JNIBridge.initSound();
@@ -314,34 +309,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         boolean killSound = JNIBridge.killSound();
     }
 
-    @Override
-    public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig)
-    {
-        GLES20.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-
-        try
-        {
-            backgroundRenderer.createOnGlThread(this);
-            objectRenderer.createOnGlThread(this, "models/arrow/Arrow.obj", "models/arrow/Arrow_S.tga");
-            // objectRenderer.createOnGlThread(this, "models/andy.obj", "models/andy.png");
-            objectRenderer.setMaterialProperties(0.f, 2.f, 0.5f, 6.f);
-        }
-        catch(IOException e)
-        {
-            Log.e(TAG, "Failed to read asset file. ", e);
-        }
-    }
-
-    @Override
-    public void onSurfaceChanged(GL10 gl10, int width, int height)
-    {
-        viewportChanged = true;
-        this.width = width;
-        this.height = height;
-        GLES20.glViewport(0, 0, width, height);
-    }
-
-    @Override
+/*    @Override
     public void onDrawFrame(GL10 gl10)
     {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
@@ -397,14 +365,14 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                 }
             }
 
-            runnableSoundGenerator.updatePhonePose(camera, session);
-            if(runnableSoundGenerator.isTargetSet())
+            soundGenerator.updatePhonePose(camera, session);
+            if(soundGenerator.isTargetSet())
             {
-                runnableSoundGenerator.setObservation(scanBarcode());
+                soundGenerator.setObservation(scanBarcode());
 
                 if(camera.getTrackingState() == TrackingState.TRACKING)
                 {
-                    runnableSoundGenerator.getWaypointAnchor().getPose().toMatrix(anchorMatrix, 0);
+                    soundGenerator.getWaypointAnchor().getPose().toMatrix(anchorMatrix, 0);
 
                     objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
                     objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
@@ -416,10 +384,10 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
             }
 
             if(camera.getTrackingState() == TrackingState.TRACKING &&
-                    runnableSoundGenerator.isTargetSet() &&
-                    !runnableSoundGenerator.isTargetFound())
+                    soundGenerator.isTargetSet() &&
+                    !soundGenerator.isTargetFound())
             {
-                runnableSoundGenerator.update();
+                soundGenerator.update();
             }
             else
             {
@@ -435,17 +403,17 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
         {
             Log.e(TAG, "Exception on OpenGL thread: " + t);
         }
-    }
+    }*/
 
     public int scanBarcode()
     {
         /* TODO: Only scan centre of screen */
-        Bitmap bitmap = backgroundRenderer.getBitmap(width, height);
+        int val = O_NOTHING;
+/*        Bitmap bitmap = backgroundRenderer.getBitmap(width, height);
 
         com.google.android.gms.vision.Frame bitmapFrame = new com.google.android.gms.vision.Frame.Builder().setBitmap(bitmap).build();
         SparseArray<Barcode> barcodes = detector.detect(bitmapFrame);
 
-        int val = O_NOTHING;
 
         if(barcodes.size() > 0)
         {
@@ -460,7 +428,7 @@ public class ActivityCamera extends AppCompatActivity implements GLSurfaceView.R
                     Log.d(TAG, "Object found: " + val);
                 }
             }
-        }
+        }*/
 
         return val;
     }

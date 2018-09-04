@@ -22,9 +22,9 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RunnableSoundGenerator implements Runnable
+public class SoundGenerator implements Runnable
 {
-    private static final String TAG = RunnableSoundGenerator.class.getSimpleName();
+    private static final String TAG = SoundGenerator.class.getSimpleName();
 
     private static final int O_NOTHING = 0;
 
@@ -45,13 +45,13 @@ public class RunnableSoundGenerator implements Runnable
 
     private Policy policy;
 
-    private ClassMetrics metrics = new ClassMetrics();
+    private Metrics metrics = new Metrics();
     private State state;
 
     private Vibrator vibrator;
     private Toast toast;
 
-    RunnableSoundGenerator(Activity callingActivity)
+    SoundGenerator(Activity callingActivity)
     {
         this.callingActivity = callingActivity;
         this.vibrator= (Vibrator)callingActivity.getSystemService(Context.VIBRATOR_SERVICE);

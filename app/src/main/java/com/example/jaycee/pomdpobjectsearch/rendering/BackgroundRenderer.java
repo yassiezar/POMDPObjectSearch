@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
+import android.util.Log;
 
 import com.google.ar.core.Frame;
 
@@ -13,9 +14,9 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-public class ClassRendererBackground
+public class BackgroundRenderer
 {
-    private static final String TAG = ClassRendererBackground.class.getSimpleName();
+    private static final String TAG = BackgroundRenderer.class.getSimpleName();
 
     private static final String VERTEX_SHADER_NAME = "shaders/screenquad.vert";
     private static final String FRAGMENT_SHADER_NAME = "shaders/screenquad.frag";
@@ -33,12 +34,14 @@ public class ClassRendererBackground
     private int quadTexCoordParam;
     private int textureId = -1;
 
-    public ClassRendererBackground() {}
+    public BackgroundRenderer() {}
 
     public int getTextureId() { return this.textureId; }
 
     public void createOnGlThread(Context context) throws IOException
     {
+        Log.i(TAG, "Initialised background renderer");
+
         int[] textures = new int[1];
         GLES20.glGenTextures(1, textures, 0);
         textureId = textures[0];
@@ -73,8 +76,8 @@ public class ClassRendererBackground
         bbTexCoordsTransformed.order(ByteOrder.nativeOrder());
         quadTexCoordTransformed = bbTexCoordsTransformed.asFloatBuffer();
 
-        int vertexShader = ClassShaderUtil.loadGLShader(TAG, context, GLES20.GL_VERTEX_SHADER, VERTEX_SHADER_NAME);
-        int fragmentShader = ClassShaderUtil.loadGLShader(TAG, context, GLES20.GL_FRAGMENT_SHADER, FRAGMENT_SHADER_NAME);
+        int vertexShader = ShaderUtils.loadGLShader(TAG, context, GLES20.GL_VERTEX_SHADER, VERTEX_SHADER_NAME);
+        int fragmentShader = ShaderUtils.loadGLShader(TAG, context, GLES20.GL_FRAGMENT_SHADER, FRAGMENT_SHADER_NAME);
 
         quadProgram = GLES20.glCreateProgram();
         GLES20.glAttachShader(quadProgram, vertexShader);
@@ -82,12 +85,12 @@ public class ClassRendererBackground
         GLES20.glLinkProgram(quadProgram);
         GLES20.glUseProgram(quadProgram);
 
-        ClassShaderUtil.checkGLError(TAG, "Program creation.");
+        ShaderUtils.checkGLError(TAG, "Program creation.");
 
         quadPositionParam = GLES20.glGetAttribLocation(quadProgram, "a_Position");
         quadTexCoordParam = GLES20.glGetAttribLocation(quadProgram, "a_TexCoord");
 
-        ClassShaderUtil.checkGLError(TAG, "Program parameters.");
+        ShaderUtils.checkGLError(TAG, "Program parameters.");
     }
 
     public void draw(Frame frame)
@@ -119,7 +122,7 @@ public class ClassRendererBackground
         GLES20.glDepthMask(true);
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
 
-        ClassShaderUtil.checkGLError(TAG, "Draw");
+        ShaderUtils.checkGLError(TAG, "Draw");
     }
 
     public Bitmap getBitmap(int width, int height)

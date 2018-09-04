@@ -24,7 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 /** Shader helper functions. */
-public class ClassShaderUtil
+public class ShaderUtils
 {
   /**
    * Converts a raw text file, saved as a resource, into an OpenGL ES shader.

@@ -10,9 +10,9 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.net.Socket;
 
-public class ClassMetrics
+public class Metrics
 {
-    private static final String TAG = ClassMetrics.class.getSimpleName();
+    private static final String TAG = Metrics.class.getSimpleName();
     private static final String DELIMITER = ",";
 
     private WifiDataSend dataStreamer = null;
