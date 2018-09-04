@@ -95,7 +95,7 @@ public class BackgroundRenderer
 
     public void draw(Frame frame)
     {
-        Log.i(TAG, "Drawing background");
+        Log.v(TAG, "Drawing background");
         if(frame.hasDisplayGeometryChanged())
         {
             frame.transformDisplayUvCoords(quadTexCoord, quadTexCoordTransformed);
@@ -126,7 +126,7 @@ public class BackgroundRenderer
         ShaderUtils.checkGLError(TAG, "Draw");
     }
 
-    public Bitmap getBitmap(int width, int height)
+/*    public Bitmap getBitmap(int width, int height)
     {
         IntBuffer bitmapBuffer = IntBuffer.allocate(width*height);
         bitmapBuffer.position(0);
@@ -137,7 +137,7 @@ public class BackgroundRenderer
 
         bitmap.copyPixelsFromBuffer(bitmapBuffer);
         return bitmap;
-    }
+    }*/
 
     private static final float[] QUAD_COORDS =
             new float[] {-1.f, -1.f, 0.f, -1.f, 1.f, 0.f, 1.f, -1.f, 0.f, 1.f, 1.f, 0.f};

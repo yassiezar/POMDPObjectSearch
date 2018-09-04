@@ -7,6 +7,8 @@ import android.graphics.Rect;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -81,12 +83,12 @@ public class ActivityCamera extends AppCompatActivity
     private BarcodeDetector detector;
 
     private SoundGenerator soundGenerator;
+    private BarcodeScanner barcodeScanner;
 
     private ArrayList<ARObject> objectList;
 
     private boolean requestARCoreInstall = true;
     private boolean drawObjects = false;
-
 
     private final float[] anchorMatrix = new float[16];
 
@@ -293,13 +295,20 @@ public class ActivityCamera extends AppCompatActivity
         surfaceView.setSession(session);
         surfaceView.onResume();
 
+        int width = 1080;//surfaceView.getWidth();
+        int height = 1920;//surfaceView.getHeight();
+
+        barcodeScanner = new BarcodeScanner("BarcodeScanner", width/2-150, height/2-150, 150, 150);
+        barcodeScanner.run();
+
         boolean initSound = JNIBridge.initSound();
     }
 
     @Override
     protected void onPause()
     {
-        super.onPause();
+        barcodeScanner.stop();
+
         if(session != null)
         {
             surfaceView.onPause();
@@ -307,6 +316,8 @@ public class ActivityCamera extends AppCompatActivity
         }
 
         boolean killSound = JNIBridge.killSound();
+
+        super.onPause();
     }
 
 /*    @Override
