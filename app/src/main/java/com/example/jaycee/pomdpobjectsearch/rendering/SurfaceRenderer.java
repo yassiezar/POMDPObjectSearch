@@ -6,6 +6,7 @@ import android.opengl.GLSurfaceView;
 import android.util.Log;
 import android.view.WindowManager;
 
+import com.example.jaycee.pomdpobjectsearch.ActivityCamera;
 import com.example.jaycee.pomdpobjectsearch.CameraSurface;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Frame;
@@ -13,6 +14,8 @@ import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -41,8 +44,6 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
 
     public void init()
     {
-        Log.i(TAG, "Initialised main renderer");
-
         surfaceView.setPreserveEGLContextOnPause(true);
         surfaceView.setEGLContextClientVersion(2);
         surfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
@@ -58,6 +59,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     {
         GLES20.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
+        Log.i(TAG, "Surface created");
         try
         {
             backgroundRenderer.createOnGlThread(context);
@@ -74,6 +76,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     @Override
     public void onSurfaceChanged(GL10 gl10, int width, int height)
     {
+        Log.i(TAG, "Surface changed");
         viewportChanged = true;
         this.width = width;
         this.height = height;
@@ -122,4 +125,20 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
             Log.e(TAG, "Exception on the GL Thread: " + t);
         }
     }
+
+    public IntBuffer getCurrentFrameBuffer()
+    {
+        try
+        {
+            return backgroundRenderer.getCurrentFrameBuffer().duplicate();
+        }
+        catch(NullPointerException e)
+        {
+            Log.e(TAG, "Frame buffer not yet initialised: " + e);
+            return IntBuffer.allocate(1440*2560);
+        }
+    }
+
+    public int getWidth() { return this.width; }
+    public int getHeight() { return this.height; }
 }

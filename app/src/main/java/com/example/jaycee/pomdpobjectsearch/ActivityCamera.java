@@ -47,6 +47,7 @@ import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
 import java.io.IOException;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -84,6 +85,7 @@ public class ActivityCamera extends AppCompatActivity
 
     private SoundGenerator soundGenerator;
     private BarcodeScanner barcodeScanner;
+    private Handler barcodeScannerHandler;
 
     private ArrayList<ARObject> objectList;
 
@@ -295,19 +297,17 @@ public class ActivityCamera extends AppCompatActivity
         surfaceView.setSession(session);
         surfaceView.onResume();
 
-        int width = 1080;//surfaceView.getWidth();
-        int height = 1920;//surfaceView.getHeight();
-
-        barcodeScanner = new BarcodeScanner("BarcodeScanner", width/2-150, height/2-150, 150, 150);
-        barcodeScanner.run();
-
         boolean initSound = JNIBridge.initSound();
     }
 
     @Override
     protected void onPause()
     {
-        barcodeScanner.stop();
+        if(barcodeScanner != null)
+        {
+            barcodeScanner.stop();
+            barcodeScanner = null;
+        }
 
         if(session != null)
         {
@@ -463,5 +463,20 @@ public class ActivityCamera extends AppCompatActivity
     public void requestCameraPermission()
     {
         ActivityCompat.requestPermissions(this, new String[] {CAMERA_PERMISSION}, CAMERA_PERMISSION_CODE);
+    }
+
+    public void stopBarcodeScanner()
+    {
+        if(barcodeScanner != null)
+        {
+            barcodeScanner.stop();
+            barcodeScanner = null;
+        }
+    }
+
+    public void startBarcodeScanner(int width, int height)
+    {
+        barcodeScanner = new BarcodeScanner(this, width, height, renderer);
+        barcodeScanner.run();
     }
 }

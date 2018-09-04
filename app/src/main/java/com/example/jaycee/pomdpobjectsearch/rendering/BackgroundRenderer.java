@@ -29,6 +29,8 @@ public class BackgroundRenderer
     private FloatBuffer quadTexCoord;
     private FloatBuffer quadTexCoordTransformed;
 
+    private IntBuffer currentFrameBuffer;
+
     private int quadProgram;
     private int quadPositionParam;
     private int quadTexCoordParam;
@@ -91,6 +93,9 @@ public class BackgroundRenderer
         quadTexCoordParam = GLES20.glGetAttribLocation(quadProgram, "a_TexCoord");
 
         ShaderUtils.checkGLError(TAG, "Program parameters.");
+
+        /* TODO: Make size automatic */
+        currentFrameBuffer = IntBuffer.allocate(1440*2560);
     }
 
     public void draw(Frame frame)
@@ -124,6 +129,9 @@ public class BackgroundRenderer
         GLES20.glEnable(GLES20.GL_DEPTH_TEST);
 
         ShaderUtils.checkGLError(TAG, "Draw");
+
+        /* TODO: Make size automatic */
+        GLES20.glReadPixels(0, 0, 1440, 2560, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, currentFrameBuffer);
     }
 
 /*    public Bitmap getBitmap(int width, int height)
@@ -138,6 +146,11 @@ public class BackgroundRenderer
         bitmap.copyPixelsFromBuffer(bitmapBuffer);
         return bitmap;
     }*/
+
+    public IntBuffer getCurrentFrameBuffer()
+    {
+        return currentFrameBuffer;
+    }
 
     private static final float[] QUAD_COORDS =
             new float[] {-1.f, -1.f, 0.f, -1.f, 1.f, 0.f, 1.f, -1.f, 0.f, 1.f, 1.f, 0.f};

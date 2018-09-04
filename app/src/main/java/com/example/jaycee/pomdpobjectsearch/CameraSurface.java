@@ -1,7 +1,9 @@
 package com.example.jaycee.pomdpobjectsearch;
 
+import android.app.Activity;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 
@@ -35,12 +37,14 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height)
     {
         super.surfaceChanged(surfaceHolder, format, width, height);
+        ((ActivityCamera)context).startBarcodeScanner(width, height);
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder surfaceHolder)
     {
         super.surfaceDestroyed(surfaceHolder);
+        ((ActivityCamera)context).stopBarcodeScanner();
     }
 
     public void setSession(Session session) { this.session = session; }
