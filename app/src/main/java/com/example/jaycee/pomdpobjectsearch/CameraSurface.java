@@ -22,6 +22,7 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
         this.context = context;
 
         getHolder().addCallback(this);
+        getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
     }
 
     @Override

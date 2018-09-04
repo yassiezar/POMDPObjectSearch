@@ -95,6 +95,7 @@ public class BackgroundRenderer
 
     public void draw(Frame frame)
     {
+        Log.i(TAG, "Drawing background");
         if(frame.hasDisplayGeometryChanged())
         {
             frame.transformDisplayUvCoords(quadTexCoord, quadTexCoordTransformed);
