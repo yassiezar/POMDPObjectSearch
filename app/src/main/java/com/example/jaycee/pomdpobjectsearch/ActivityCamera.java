@@ -414,7 +414,6 @@ public class ActivityCamera extends AppCompatActivity
         com.google.android.gms.vision.Frame bitmapFrame = new com.google.android.gms.vision.Frame.Builder().setBitmap(bitmap).build();
         SparseArray<Barcode> barcodes = detector.detect(bitmapFrame);
 
-
         if(barcodes.size() > 0)
         {
             for(int i = 0; i < barcodes.size(); i ++)

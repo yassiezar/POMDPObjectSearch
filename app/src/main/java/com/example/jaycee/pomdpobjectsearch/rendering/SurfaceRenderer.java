@@ -61,9 +61,9 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         try
         {
             backgroundRenderer.createOnGlThread(context);
-            objectRenderer.createOnGlThread(context, "models/arrow/Arrow.obj", "models/arrow/Arrow_S.tga");
+            // objectRenderer.createOnGlThread(context, "models/arrow/Arrow.obj", "models/arrow/Arrow_S.tga");
             // objectRenderer.createOnGlThread(this, "models/andy.obj", "models/andy.png");
-            objectRenderer.setMaterialProperties(0.f, 2.f, 0.5f, 6.f);
+            // objectRenderer.setMaterialProperties(0.f, 2.f, 0.5f, 6.f);
         }
         catch(IOException e)
         {
@@ -72,7 +72,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     }
 
     @Override
-    public void onSurfaceChanged(GL10 gl10, int i, int i1)
+    public void onSurfaceChanged(GL10 gl10, int width, int height)
     {
         viewportChanged = true;
         this.width = width;
@@ -116,6 +116,10 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         catch(CameraNotAvailableException e)
         {
             Log.e(TAG, "Camera not available: " + e);
+        }
+        catch(Throwable t)
+        {
+            Log.e(TAG, "Exception on the GL Thread: " + t);
         }
     }
 }
