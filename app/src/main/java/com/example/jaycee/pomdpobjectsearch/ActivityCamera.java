@@ -33,6 +33,8 @@ public class ActivityCamera extends AppCompatActivity
     private static final int CAMERA_PERMISSION_CODE = 0;
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
 
+    private static final int O_NOTHING = 0;
+
     private static final int T_COMPUTER_MONITOR = 1;
     private static final int T_COMPUTER_MOUSE = 3;
     private static final int T_COMPUTER_KEYBOARD = 2;
@@ -184,13 +186,13 @@ public class ActivityCamera extends AppCompatActivity
         surfaceView.setSession(session);
         surfaceView.onResume();
 
-        soundGenerator = new SoundGenerator(this, surfaceView.getRenderer());
-        soundGenerator.run();
-
         if(!JNIBridge.initSound())
         {
             Log.e(TAG, "OpenAL init error");
         }
+
+        soundGenerator = new SoundGenerator(this, surfaceView.getRenderer());
+        soundGenerator.run();
     }
 
     @Override
@@ -261,7 +263,12 @@ public class ActivityCamera extends AppCompatActivity
 
     public int currentBarcodeScan()
     {
-        return barcodeScanner.getCode();
+        if(barcodeScanner != null)
+        {
+            return barcodeScanner.getCode();
+        }
+
+        return O_NOTHING;
     }
 
     public Anchor getWaypointAnchor() { return soundGenerator.getWaypointAnchor(); }

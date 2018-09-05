@@ -75,11 +75,12 @@ public class SoundGenerator implements Runnable
         phonePose = renderer.getDevicePose();
         this.session = renderer.getSession();
 
-        if(!isTargetSet() || !isTargetFound())
+        if(!isTargetSet() || isTargetFound())
         {
             if(!stop) handler.postDelayed(this, 40);
             return;
         }
+        Log.i(TAG, "Running");
 
         if(!renderer.isRendererReady())
         {
