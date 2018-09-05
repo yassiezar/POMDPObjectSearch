@@ -7,9 +7,12 @@ import android.util.Log;
 import android.view.WindowManager;
 
 import com.example.jaycee.pomdpobjectsearch.CameraSurface;
+import com.google.ar.core.Anchor;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Frame;
+import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
+import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 
 import java.io.IOException;
@@ -25,15 +28,23 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     private Context context;
     private CameraSurface surfaceView;
 
+    private Frame frame;
+    private Anchor debugObjectAnchor;
+
     private BackgroundRenderer backgroundRenderer;
     private ObjectRenderer objectRenderer;
 
-    private boolean viewportChanged = false;
+    private ARObject debugObject;
 
     private int width, height;
 
     private int scannerWidth, scannerHeight;
     private int scannerX, scannerY;
+
+    private final float[] anchorMatrix = new float[16];
+
+    private boolean drawObjects = false;
+    private boolean viewportChanged = false;
 
     public SurfaceRenderer(Context context, CameraSurface surfaceView)
     {
@@ -50,12 +61,6 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
 
     public void init()
     {
-        surfaceView.setPreserveEGLContextOnPause(true);
-        surfaceView.setEGLContextClientVersion(2);
-        surfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
-        surfaceView.setRenderer(this);
-        surfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
-
         backgroundRenderer = new BackgroundRenderer(scannerX, scannerY, scannerWidth, scannerHeight);
         objectRenderer = new ObjectRenderer();
     }
@@ -87,6 +92,9 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         this.width = width;
         this.height = height;
         GLES20.glViewport(0, 0, width, height);
+
+        // Create AR debug object
+        debugObject = new ARObject(6, 6, "Centre");
     }
 
     @Override
@@ -117,10 +125,41 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         session.setCameraTextureName(backgroundRenderer.getTextureId());
         try
         {
-            Frame frame = session.update();
+            frame = session.update();
             Camera camera = frame.getCamera();
 
             backgroundRenderer.draw(frame);
+
+            float[] projectionMatrix = new float[16];
+            camera.getProjectionMatrix(projectionMatrix, 0, 0.1f, 100.0f);
+
+            float[] viewMatrix = new float[16];
+            camera.getViewMatrix(viewMatrix, 0);
+
+            // Compute lighting from average intensity of the image.
+            // The first three components are color scaling factors.
+            // The last one is the average pixel intensity in gamma space.
+            final float[] colourCorrectionRgba = new float[4];
+            frame.getLightEstimate().getColorCorrection(colourCorrectionRgba, 0);
+
+            float scaleFactor = 1.f;
+
+            // Update the debug object
+            if(camera.getTrackingState() == TrackingState.TRACKING && drawObjects)
+            {
+                /* TODO: Detach old anchors */
+/*                if(debugObjectAnchor != null)
+                {
+                    debugObjectAnchor.detach();
+                }*/
+                Pose devicePose = frame.getAndroidSensorPose();
+                debugObject.getRotatedObject(devicePose);
+                session.createAnchor(debugObject.getRotatedPose());
+
+                debugObject.getRotatedPose().toMatrix(anchorMatrix, 0);
+                objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
+                objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
+            }
         }
         catch(CameraNotAvailableException e)
         {
@@ -144,6 +183,8 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
             return IntBuffer.allocate(scannerWidth*scannerHeight);
         }
     }
+
+    public void toggleDrawObjects() { this.drawObjects = !this.drawObjects; }
 
     public int getWidth() { return this.width; }
     public int getHeight() { return this.height; }

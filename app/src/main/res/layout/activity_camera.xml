@@ -22,7 +22,8 @@
             android:id="@+id/surfaceview"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:layout_below="@id/toolbar">
+            android:layout_below="@id/toolbar"
+            android:contentDescription="Drawing debug object" >
         </com.example.jaycee.pomdpobjectsearch.CameraSurface>
         <View
             android:layout_width="150dp"

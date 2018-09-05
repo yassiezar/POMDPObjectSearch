@@ -56,17 +56,10 @@ public class ActivityCamera extends AppCompatActivity
     private CameraSurface surfaceView;
     private DrawerLayout drawerLayout;
 
-    private SurfaceRenderer renderer;
-
     private SoundGenerator soundGenerator;
     private BarcodeScanner barcodeScanner;
 
-    private ArrayList<ARObject> objectList;
-
     private boolean requestARCoreInstall = true;
-    private boolean drawObjects = false;
-
-    private final float[] anchorMatrix = new float[16];
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -82,41 +75,6 @@ public class ActivityCamera extends AppCompatActivity
         actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
 
         surfaceView = findViewById(R.id.surfaceview);
-        renderer = new SurfaceRenderer(this, surfaceView);
-        surfaceView.setOnTouchListener(new View.OnTouchListener()
-        {
-            @Override
-            public boolean onTouch(View v, MotionEvent event)
-            {
-                switch(event.getAction())
-                {
-                    case (MotionEvent.ACTION_DOWN):
-                    {
-                        if(!drawObjects)
-                        {
-                            Log.i(TAG, "Pressed");
-                            try
-                            {
-                                Pose devicePose = frame.getAndroidSensorPose();
-
-                                for (ARObject object : objectList)
-                                {
-                                    object.getRotatedObject(devicePose);
-                                    session.createAnchor(object.getRotatedPose());
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                Log.e(TAG, "Exception on adding AR anchors: " + e);
-                            }
-                            drawObjects = true;
-                        }
-                        else drawObjects = false;
-                    }
-                }
-                return true;
-            }
-        });
 
         drawerLayout = findViewById(R.id.layout_drawer_objects);
         NavigationView navigationView = findViewById(R.id.navigation_view_objects);
@@ -165,38 +123,6 @@ public class ActivityCamera extends AppCompatActivity
         });
 
         soundGenerator = new SoundGenerator(this);
-
-        // Create and add objects to list
-        objectList = new ArrayList<>();
-
-        objectList.add(new ARObject(0, 3, "Door"));
-        objectList.add(new ARObject(1, 3, "Door"));
-        objectList.add(new ARObject(5, 3, "Window"));
-        objectList.add(new ARObject(6, 3, "Window"));
-        objectList.add(new ARObject(10, 3, "Door"));
-        objectList.add(new ARObject(11, 3, "Door"));
-
-        objectList.add(new ARObject(0, 4, "Door Handle"));
-        objectList.add(new ARObject(1, 4, "Door Handle"));
-        objectList.add(new ARObject(5, 4, "Monitor"));
-        objectList.add(new ARObject(6, 4, "Monitor"));
-        objectList.add(new ARObject(8, 4, "Bookcase"));
-        objectList.add(new ARObject(9, 4, "Bookcase"));
-        objectList.add(new ARObject(10, 4, "Door Handle"));
-        objectList.add(new ARObject(11, 4, "Door Handle"));
-
-        objectList.add(new ARObject(0,5, "Chair"));
-        objectList.add(new ARObject(3,5, "Mouse"));
-        objectList.add(new ARObject(4,5, "Mug"));
-        objectList.add(new ARObject(5,5, "Keyboard"));
-        objectList.add(new ARObject(6,5, "Laptop"));
-        objectList.add(new ARObject(7,5, "Office Supplies"));
-        objectList.add(new ARObject(8,5, "Book"));
-        objectList.add(new ARObject(9,5, "Book"));
-        objectList.add(new ARObject(11,5, "Chair"));
-
-        objectList.add(new ARObject(5, 6, "Table"));
-        objectList.add(new ARObject(6, 6, "Desk"));
     }
 
     @Override
@@ -425,9 +351,9 @@ public class ActivityCamera extends AppCompatActivity
         }
     }
 
-    public void startBarcodeScanner(int width, int height)
+    public void startBarcodeScanner()
     {
-        barcodeScanner = new BarcodeScanner(this, 525, 525, renderer);
+        barcodeScanner = new BarcodeScanner(this, 525, 525, surfaceView.getRenderer());
         barcodeScanner.run();
     }
 }
