@@ -14,16 +14,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.View;
 
-import com.example.jaycee.pomdpobjectsearch.rendering.ARObject;
-import com.example.jaycee.pomdpobjectsearch.rendering.SurfaceRenderer;
-
+import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
-import com.google.ar.core.Frame;
-import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
@@ -31,8 +25,6 @@ import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
-
-import java.util.ArrayList;
 
 public class ActivityCamera extends AppCompatActivity
 {
@@ -51,7 +43,6 @@ public class ActivityCamera extends AppCompatActivity
     private static final int T_WINDOW = 8;
 
     private Session session;
-    private Frame frame;
 
     private CameraSurface surfaceView;
     private DrawerLayout drawerLayout;
@@ -113,7 +104,7 @@ public class ActivityCamera extends AppCompatActivity
                         break;
                 }
 
-                soundGenerator.setOffsetPose(frame.getAndroidSensorPose());
+                soundGenerator.markOffsetPose();
                 item.setCheckable(true);
 
                 drawerLayout.closeDrawers();
@@ -194,7 +185,7 @@ public class ActivityCamera extends AppCompatActivity
         surfaceView.onResume();
 
         soundGenerator = new SoundGenerator(this, surfaceView.getRenderer());
-        // soundGenerator.run();
+        soundGenerator.run();
 
         if(!JNIBridge.initSound())
         {
@@ -230,102 +221,6 @@ public class ActivityCamera extends AppCompatActivity
 
         super.onPause();
     }
-
-/*    @Override
-    public void onDrawFrame(GL10 gl10)
-    {
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-
-        if(session == null)
-        {
-            return;
-        }
-
-        if(viewportChanged)
-        {
-            try
-            {
-                viewportChanged = false;
-                int displayRotation = this.getSystemService(WindowManager.class).getDefaultDisplay().getRotation();
-                session.setDisplayGeometry(displayRotation, width, height);
-            }
-            catch(NullPointerException e)
-            {
-                Log.e(TAG, "defaultDisplay exception: " + e);
-            }
-        }
-
-        session.setCameraTextureName(backgroundRenderer.getTextureId());
-        try
-        {
-            frame = session.update();
-            Camera camera = frame.getCamera();
-
-            backgroundRenderer.draw(frame);
-
-            float[] projectionMatrix = new float[16];
-            camera.getProjectionMatrix(projectionMatrix, 0, 0.1f, 100.0f);
-
-            float[] viewMatrix = new float[16];
-            camera.getViewMatrix(viewMatrix, 0);
-
-            // Compute lighting from average intensity of the image.
-            // The first three components are color scaling factors.
-            // The last one is the average pixel intensity in gamma space.
-            final float[] colourCorrectionRgba = new float[4];
-            frame.getLightEstimate().getColorCorrection(colourCorrectionRgba, 0);
-
-            float scaleFactor = 1.f;
-
-            if(camera.getTrackingState() == TrackingState.TRACKING && drawObjects)
-            {
-                for(ARObject object : objectList)
-                {
-                    object.getRotatedPose().toMatrix(anchorMatrix, 0);
-                    objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
-                    objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
-                }
-            }
-
-            soundGenerator.updatePhonePose(camera, session);
-            if(soundGenerator.isTargetSet())
-            {
-                soundGenerator.setObservation(scanBarcode());
-
-                if(camera.getTrackingState() == TrackingState.TRACKING)
-                {
-                    soundGenerator.getWaypointAnchor().getPose().toMatrix(anchorMatrix, 0);
-
-                    objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
-                    objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
-                }
-                else
-                {
-                    Log.d(TAG, "No target set.");
-                }
-            }
-
-            if(camera.getTrackingState() == TrackingState.TRACKING &&
-                    soundGenerator.isTargetSet() &&
-                    !soundGenerator.isTargetFound())
-            {
-                soundGenerator.update();
-            }
-            else
-            {
-                Log.d(TAG, "Camera not tracking or target not set. ");
-            }
-
-        }
-        catch(CameraNotAvailableException e)
-        {
-            Log.e(TAG, "Camera not available: " + e);
-        }
-        catch(Throwable t)
-        {
-            Log.e(TAG, "Exception on OpenGL thread: " + t);
-        }
-    }*/
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
@@ -363,4 +258,11 @@ public class ActivityCamera extends AppCompatActivity
         barcodeScanner = new BarcodeScanner(this, 525, 525, surfaceView.getRenderer());
         barcodeScanner.run();
     }
+
+    public int currentBarcodeScan()
+    {
+        return barcodeScanner.getCode();
+    }
+
+    public Anchor getWaypointAnchor() { return soundGenerator.getWaypointAnchor(); }
 }

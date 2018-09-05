@@ -30,7 +30,7 @@ public class SoundGenerator implements Runnable
 
     private static final int O_NOTHING = 0;
 
-    private Activity callingActivity;
+    private Context context;
     private SurfaceRenderer renderer;
 
     private Pose phonePose;
@@ -38,9 +38,6 @@ public class SoundGenerator implements Runnable
     private Pose offsetPose;
     private Anchor waypointAnchor;
     private Session session;
-
-    private boolean targetSet = false;
-    private boolean targetFound = false;
 
     private long observation = O_NOTHING;
     private long prevCameraObservation = O_NOTHING;
@@ -56,13 +53,16 @@ public class SoundGenerator implements Runnable
     private Handler handler = new Handler();
 
     private boolean stop = false;
+    private boolean targetSet = false;
+    private boolean targetFound = false;
 
-    SoundGenerator(Activity callingActivity, SurfaceRenderer renderer)
+
+    SoundGenerator(Context context, SurfaceRenderer renderer)
     {
-        this.callingActivity = callingActivity;
+        this.context = context;
         this.renderer = renderer;
 
-        this.vibrator= (Vibrator)callingActivity.getSystemService(Context.VIBRATOR_SERVICE);
+        this.vibrator= (Vibrator)context.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     public void stop()
@@ -74,6 +74,23 @@ public class SoundGenerator implements Runnable
     @Override
     public void run()
     {
+        phonePose = renderer.getDevicePose();
+        this.session = renderer.getSession();
+
+        if(!isTargetSet() || !isTargetFound())
+        {
+            if(!stop) handler.postDelayed(this, 40);
+            return;
+        }
+
+        if(!renderer.isRendererReady())
+        {
+            if(!stop) handler.postDelayed(this, 40);
+            return;
+        }
+
+        setObservation(((ActivityCamera)context).currentBarcodeScan());
+
         float gain = 1.f;
         if(observation == target)
         {
@@ -111,19 +128,8 @@ public class SoundGenerator implements Runnable
 
         JNIBridge.playSound(waypoint.getPose().getTranslation(), cameraVector.asFloat(), gain, getPitch(waypointTilt - cameraTilt));
 
-        if(!stop) handler.postDelayed(this, 40);
-    }
-
-    public void updatePhonePose(Camera camera, Session session)
-    {
-        phonePose = camera.getDisplayOrientedPose();
-        this.session = session;
-    }
-
-    public void update()
-    {
         metrics.writeWifi();
-        this.run();
+        if(!stop) handler.postDelayed(this, 40);
     }
 
     private ClassHelpers.mVector getRotation(Pose pose, boolean isWaypointPose)
@@ -174,6 +180,8 @@ public class SoundGenerator implements Runnable
         prevCameraObservation = observation;
 
         metrics.updateTarget(target);
+
+        renderer.setDrawWaypoint(true);
     }
 
     private float getPitch(double tilt)
@@ -253,7 +261,7 @@ public class SoundGenerator implements Runnable
 
         if(observation != O_NOTHING && observation != -1)
         {
-            callingActivity.runOnUiThread(new Runnable()
+            ((ActivityCamera)context).runOnUiThread(new Runnable()
             {
                 @Override
                 public void run()
@@ -262,14 +270,14 @@ public class SoundGenerator implements Runnable
                     {
                         toast.cancel();
                     }
-                    toast = Toast.makeText(callingActivity, val, Toast.LENGTH_SHORT);
+                    toast = Toast.makeText(context, val, Toast.LENGTH_SHORT);
                     toast.show();
                 }
             });
         }
     }
 
-    public void setOffsetPose(Pose pose) { this.offsetPose = pose; }
+    public void markOffsetPose() { this.offsetPose = phonePose; }
     public boolean isTargetSet() { return this.targetSet; }
     public boolean isTargetFound() { return this.targetFound; }
     public long getTarget() { return this.target; }
@@ -474,7 +482,7 @@ public class SoundGenerator implements Runnable
             {
                 // Extract policy state-action pairs from text file using regex
                 Pattern pattern = Pattern.compile("(\\d+)\\s(\\d)\\s(1.0|0.25)");
-                reader = new BufferedReader(new InputStreamReader(callingActivity.getResources().getAssets().open(fileName)));
+                reader = new BufferedReader(new InputStreamReader(context.getResources().getAssets().open(fileName)));
 
                 String line;
                 while ((line = reader.readLine()) != null)
