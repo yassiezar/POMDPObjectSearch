@@ -121,8 +121,6 @@ public class ActivityCamera extends AppCompatActivity
                 return true;
             }
         });
-
-        soundGenerator = new SoundGenerator(this);
     }
 
     @Override
@@ -195,6 +193,9 @@ public class ActivityCamera extends AppCompatActivity
         surfaceView.setSession(session);
         surfaceView.onResume();
 
+        soundGenerator = new SoundGenerator(this, surfaceView.getRenderer());
+        // soundGenerator.run();
+
         if(!JNIBridge.initSound())
         {
             Log.e(TAG, "OpenAL init error");
@@ -208,6 +209,12 @@ public class ActivityCamera extends AppCompatActivity
         {
             barcodeScanner.stop();
             barcodeScanner = null;
+        }
+
+        if(soundGenerator != null)
+        {
+            soundGenerator.stop();
+            soundGenerator = null;
         }
 
         if(session != null)

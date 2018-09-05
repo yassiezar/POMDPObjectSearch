@@ -1,6 +1,7 @@
 package com.example.jaycee.pomdpobjectsearch;
 
 import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
+import com.example.jaycee.pomdpobjectsearch.rendering.SurfaceRenderer;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Pose;
@@ -8,6 +9,7 @@ import com.google.ar.core.Session;
 
 import android.app.Activity;
 import android.content.Context;
+import android.os.Handler;
 import android.os.Vibrator;
 import android.util.Log;
 import android.widget.Toast;
@@ -29,6 +31,7 @@ public class SoundGenerator implements Runnable
     private static final int O_NOTHING = 0;
 
     private Activity callingActivity;
+    private SurfaceRenderer renderer;
 
     private Pose phonePose;
     private Waypoint waypoint;
@@ -50,11 +53,22 @@ public class SoundGenerator implements Runnable
 
     private Vibrator vibrator;
     private Toast toast;
+    private Handler handler = new Handler();
 
-    SoundGenerator(Activity callingActivity)
+    private boolean stop = false;
+
+    SoundGenerator(Activity callingActivity, SurfaceRenderer renderer)
     {
         this.callingActivity = callingActivity;
+        this.renderer = renderer;
+
         this.vibrator= (Vibrator)callingActivity.getSystemService(Context.VIBRATOR_SERVICE);
+    }
+
+    public void stop()
+    {
+        this.stop = true;
+        handler = null;
     }
 
     @Override
@@ -96,6 +110,8 @@ public class SoundGenerator implements Runnable
         float waypointTilt = waypointRotationAngles[1];
 
         JNIBridge.playSound(waypoint.getPose().getTranslation(), cameraVector.asFloat(), gain, getPitch(waypointTilt - cameraTilt));
+
+        if(!stop) handler.postDelayed(this, 40);
     }
 
     public void updatePhonePose(Camera camera, Session session)

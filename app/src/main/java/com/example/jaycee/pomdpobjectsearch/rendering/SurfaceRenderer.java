@@ -29,6 +29,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     private CameraSurface surfaceView;
 
     private Frame frame;
+    private Camera camera;
     private Anchor debugObjectAnchor;
 
     private BackgroundRenderer backgroundRenderer;
@@ -126,7 +127,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         try
         {
             frame = session.update();
-            Camera camera = frame.getCamera();
+            camera = frame.getCamera();
 
             backgroundRenderer.draw(frame);
 
