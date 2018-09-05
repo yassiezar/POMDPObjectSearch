@@ -36,7 +36,16 @@ public class BackgroundRenderer
     private int quadTexCoordParam;
     private int textureId = -1;
 
-    public BackgroundRenderer() {}
+    private int scannerWidth, scannerHeight;
+    private int scannerX, scannerY;
+
+    public BackgroundRenderer(int scannerX, int scannerY, int scannerWidth, int scannerHeight)
+    {
+        this.scannerWidth = scannerWidth;
+        this.scannerHeight = scannerHeight;
+        this.scannerX = scannerX;
+        this.scannerY = scannerY;
+    }
 
     public int getTextureId() { return this.textureId; }
 
@@ -95,7 +104,8 @@ public class BackgroundRenderer
         ShaderUtils.checkGLError(TAG, "Program parameters.");
 
         /* TODO: Make size automatic */
-        currentFrameBuffer = IntBuffer.allocate(1440*2560);
+        // currentFrameBuffer = IntBuffer.allocate(480*480);
+        currentFrameBuffer = IntBuffer.allocate(scannerWidth*scannerHeight);
     }
 
     public void draw(Frame frame)
@@ -131,21 +141,9 @@ public class BackgroundRenderer
         ShaderUtils.checkGLError(TAG, "Draw");
 
         /* TODO: Make size automatic */
-        GLES20.glReadPixels(0, 0, 1440, 2560, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, currentFrameBuffer);
+        // GLES20.glReadPixels(480,1040, 960, 1520, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, currentFrameBuffer);
+        GLES20.glReadPixels(scannerX, scannerY, scannerWidth, scannerHeight, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, currentFrameBuffer);
     }
-
-/*    public Bitmap getBitmap(int width, int height)
-    {
-        IntBuffer bitmapBuffer = IntBuffer.allocate(width*height);
-        bitmapBuffer.position(0);
-
-        GLES20.glReadPixels(0, 0, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, bitmapBuffer);
-
-        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-
-        bitmap.copyPixelsFromBuffer(bitmapBuffer);
-        return bitmap;
-    }*/
 
     public IntBuffer getCurrentFrameBuffer()
     {

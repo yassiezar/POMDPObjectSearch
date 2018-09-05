@@ -152,31 +152,32 @@ public class ActivityCamera extends AppCompatActivity
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item)
             {
+                int code = barcodeScanner.getCode();
                 switch (item.getItemId())
                 {
                     case R.id.item_object_mug:
-                        soundGenerator.setTarget(T_MUG, scanBarcode());
+                        soundGenerator.setTarget(T_MUG, code);
                         break;
                     case R.id.item_object_laptop:
-                        soundGenerator.setTarget(T_LAPTOP, scanBarcode());
+                        soundGenerator.setTarget(T_LAPTOP, code);
                         break;
                     case R.id.item_object_desk:
-                        soundGenerator.setTarget(T_DESK, scanBarcode());
+                        soundGenerator.setTarget(T_DESK, code);
                         break;
                     case R.id.item_object_office_supplies:
-                        soundGenerator.setTarget(T_OFFICE_SUPPLIES, scanBarcode());
+                        soundGenerator.setTarget(T_OFFICE_SUPPLIES, code);
                         break;
                     case R.id.item_object_keyboard:
-                        soundGenerator.setTarget(T_COMPUTER_KEYBOARD, scanBarcode());
+                        soundGenerator.setTarget(T_COMPUTER_KEYBOARD, code);
                         break;
                     case R.id.item_object_monitor:
-                        soundGenerator.setTarget(T_COMPUTER_MONITOR, scanBarcode());
+                        soundGenerator.setTarget(T_COMPUTER_MONITOR, code);
                         break;
                     case R.id.item_object_mouse:
-                        soundGenerator.setTarget(T_COMPUTER_MOUSE, scanBarcode());
+                        soundGenerator.setTarget(T_COMPUTER_MOUSE, code);
                         break;
                     case R.id.item_object_window:
-                        soundGenerator.setTarget(T_WINDOW, scanBarcode());
+                        soundGenerator.setTarget(T_WINDOW, code);
                         break;
                 }
 
@@ -416,33 +417,6 @@ public class ActivityCamera extends AppCompatActivity
         }
     }*/
 
-    public int scanBarcode()
-    {
-        /* TODO: Only scan centre of screen */
-        int val = O_NOTHING;
-/*        Bitmap bitmap = backgroundRenderer.getBitmap(width, height);
-
-        com.google.android.gms.vision.Frame bitmapFrame = new com.google.android.gms.vision.Frame.Builder().setBitmap(bitmap).build();
-        SparseArray<Barcode> barcodes = detector.detect(bitmapFrame);
-
-        if(barcodes.size() > 0)
-        {
-            for(int i = 0; i < barcodes.size(); i ++)
-            {
-                int key = barcodes.keyAt(i);
-
-                Rect scannerArea = new Rect(scannerView.getLeft(), scannerView.getTop(), scannerView.getRight(), scannerView.getBottom());
-                if(scannerArea.contains(barcodes.get(key).getBoundingBox()))
-                {
-                    val = Integer.parseInt(barcodes.get(key).displayValue);
-                    Log.d(TAG, "Object found: " + val);
-                }
-            }
-        }*/
-
-        return val;
-    }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
@@ -476,7 +450,11 @@ public class ActivityCamera extends AppCompatActivity
 
     public void startBarcodeScanner(int width, int height)
     {
-        barcodeScanner = new BarcodeScanner(this, width, height, renderer);
+        View view = scannerView;
+        Log.i(TAG, String.format("x %d y %d width %d height %d", (int)view.getLeft(), (int)view.getTop(), view.getRight(), view.getBottom()));
+        // barcodeScanner = new BarcodeScanner(this, (int)view.getX(), (int)view.getY(), view.getWidth(), view.getHeight(), renderer);
+        // barcodeScanner = new BarcodeScanner(this, 480, 1040, 480, 480, renderer);
+        barcodeScanner = new BarcodeScanner(this, 450, 1017, 525, 525, renderer);
         barcodeScanner.run();
     }
 }

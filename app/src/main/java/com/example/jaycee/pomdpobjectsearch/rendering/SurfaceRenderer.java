@@ -34,10 +34,18 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
 
     private int width, height;
 
+    private int scannerWidth, scannerHeight;
+    private int scannerX, scannerY;
+
     public SurfaceRenderer(Context context, CameraSurface surfaceView)
     {
         this.context = context;
         this.surfaceView = surfaceView;
+
+        this.scannerWidth = 525;
+        this.scannerHeight = 525;
+        this.scannerX = 450;
+        this.scannerY = 1017;
 
         init();
     }
@@ -50,7 +58,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         surfaceView.setRenderer(this);
         surfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
 
-        backgroundRenderer = new BackgroundRenderer();
+        backgroundRenderer = new BackgroundRenderer(scannerX, scannerY, scannerWidth, scannerHeight);
         objectRenderer = new ObjectRenderer();
     }
 
@@ -135,7 +143,8 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         catch(NullPointerException e)
         {
             Log.e(TAG, "Frame buffer not yet initialised: " + e);
-            return IntBuffer.allocate(1440*2560);
+            // return IntBuffer.allocate(480*480);
+            return IntBuffer.allocate(scannerWidth*scannerHeight);
         }
     }
 
