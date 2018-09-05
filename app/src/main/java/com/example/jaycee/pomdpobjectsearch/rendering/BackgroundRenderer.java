@@ -1,7 +1,6 @@
 package com.example.jaycee.pomdpobjectsearch.rendering;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.util.Log;
@@ -141,7 +140,6 @@ public class BackgroundRenderer
         ShaderUtils.checkGLError(TAG, "Draw");
 
         /* TODO: Make size automatic */
-        // GLES20.glReadPixels(480,1040, 960, 1520, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, currentFrameBuffer);
         GLES20.glReadPixels(scannerX, scannerY, scannerWidth, scannerHeight, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, currentFrameBuffer);
     }
 

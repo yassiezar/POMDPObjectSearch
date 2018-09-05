@@ -450,11 +450,7 @@ public class ActivityCamera extends AppCompatActivity
 
     public void startBarcodeScanner(int width, int height)
     {
-        View view = scannerView;
-        Log.i(TAG, String.format("x %d y %d width %d height %d", (int)view.getLeft(), (int)view.getTop(), view.getRight(), view.getBottom()));
-        // barcodeScanner = new BarcodeScanner(this, (int)view.getX(), (int)view.getY(), view.getWidth(), view.getHeight(), renderer);
-        // barcodeScanner = new BarcodeScanner(this, 480, 1040, 480, 480, renderer);
-        barcodeScanner = new BarcodeScanner(this, 450, 1017, 525, 525, renderer);
+        barcodeScanner = new BarcodeScanner(this, 525, 525, renderer);
         barcodeScanner.run();
     }
 }

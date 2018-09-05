@@ -2,8 +2,6 @@ package com.example.jaycee.pomdpobjectsearch;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 import android.util.SparseArray;
@@ -13,19 +11,11 @@ import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-
 public class BarcodeScanner implements Runnable
 {
     private static final String TAG = BarcodeScanner.class.getSimpleName();
 
     private static final int O_NOTHING = 0;
-
-    private int scannerWidth, scannerHeight;
-    private int scannerX, scannerY;
 
     private Handler handler = new Handler();
 
@@ -38,12 +28,8 @@ public class BarcodeScanner implements Runnable
 
     private int code = O_NOTHING;
 
-    public BarcodeScanner(Context context, int scannerX, int scannerY, int scannerWidth, int scannerHeight, SurfaceRenderer renderer)
+    public BarcodeScanner(Context context, int scannerWidth, int scannerHeight, SurfaceRenderer renderer)
     {
-        this.scannerWidth = scannerWidth;
-        this.scannerHeight = scannerHeight;
-        this.scannerX = scannerX;
-        this.scannerY = scannerY;
         this.renderer = renderer;
 
         this.detector = new BarcodeDetector.Builder(context).setBarcodeFormats(Barcode.QR_CODE).build();

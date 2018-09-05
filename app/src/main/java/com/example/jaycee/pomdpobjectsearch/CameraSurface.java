@@ -1,9 +1,7 @@
 package com.example.jaycee.pomdpobjectsearch;
 
-import android.app.Activity;
 import android.content.Context;
 import android.opengl.GLSurfaceView;
-import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 

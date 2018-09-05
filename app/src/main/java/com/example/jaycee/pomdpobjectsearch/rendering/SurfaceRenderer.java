@@ -6,7 +6,6 @@ import android.opengl.GLSurfaceView;
 import android.util.Log;
 import android.view.WindowManager;
 
-import com.example.jaycee.pomdpobjectsearch.ActivityCamera;
 import com.example.jaycee.pomdpobjectsearch.CameraSurface;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Frame;
@@ -14,7 +13,6 @@ import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
 import javax.microedition.khronos.egl.EGLConfig;
