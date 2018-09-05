@@ -67,6 +67,7 @@ public class SoundGenerator implements Runnable
     {
         this.stop = true;
         handler = null;
+        waypointAnchor = null;
     }
 
     @Override
@@ -114,6 +115,11 @@ public class SoundGenerator implements Runnable
         Log.i(TAG, String.format("Object: %d Step: %d Visited: %d", state.getEncodedState()[0], state.getEncodedState()[1], state.getEncodedState()[2]));
         if(waypoint.waypointReached(cameraPan, cameraTilt) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
         {
+            if(waypointAnchor != null)
+            {
+                waypointAnchor.detach();
+            }
+
             long action = policy.getAction(state);
             Log.i(TAG, String.format("Object found or found waypoint, action: %d", action));
             waypoint.updateWaypoint(phonePose, state, action);
@@ -304,9 +310,11 @@ public class SoundGenerator implements Runnable
             // Assume the current waypoint is where the camera is pointing.
             // Reasonable since this function only called when pointing to new target
             ClassHelpers.mVector waypointVector = getRotation(phonePose, true);
-            waypointVector.x /= waypointVector.z;
+            // ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(this.pose.getTranslation());
+
+            /*waypointVector.x /= waypointVector.z;
             waypointVector.y /= waypointVector.z;
-            waypointVector.z /= waypointVector.z;
+            waypointVector.z /= waypointVector.z;*/
 
             if(action == Policy.A_LEFT)
             {

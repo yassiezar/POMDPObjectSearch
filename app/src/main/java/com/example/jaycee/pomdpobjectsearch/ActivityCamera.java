@@ -271,5 +271,9 @@ public class ActivityCamera extends AppCompatActivity
         return O_NOTHING;
     }
 
-    public Anchor getWaypointAnchor() { return soundGenerator.getWaypointAnchor(); }
+    public Anchor getWaypointAnchor()
+    {
+        /* TODO: Handle nullpointer crash here */
+        return soundGenerator.getWaypointAnchor();
+    }
 }

@@ -1,8 +1,11 @@
 package com.example.jaycee.pomdpobjectsearch.rendering;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLES30;
+import android.opengl.GLUtils;
 import android.opengl.Matrix;
 
 import com.example.jaycee.pomdpobjectsearch.TGAReader;
@@ -104,7 +107,7 @@ public class ObjectRenderer
 
         ShaderUtils.checkGLError(TAG, "Program parameters");
 
-        InputStream fis = context.getAssets().open(diffuseTextureAssetName);
+        /*InputStream fis = context.getAssets().open(diffuseTextureAssetName);
         byte [] buffer = new byte[fis.available()];
         context.getAssets().open(diffuseTextureAssetName).read(buffer);
 
@@ -115,22 +118,23 @@ public class ObjectRenderer
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(pixels.length*4);
         byteBuffer.order(ByteOrder.nativeOrder());
         IntBuffer intBuffer = byteBuffer.asIntBuffer();
-        intBuffer.put(pixels);
-
+        intBuffer.put(pixels);*/
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glGenTextures(textures.length, textures, 0);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
 
+        Bitmap textureBitmap =
+                BitmapFactory.decodeStream(context.getAssets().open(diffuseTextureAssetName));
         GLES20.glTexParameteri(
                 GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR_MIPMAP_LINEAR);
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-        GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA, width, height, 0, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, byteBuffer);
-        // GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, textureBitmap, 0);
+        // GLES30.glTexImage2D(GLES30.GL_TEXTURE_2D, 0, GLES30.GL_RGBA, width, height, 0, GLES30.GL_RGBA, GLES30.GL_UNSIGNED_BYTE, byteBuffer);
+        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, textureBitmap, 0);
         GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
 
-        //textureBitmap.recycle();
+        textureBitmap.recycle();
 
         ShaderUtils.checkGLError(TAG, "Texture loading");
 

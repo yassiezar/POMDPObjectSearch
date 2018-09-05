@@ -8,6 +8,8 @@ import android.view.WindowManager;
 
 import com.example.jaycee.pomdpobjectsearch.ActivityCamera;
 import com.example.jaycee.pomdpobjectsearch.CameraSurface;
+import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
+import com.google.ar.core.Anchor;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
@@ -29,6 +31,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     private CameraSurface surfaceView;
 
     private Pose devicePose;
+    private Anchor debugObjectAnchor;
 
     private BackgroundRenderer backgroundRenderer;
     private ObjectRenderer objectRenderer;
@@ -75,8 +78,8 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         try
         {
             backgroundRenderer.createOnGlThread(context);
-            objectRenderer.createOnGlThread(context, "models/arrow/Arrow.obj", "models/arrow/Arrow_S.tga");
-            // objectRenderer.createOnGlThread(this, "models/andy.obj", "models/andy.png");
+            // objectRenderer.createOnGlThread(context, "models/arrow/Arrow.obj", "models/arrow/Arrow_S.tga");
+            objectRenderer.createOnGlThread(context, "models/andy.obj", "models/andy.png");
             objectRenderer.setMaterialProperties(0.f, 2.f, 0.5f, 6.f);
         }
         catch(IOException e)
@@ -95,7 +98,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         GLES20.glViewport(0, 0, width, height);
 
         // Create AR debug object
-        debugObject = new ARObject(6, 6, "Centre");
+        debugObject = new ARObject(5, 5, "Centre");
 
         // If surface changed, renderer is not ready
         rendererReady = false;
@@ -154,13 +157,12 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
             {
                 if(drawObjects)
                 {
-                    /* TODO: Detach old anchors */
-/*                if(debugObjectAnchor != null)
-                {
-                    debugObjectAnchor.detach();
-                }*/
+                    if(debugObjectAnchor != null)
+                    {
+                        debugObjectAnchor.detach();
+                    }
                     debugObject.getRotatedObject(devicePose);
-                    session.createAnchor(debugObject.getRotatedPose());
+                    debugObjectAnchor = session.createAnchor(debugObject.getRotatedPose());
 
                     debugObject.getRotatedPose().toMatrix(anchorMatrix, 0);
                     objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
@@ -169,8 +171,20 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
 
                 if(drawWaypoint)
                 {
-                    ((ActivityCamera)context).getWaypointAnchor().getPose().toMatrix(anchorMatrix, 0);
+                    Pose pose = ((ActivityCamera)context).getWaypointAnchor().getPose();
+                    ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(pose.getTranslation());
+                    ClassHelpers.mVector pointingVector = new ClassHelpers.mVector(devicePose.getTranslation());
+                    //pointingVector.z -= 1;
+                    pointingVector.rotateByQuaternion(devicePose.getRotationQuaternion());
 
+                    //pointingVector = pointingVector.cross(waypointVector);
+                    float angle = (float)pointingVector.invDotProduct(waypointVector);
+                    Log.i(TAG, String.format("%f %f %f", pose.getTranslation()[0], pose.getTranslation()[1], pose.getTranslation()[2]));
+
+                    Pose markerPose = new Pose(pose.getTranslation(), new ClassHelpers.mQuaternion(pointingVector.x, pointingVector.y, pointingVector.z, angle).getQuaternionAsFloat());
+                    //Pose markerPose = new Pose(pose.getTranslation(), pose.getRotationQuaternion());
+
+                    markerPose.toMatrix(anchorMatrix, 0);
                     objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
                     objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
                 }

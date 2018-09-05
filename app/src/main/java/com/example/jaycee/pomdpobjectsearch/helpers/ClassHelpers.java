@@ -14,6 +14,7 @@ public class ClassHelpers
             this.y = (float)(y * Math.sin(theta/2));
             this.z = (float)(z * Math.sin(theta/2));
             this.w = (float)(Math.cos(theta));
+            normalise();
         }
 
         public mQuaternion(float[] q)
@@ -22,6 +23,7 @@ public class ClassHelpers
             this.y = q[1];
             this.z = q[2];
             this.w = q[3];
+            normalise();
         }
 
         /*
@@ -162,6 +164,25 @@ public class ClassHelpers
             yaw = Math.atan2(this.x, -this.z);
 
             return new float[] {(float)roll, (float)pitch, (float)yaw};
+        }
+
+        public mVector cross(mVector v)
+        {
+            float x = this.y*v.z - this.z*v.y;
+            float y = -this.x*v.z + this.z*v.x;
+            float z = this.x*v.y - this.y*v.z;
+
+            return new mVector(x, y, z);
+        }
+
+        public double dotProduct(mVector v)
+        {
+            return this.x * v.x + this.y * v.y + this.z * v.z;
+        }
+
+        public double invDotProduct(mVector v)
+        {
+            return Math.acos(dotProduct(v));
         }
 
         public float[] asFloat()
