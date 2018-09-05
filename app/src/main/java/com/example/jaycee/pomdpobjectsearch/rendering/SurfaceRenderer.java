@@ -69,9 +69,9 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         try
         {
             backgroundRenderer.createOnGlThread(context);
-            // objectRenderer.createOnGlThread(context, "models/arrow/Arrow.obj", "models/arrow/Arrow_S.tga");
+            objectRenderer.createOnGlThread(context, "models/arrow/Arrow.obj", "models/arrow/Arrow_S.tga");
             // objectRenderer.createOnGlThread(this, "models/andy.obj", "models/andy.png");
-            // objectRenderer.setMaterialProperties(0.f, 2.f, 0.5f, 6.f);
+            objectRenderer.setMaterialProperties(0.f, 2.f, 0.5f, 6.f);
         }
         catch(IOException e)
         {
@@ -141,7 +141,6 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         catch(NullPointerException e)
         {
             Log.e(TAG, "Frame buffer not yet initialised: " + e);
-            // return IntBuffer.allocate(480*480);
             return IntBuffer.allocate(scannerWidth*scannerHeight);
         }
     }

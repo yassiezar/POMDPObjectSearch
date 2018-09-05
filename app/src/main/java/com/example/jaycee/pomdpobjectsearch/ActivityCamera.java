@@ -2,13 +2,7 @@ package com.example.jaycee.pomdpobjectsearch;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.Rect;
-import android.opengl.GLES20;
-import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -19,26 +13,18 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.WindowManager;
 
 import com.example.jaycee.pomdpobjectsearch.rendering.ARObject;
-import com.example.jaycee.pomdpobjectsearch.rendering.BackgroundRenderer;
-import com.example.jaycee.pomdpobjectsearch.rendering.ObjectRenderer;
 import com.example.jaycee.pomdpobjectsearch.rendering.SurfaceRenderer;
-import com.google.android.gms.vision.barcode.Barcode;
-import com.google.android.gms.vision.barcode.BarcodeDetector;
 
 import com.google.ar.core.ArCoreApk;
-import com.google.ar.core.Camera;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
-import com.google.ar.core.TrackingState;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
@@ -46,12 +32,7 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
-import java.io.IOException;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
-
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
 
 public class ActivityCamera extends AppCompatActivity
 {
@@ -60,9 +41,6 @@ public class ActivityCamera extends AppCompatActivity
     private static final int CAMERA_PERMISSION_CODE = 0;
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
 
-    private static final int O_NOTHING = 0;
-
-    /* TODO: Make new barcodes to correspond with new values */
     private static final int T_COMPUTER_MONITOR = 1;
     private static final int T_COMPUTER_MOUSE = 3;
     private static final int T_COMPUTER_KEYBOARD = 2;
@@ -76,16 +54,12 @@ public class ActivityCamera extends AppCompatActivity
     private Frame frame;
 
     private CameraSurface surfaceView;
-    private View scannerView;
     private DrawerLayout drawerLayout;
 
     private SurfaceRenderer renderer;
 
-    private BarcodeDetector detector;
-
     private SoundGenerator soundGenerator;
     private BarcodeScanner barcodeScanner;
-    private Handler barcodeScannerHandler;
 
     private ArrayList<ARObject> objectList;
 
@@ -190,9 +164,6 @@ public class ActivityCamera extends AppCompatActivity
             }
         });
 
-        scannerView = findViewById(R.id.view_scanner);
-
-        detector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.ALL_FORMATS).build();
         soundGenerator = new SoundGenerator(this);
 
         // Create and add objects to list
@@ -298,7 +269,10 @@ public class ActivityCamera extends AppCompatActivity
         surfaceView.setSession(session);
         surfaceView.onResume();
 
-        boolean initSound = JNIBridge.initSound();
+        if(!JNIBridge.initSound())
+        {
+            Log.e(TAG, "OpenAL init error");
+        }
     }
 
     @Override
@@ -316,7 +290,10 @@ public class ActivityCamera extends AppCompatActivity
             session.pause();
         }
 
-        boolean killSound = JNIBridge.killSound();
+        if(!JNIBridge.killSound())
+        {
+            Log.e(TAG, "OpenAL kill error");
+        }
 
         super.onPause();
     }
