@@ -8,7 +8,6 @@ import android.view.WindowManager;
 
 import com.example.jaycee.pomdpobjectsearch.ActivityCamera;
 import com.example.jaycee.pomdpobjectsearch.CameraSurface;
-import com.google.ar.core.Anchor;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
@@ -29,8 +28,6 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     private Context context;
     private CameraSurface surfaceView;
 
-    private Frame frame;
-    private Anchor debugObjectAnchor;
     private Pose devicePose;
 
     private BackgroundRenderer backgroundRenderer;
@@ -132,7 +129,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         session.setCameraTextureName(backgroundRenderer.getTextureId());
         try
         {
-            frame = session.update();
+            Frame frame = session.update();
             Camera camera = frame.getCamera();
             devicePose = frame.getAndroidSensorPose();
 

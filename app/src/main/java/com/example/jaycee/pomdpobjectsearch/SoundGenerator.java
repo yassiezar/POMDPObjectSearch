@@ -3,11 +3,9 @@ package com.example.jaycee.pomdpobjectsearch;
 import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
 import com.example.jaycee.pomdpobjectsearch.rendering.SurfaceRenderer;
 import com.google.ar.core.Anchor;
-import com.google.ar.core.Camera;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Vibrator;
