@@ -35,7 +35,7 @@ public class ARObject
 
     public void getRotatedObject(Pose devicePose)
     {
-        float[] rotation = devicePose.getRotationQuaternion();//this.pose.getRotationQuaternion();
+        float[] rotation = devicePose.getRotationQuaternion();
         float[] centre = this.pose.getTranslation();
 
         ClassHelpers.mQuaternion phoneRotationQuaternion = new ClassHelpers.mQuaternion(devicePose.getRotationQuaternion());

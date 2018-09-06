@@ -35,6 +35,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
 
     private BackgroundRenderer backgroundRenderer;
     private ObjectRenderer objectRenderer;
+    private ObjectRenderer waypointRenderer;
 
     private ARObject debugObject;
 
@@ -67,6 +68,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     {
         backgroundRenderer = new BackgroundRenderer(scannerX, scannerY, scannerWidth, scannerHeight);
         objectRenderer = new ObjectRenderer();
+        waypointRenderer = new ObjectRenderer();
     }
 
     @Override
@@ -78,9 +80,11 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         try
         {
             backgroundRenderer.createOnGlThread(context);
-            // objectRenderer.createOnGlThread(context, "models/arrow/Arrow.obj", "models/arrow/Arrow_S.tga");
-            objectRenderer.createOnGlThread(context, "models/andy.obj", "models/andy.png");
+            objectRenderer.createOnGlThread(context, "models/arrow/Arrow.obj", "models/arrow/Arrow_S.tga");
+            waypointRenderer.createOnGlThread(context, "models/andy.obj", "models/andy.png");
+
             objectRenderer.setMaterialProperties(0.f, 2.f, 0.5f, 6.f);
+            waypointRenderer.setMaterialProperties(0.f, 2.f, 0.5f, 6.f);
         }
         catch(IOException e)
         {
@@ -155,24 +159,24 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
             // Update the debug object
             if(camera.getTrackingState() == TrackingState.TRACKING)
             {
-                if(drawObjects)
+/*                if(drawObjects)
                 {
-                    if(debugObjectAnchor != null)
-                    {
-                        debugObjectAnchor.detach();
-                    }
-                    debugObject.getRotatedObject(devicePose);
-                    debugObjectAnchor = session.createAnchor(debugObject.getRotatedPose());
-
                     debugObject.getRotatedPose().toMatrix(anchorMatrix, 0);
                     objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
                     objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
-                }
+                }*/
 
                 if(drawWaypoint)
                 {
-                    Pose pose = ((ActivityCamera)context).getWaypointAnchor().getPose();
-                    ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(pose.getTranslation());
+                    Pose waypointPose = ((ActivityCamera)context).getWaypointAnchor().getPose();
+                    Pose devicePose = this.devicePose;
+
+                    // Draw the waypoints as an Andyman
+                    waypointPose.toMatrix(anchorMatrix, 0);
+                    waypointRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
+                    waypointRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
+
+/*                    ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(pose.getTranslation());
                     ClassHelpers.mVector pointingVector = new ClassHelpers.mVector(devicePose.getTranslation());
                     //pointingVector.z -= 1;
                     pointingVector.rotateByQuaternion(devicePose.getRotationQuaternion());
@@ -181,10 +185,27 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
                     float angle = (float)pointingVector.invDotProduct(waypointVector);
                     Log.i(TAG, String.format("%f %f %f", pose.getTranslation()[0], pose.getTranslation()[1], pose.getTranslation()[2]));
 
-                    Pose markerPose = new Pose(pose.getTranslation(), new ClassHelpers.mQuaternion(pointingVector.x, pointingVector.y, pointingVector.z, angle).getQuaternionAsFloat());
-                    //Pose markerPose = new Pose(pose.getTranslation(), pose.getRotationQuaternion());
+                    // Pose markerPose = new Pose(pose.getTranslation(), new ClassHelpers.mQuaternion(pointingVector.x, pointingVector.y, pointingVector.z, angle).getQuaternionAsFloat());
+                    // Pose markerPose = new Pose(pose.getTranslation(), new float[]{0.f, 0.f, 0.f, angle});
+                    Pose markerPose = new Pose(pose.getTranslation(), pose.getRotationQuaternion());*/
 
-                    markerPose.toMatrix(anchorMatrix, 0);
+                    // Get pointing vector
+                    ClassHelpers.mVector currentPointingVector = new ClassHelpers.mVector(devicePose.getTranslation());
+                    ClassHelpers.mQuaternion currentPhoneRotation = new ClassHelpers.mQuaternion(devicePose.getRotationQuaternion());
+                    currentPointingVector.z -= 1;
+                    currentPointingVector.rotateByQuaternion(currentPhoneRotation);
+                    currentPointingVector.y *= -1;
+
+                    // Get required rotation axis and angle to form quaternion
+                    ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(waypointPose.getTranslation());
+/*                    ClassHelpers.mVector rotationAxis = currentPointingVector.cross(waypointVector);
+                    double rotationAngle = Math.sqrt(waypointVector.length*waypointVector.length * currentPointingVector.length*currentPointingVector.length) + currentPointingVector.dotProduct(waypointVector);*/
+
+                    // Construct arrow pose
+                    // Pose indicatorPose = new Pose(waypointPose.getTranslation(), new float[]{rotationAxis.x, rotationAxis.y, rotationAxis.z, (float)rotationAngle});
+                    Pose indicatorPose = new Pose(currentPointingVector.asFloat(), devicePose.getRotationQuaternion());
+
+                    indicatorPose.toMatrix(anchorMatrix, 0);
                     objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
                     objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
                 }
@@ -220,7 +241,17 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         }
     }
 
-    public void toggleDrawObjects() { this.drawObjects = !this.drawObjects; }
+    public void toggleDrawObjects()
+    {
+        if(debugObjectAnchor != null)
+        {
+            debugObjectAnchor.detach();
+        }
+        debugObject.getRotatedObject(devicePose);
+        debugObjectAnchor = surfaceView.getSession().createAnchor(debugObject.getRotatedPose());
+
+        this.drawObjects = !this.drawObjects;
+    }
     public boolean isRendererReady() { return this.rendererReady; }
     public void setDrawWaypoint(boolean drawWaypoint) { this.drawWaypoint = drawWaypoint; }
 

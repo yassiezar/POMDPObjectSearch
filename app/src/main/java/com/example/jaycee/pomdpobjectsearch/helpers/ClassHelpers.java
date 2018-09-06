@@ -94,12 +94,14 @@ public class ClassHelpers
     public static class mVector
     {
         public float x, y, z;
+        public float length;
 
         public mVector(float x, float y, float z)
         {
             this.x = x;
             this.y = y;
             this.z = z;
+            this.length = (float)Math.sqrt(x*x + y*y + z*z);
         }
 
         public mVector(float[] centre)
@@ -107,6 +109,7 @@ public class ClassHelpers
             this.x = centre[0];
             this.y = centre[1];
             this.z = centre[2];
+            this.length = (float)Math.sqrt(x*x + y*y + z*z);
         }
 
         public void rotateByQuaternion(mQuaternion q)
@@ -120,7 +123,6 @@ public class ClassHelpers
             float z = 2 * (q.x * q.z + q.w * q.y) * this.x +
                     2 * (q.y * q.z - q.w * q.x) * this.y +
                     (1 - 2 * q.x * q.x - 2 * q.y * q.y) * this.z;
-
 
             this.x = x;
             this.y = y;
@@ -149,10 +151,9 @@ public class ClassHelpers
 
         public void normalise()
         {
-            float fact = (float)Math.sqrt(x*x + y*y + z*z);
-            this.x /= fact;
-            this.y /= fact;
-            this.z /= fact;
+            this.x /= this.length;
+            this.y /= this.length;
+            this.z /= this.length;
         }
 
         public float[] getEuler()

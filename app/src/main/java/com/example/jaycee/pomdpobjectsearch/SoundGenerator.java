@@ -363,7 +363,8 @@ public class SoundGenerator implements Runnable
 
             wayPointTranslation[2] = phonePose.getTranslation()[2] - 1.f;
 
-            pose = new Pose(wayPointTranslation, phonePose.getRotationQuaternion());
+            // pose = new Pose(wayPointTranslation, phonePose.getRotationQuaternion());
+            pose = new Pose(wayPointTranslation, new float[]{0.f, 0.f, 0.f, 1.f});
         }
 
         private boolean waypointReached(float pan, float tilt)
