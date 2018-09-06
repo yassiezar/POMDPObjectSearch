@@ -80,7 +80,7 @@ public class ClassHelpers
             this.w = tmpw;
         }
 
-        public float[] getQuaternionAsFloat()
+        public float[] asFloat()
         {
             return new float[] {this.x, this.y, this.z, this.w};
         }
@@ -89,6 +89,7 @@ public class ClassHelpers
         {
             return new float[] {-this.x, -this.y, -this.z, this.w};
         }
+        public mQuaternion getAsConjugate() { return new mQuaternion(-this.x, -this.y, -this.z, this.w); }
     }
 
     public static class mVector
@@ -143,7 +144,6 @@ public class ClassHelpers
                     2 * (q.y * q.z - q.w * q.x) * this.y +
                     (1 - 2 * q.x * q.x - 2 * q.y * q.y) * this.z;
 
-
             this.x = x;
             this.y = y;
             this.z = z;
@@ -154,6 +154,13 @@ public class ClassHelpers
             this.x /= this.length;
             this.y /= this.length;
             this.z /= this.length;
+        }
+
+        public void denormalise()
+        {
+            this.x *= this.length;
+            this.y *= this.length;
+            this.z *= this.length;
         }
 
         public float[] getEuler()
@@ -172,6 +179,15 @@ public class ClassHelpers
             float x = this.y*v.z - this.z*v.y;
             float y = -this.x*v.z + this.z*v.x;
             float z = this.x*v.y - this.y*v.z;
+
+            return new mVector(x, y, z);
+        }
+
+        public mVector translate(mVector v)
+        {
+            float x = v.x - this.x;
+            float y = v.y - this.y;
+            float z = v.z - this.z;
 
             return new mVector(x, y, z);
         }

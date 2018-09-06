@@ -81,7 +81,6 @@ public class SoundGenerator implements Runnable
             if(!stop) handler.postDelayed(this, 40);
             return;
         }
-        Log.i(TAG, "Running");
 
         if(!renderer.isRendererReady())
         {
@@ -112,7 +111,7 @@ public class SoundGenerator implements Runnable
 
         // Get current state and generate new waypoint if agent is in new state or sees new object
         Log.d(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
-        Log.i(TAG, String.format("Object: %d Step: %d Visited: %d", state.getEncodedState()[0], state.getEncodedState()[1], state.getEncodedState()[2]));
+        Log.d(TAG, String.format("Object: %d Step: %d Visited: %d", state.getEncodedState()[0], state.getEncodedState()[1], state.getEncodedState()[2]));
         if(waypoint.waypointReached(cameraPan, cameraTilt) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
         {
             if(waypointAnchor != null)
@@ -359,7 +358,7 @@ public class SoundGenerator implements Runnable
             {
                 wayPointTranslation[0] = (float)Math.sin(Math.sin(Math.PI/4));
             }
-            Log.i(TAG, String.format("Current pan: %f Current tilt: %f", Math.asin(wayPointTranslation[0]), Math.asin(wayPointTranslation[1])));
+            Log.d(TAG, String.format("Current pan: %f Current tilt: %f", Math.asin(wayPointTranslation[0]), Math.asin(wayPointTranslation[1])));
 
             wayPointTranslation[2] = phonePose.getTranslation()[2] - 1.f;
 
@@ -372,7 +371,7 @@ public class SoundGenerator implements Runnable
             float x = pose.getTranslation()[0];
             float y = pose.getTranslation()[1];
 
-            Log.i(TAG, String.format("x: %f y %f", Math.cos(pan+Math.PI/2) - x, Math.sin(-tilt) - y));
+            Log.d(TAG, String.format("x: %f y %f", Math.cos(pan+Math.PI/2) - x, Math.sin(-tilt) - y));
             // Compensate for Z-axis going in negative direction, rotating pan around y-axis
             return Math.abs(Math.sin(-tilt) - y) < 0.1 && Math.abs(Math.cos(pan+Math.PI/2) - x) < 0.1;
         }

@@ -3,6 +3,7 @@ package com.example.jaycee.pomdpobjectsearch.rendering;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.opengl.GLES11;
 import android.opengl.GLES20;
 import android.opengl.GLES30;
 import android.opengl.GLUtils;
@@ -221,11 +222,13 @@ public class ObjectRenderer
         float[] scaleMatrix = new float[16];
 
         Matrix.setIdentityM(scaleMatrix, 0);
-        scaleMatrix[0] = scaleFactor;
+/*        scaleMatrix[0] = scaleFactor;
         scaleMatrix[5] = scaleFactor;
         scaleMatrix[10] = scaleFactor;
-        scaleMatrix[15] = scaleFactor;
-        Matrix.multiplyMM(this.modelMatrix, 0, modelMatrix, 0, scaleMatrix, 0);
+        scaleMatrix[15] = scaleFactor;*/
+        Matrix.scaleM(scaleMatrix, 0, scaleFactor, scaleFactor, 1.f);
+        Matrix.multiplyMM(this.modelMatrix, 0, scaleMatrix, 0, modelMatrix, 0);
+        // Matrix.multiplyMM(this.modelMatrix, 0, modelMatrix, 0, scaleMatrix, 0);
     }
 
     public void setMaterialProperties(float ambient, float diffuse, float specular, float specularPower)

@@ -176,35 +176,30 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
                     waypointRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
                     waypointRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
 
-/*                    ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(pose.getTranslation());
-                    ClassHelpers.mVector pointingVector = new ClassHelpers.mVector(devicePose.getTranslation());
-                    //pointingVector.z -= 1;
-                    pointingVector.rotateByQuaternion(devicePose.getRotationQuaternion());
-
-                    //pointingVector = pointingVector.cross(waypointVector);
-                    float angle = (float)pointingVector.invDotProduct(waypointVector);
-                    Log.i(TAG, String.format("%f %f %f", pose.getTranslation()[0], pose.getTranslation()[1], pose.getTranslation()[2]));
-
-                    // Pose markerPose = new Pose(pose.getTranslation(), new ClassHelpers.mQuaternion(pointingVector.x, pointingVector.y, pointingVector.z, angle).getQuaternionAsFloat());
-                    // Pose markerPose = new Pose(pose.getTranslation(), new float[]{0.f, 0.f, 0.f, angle});
-                    Pose markerPose = new Pose(pose.getTranslation(), pose.getRotationQuaternion());*/
-
                     // Get pointing vector
-                    ClassHelpers.mVector currentPointingVector = new ClassHelpers.mVector(devicePose.getTranslation());
+                    // ClassHelpers.mVector currentPointingVector = new ClassHelpers.mVector(devicePose.getTranslation());
+                    ClassHelpers.mVector currentPointingVector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
                     ClassHelpers.mQuaternion currentPhoneRotation = new ClassHelpers.mQuaternion(devicePose.getRotationQuaternion());
-                    currentPointingVector.z -= 1;
+                    currentPointingVector = currentPointingVector.translate(new ClassHelpers.mVector(devicePose.getTranslation()));
+                    currentPointingVector.normalise();
                     currentPointingVector.rotateByQuaternion(currentPhoneRotation);
                     currentPointingVector.y *= -1;
+                    currentPointingVector.x *= -1;
 
                     // Get required rotation axis and angle to form quaternion
                     ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(waypointPose.getTranslation());
-/*                    ClassHelpers.mVector rotationAxis = currentPointingVector.cross(waypointVector);
-                    double rotationAngle = Math.sqrt(waypointVector.length*waypointVector.length * currentPointingVector.length*currentPointingVector.length) + currentPointingVector.dotProduct(waypointVector);*/
+                    ClassHelpers.mVector vectorToWaypoint = currentPointingVector.translate(waypointVector);
+                    ClassHelpers.mVector rotationAxis = currentPointingVector.cross(vectorToWaypoint);
+                    double rotationAngle = Math.sqrt(vectorToWaypoint.length*vectorToWaypoint.length * currentPointingVector.length*currentPointingVector.length) + currentPointingVector.dotProduct(vectorToWaypoint);
+
+                    ClassHelpers.mQuaternion rotationQuaternion = new ClassHelpers.mQuaternion(new float[]{rotationAxis.x, rotationAxis.y, rotationAxis.z, (float)rotationAngle});
 
                     // Construct arrow pose
-                    // Pose indicatorPose = new Pose(waypointPose.getTranslation(), new float[]{rotationAxis.x, rotationAxis.y, rotationAxis.z, (float)rotationAngle});
-                    Pose indicatorPose = new Pose(currentPointingVector.asFloat(), devicePose.getRotationQuaternion());
+                    currentPointingVector.denormalise();
+                    Log.i(TAG, String.format("x %f y %f z %f", vectorToWaypoint.x, vectorToWaypoint.y, vectorToWaypoint.z));
+                    Pose indicatorPose = new Pose(waypointPose.getTranslation(), rotationQuaternion.asFloat());
 
+                    scaleFactor = 0.4f;
                     indicatorPose.toMatrix(anchorMatrix, 0);
                     objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
                     objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
