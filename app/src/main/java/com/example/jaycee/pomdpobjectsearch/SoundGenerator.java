@@ -126,9 +126,33 @@ public class SoundGenerator implements Runnable
             prevCameraObservation = newCameraObservation;
             state.addObservation(newCameraObservation, cameraPan, cameraTilt);
         }
-        ClassHelpers.mVector waypointVector = getRotation(waypoint.getPose(), false);
+        // ClassHelpers.mVector waypointVector = getRotation(waypoint.getPose(), false);
+        ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(waypoint.pose.getTranslation());
         float[] waypointRotationAngles = waypointVector.getEuler();
         float waypointTilt = waypointRotationAngles[1];
+
+        // Set direction arrow
+        ClassHelpers.mVector vectorToWaypoint = waypointVector.translate(cameraVector);
+        // Log.i(TAG, String.format("x %f y %f z %f", vectorToWaypoint.x, vectorToWaypoint.y, vectorToWaypoint.z));
+        // Log.i(TAG, String.format("x %f y %f z %f", cameraVector.x, cameraVector.y, cameraVector.z));
+        // Log.i(TAG, String.format("x %f y %f z %f", waypointVector.x, waypointVector.y, waypointVector.z));
+        ((ActivityCamera)context).getCentreView().resetArrows();
+        if(vectorToWaypoint.x > 0.1)
+        {
+            ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.RIGHT, 255);
+        }
+        else if (vectorToWaypoint.x < -0.1)
+        {
+            ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.LEFT, 255);
+        }
+        if(vectorToWaypoint.y > 0.1)
+        {
+            ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.UP, 255);
+        }
+        if(vectorToWaypoint.y < -0.1)
+        {
+            ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.DOWN, 255);
+        }
 
         JNIBridge.playSound(waypoint.getPose().getTranslation(), cameraVector.asFloat(), gain, getPitch(waypointTilt - cameraTilt));
 
@@ -142,21 +166,21 @@ public class SoundGenerator implements Runnable
         // Start by rotating vector by quaternion (camera vector = -z)
         ClassHelpers.mQuaternion phoneRotationQuaternion = new ClassHelpers.mQuaternion(pose.getRotationQuaternion());
         phoneRotationQuaternion.normalise();
-        ClassHelpers.mVector vector = new ClassHelpers.mVector(0.f, 0.f, -1.f);
+        ClassHelpers.mVector vector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
         vector.rotateByQuaternion(phoneRotationQuaternion);
-        vector.normalise();
-
-        // Add initial offset pose
-        ClassHelpers.mQuaternion offsetRotationQuaternion = new ClassHelpers.mQuaternion(offsetPose.getRotationQuaternion());
-        offsetRotationQuaternion.normalise();
-        ClassHelpers.mVector offsetVector = new ClassHelpers.mVector(0.f, 0.f, -1.f);
-        offsetVector.rotateByQuaternion(offsetRotationQuaternion);
-        offsetVector.normalise();
+        // vector.normalise();
 
         if(!isWaypointPose)
         {
-            vector.x -= offsetVector.x;
-            vector.y -= offsetVector.y;
+            // Add initial offset pose
+            ClassHelpers.mQuaternion offsetRotationQuaternion = new ClassHelpers.mQuaternion(offsetPose.getRotationQuaternion());
+            offsetRotationQuaternion.normalise();
+            ClassHelpers.mVector offsetVector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
+            offsetVector.rotateByQuaternion(offsetRotationQuaternion);
+            // offsetVector.normalise();
+
+/*            vector.x -= offsetVector.x;
+            vector.y -= offsetVector.y;*/
         }
 
         return vector;
@@ -293,6 +317,8 @@ public class SoundGenerator implements Runnable
 
         private Pose pose;
 
+        private Arrow.Direction currentInstruction;
+
         Waypoint(Pose pose)
         {
             float[] phoneTranslation = pose.getTranslation();
@@ -320,25 +346,28 @@ public class SoundGenerator implements Runnable
                 wayPointTranslation[0] = waypointVector.x - 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
                 wayPointTranslation[1] = waypointVector.y;
                 stateVector[0] += 1;
+                currentInstruction = Arrow.Direction.LEFT;
             }
             if(action == Policy.A_RIGHT)
             {
                 wayPointTranslation[0] = waypointVector.x + 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
                 wayPointTranslation[1] = waypointVector.y;
                 stateVector[0] -= 1;
+                currentInstruction = Arrow.Direction.RIGHT;
             }
-
             if(action == Policy.A_UP)
             {
                 wayPointTranslation[0] = waypointVector.x;
                 wayPointTranslation[1] = waypointVector.y + 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
                 stateVector[1] -= 1;
+                currentInstruction = Arrow.Direction.UP;
             }
             if(action == Policy.A_DOWN)
             {
                 wayPointTranslation[0] = waypointVector.x;
                 wayPointTranslation[1] = waypointVector.y - 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
                 stateVector[1] += 1;
+                currentInstruction = Arrow.Direction.DOWN;
             }
 
             // Wrap the world
@@ -371,9 +400,9 @@ public class SoundGenerator implements Runnable
             float x = pose.getTranslation()[0];
             float y = pose.getTranslation()[1];
 
-            Log.d(TAG, String.format("x: %f y %f", Math.cos(pan+Math.PI/2) - x, Math.sin(-tilt) - y));
+            Log.i(TAG, String.format("x: %f y %f", Math.sin(pan) - x, Math.sin(tilt) - y));
             // Compensate for Z-axis going in negative direction, rotating pan around y-axis
-            return Math.abs(Math.sin(-tilt) - y) < 0.1 && Math.abs(Math.cos(pan+Math.PI/2) - x) < 0.1;
+            return Math.abs(Math.sin(tilt) - y) < 0.1 && Math.abs(Math.cos(-pan+Math.PI/2) - x) < 0.1;
         }
     }
 

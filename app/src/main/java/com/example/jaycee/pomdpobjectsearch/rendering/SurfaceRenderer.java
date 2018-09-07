@@ -178,7 +178,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
 
                     // Get pointing vector
                     // ClassHelpers.mVector currentPointingVector = new ClassHelpers.mVector(devicePose.getTranslation());
-                    ClassHelpers.mVector currentPointingVector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
+/*                    ClassHelpers.mVector currentPointingVector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
                     ClassHelpers.mQuaternion currentPhoneRotation = new ClassHelpers.mQuaternion(devicePose.getRotationQuaternion());
                     currentPointingVector = currentPointingVector.translate(new ClassHelpers.mVector(devicePose.getTranslation()));
                     currentPointingVector.normalise();
@@ -196,8 +196,8 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
 
                     // Construct arrow pose
                     currentPointingVector.denormalise();
-                    Log.i(TAG, String.format("x %f y %f z %f", vectorToWaypoint.x, vectorToWaypoint.y, vectorToWaypoint.z));
-                    Pose indicatorPose = new Pose(waypointPose.getTranslation(), rotationQuaternion.asFloat());
+                    // Log.i(TAG, String.format("x %f y %f z %f", vectorToWaypoint.x, vectorToWaypoint.y, vectorToWaypoint.z));
+                    Pose indicatorPose = new Pose(waypointPose.getTranslation(), rotationQuaternion.asFloat());*/
 
 /*                    ClassHelpers.mVector currentPointingVector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
                     ClassHelpers.mQuaternion currentPhoneRotation = new ClassHelpers.mQuaternion(devicePose.getRotationQuaternion());

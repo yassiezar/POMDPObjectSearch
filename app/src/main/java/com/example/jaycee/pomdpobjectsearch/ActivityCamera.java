@@ -48,6 +48,7 @@ public class ActivityCamera extends AppCompatActivity
 
     private CameraSurface surfaceView;
     private DrawerLayout drawerLayout;
+    private CentreView centreView;
 
     private SoundGenerator soundGenerator;
     private BarcodeScanner barcodeScanner;
@@ -68,6 +69,8 @@ public class ActivityCamera extends AppCompatActivity
         actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
 
         surfaceView = findViewById(R.id.surfaceview);
+
+        centreView = findViewById(R.id.centre_view);
 
         drawerLayout = findViewById(R.id.layout_drawer_objects);
         NavigationView navigationView = findViewById(R.id.navigation_view_objects);
@@ -275,5 +278,10 @@ public class ActivityCamera extends AppCompatActivity
     {
         /* TODO: Handle nullpointer crash here */
         return soundGenerator.getWaypointAnchor();
+    }
+
+    public CentreView getCentreView()
+    {
+        return centreView;
     }
 }

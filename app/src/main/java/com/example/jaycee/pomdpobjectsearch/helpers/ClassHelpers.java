@@ -168,8 +168,8 @@ public class ClassHelpers
             double roll, pitch, yaw;
 
             roll = Math.atan2(this.y, this.x);
-            pitch = Math.atan2(this.y, -this.z);
-            yaw = Math.atan2(this.x, -this.z);
+            pitch = Math.atan2(this.y, this.z);
+            yaw = Math.atan2(this.x, this.z);
 
             return new float[] {(float)roll, (float)pitch, (float)yaw};
         }
