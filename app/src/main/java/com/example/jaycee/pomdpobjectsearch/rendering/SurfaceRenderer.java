@@ -221,9 +221,9 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
                     Pose indicatorPose = new Pose(currentPointingVector.asFloat(), rotationRequired.asFloat());*/
 
                     //scaleFactor = vectorToWaypoint.length;
-                    indicatorPose.toMatrix(anchorMatrix, 0);
+/*                    indicatorPose.toMatrix(anchorMatrix, 0);
                     objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
-                    objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
+                    objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);*/
                 }
             }
             else
