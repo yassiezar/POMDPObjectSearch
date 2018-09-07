@@ -13,7 +13,7 @@ public class ClassHelpers
             this.x = (float)(x * Math.sin(theta/2));
             this.y = (float)(y * Math.sin(theta/2));
             this.z = (float)(z * Math.sin(theta/2));
-            this.w = (float)(Math.cos(theta));
+            this.w = (float)(Math.cos(theta/2));
             normalise();
         }
 
@@ -185,9 +185,9 @@ public class ClassHelpers
 
         public mVector translate(mVector v)
         {
-            float x = v.x - this.x;
-            float y = v.y - this.y;
-            float z = v.z - this.z;
+            float x = this.x - v.x;
+            float y = this.y - v.y;
+            float z = this.z - v.z;
 
             return new mVector(x, y, z);
         }

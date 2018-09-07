@@ -199,7 +199,28 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
                     Log.i(TAG, String.format("x %f y %f z %f", vectorToWaypoint.x, vectorToWaypoint.y, vectorToWaypoint.z));
                     Pose indicatorPose = new Pose(waypointPose.getTranslation(), rotationQuaternion.asFloat());
 
-                    scaleFactor = 0.4f;
+/*                    ClassHelpers.mVector currentPointingVector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
+                    ClassHelpers.mQuaternion currentPhoneRotation = new ClassHelpers.mQuaternion(devicePose.getRotationQuaternion());
+                    currentPointingVector = currentPointingVector.translate(new ClassHelpers.mVector(devicePose.getTranslation()));
+                    currentPointingVector.rotateByQuaternion(currentPhoneRotation);
+                    // currentPointingVector.y *= -1;
+                    // currentPointingVector.x *= -1;
+                    currentPointingVector.z = waypointPose.getTranslation()[2];
+
+                    ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(waypointPose.getTranslation());
+                    ClassHelpers.mVector waypointToPointingVector = waypointVector.translate(currentPointingVector);
+
+                    double rotationAngle = Math.sqrt(waypointToPointingVector.length*waypointToPointingVector.length * currentPointingVector.length*currentPointingVector.length) + waypointVector.dotProduct(currentPointingVector);
+                    ClassHelpers.mVector rotationAxis = currentPointingVector.cross(waypointToPointingVector);
+
+                    ClassHelpers.mQuaternion rotationRequired = new ClassHelpers.mQuaternion(rotationAxis.x, rotationAxis.y, rotationAxis.z, (float)rotationAngle);
+
+                    // Log.i(TAG, String.format("x %f y %f z %f", currentPointingVector.x, currentPointingVector.y, currentPointingVector.z));
+                    Log.i(TAG, String.format("w %f p %f r %f", waypointVector.y, currentPointingVector.y, waypointToPointingVector.y));
+
+                    Pose indicatorPose = new Pose(currentPointingVector.asFloat(), rotationRequired.asFloat());*/
+
+                    //scaleFactor = vectorToWaypoint.length;
                     indicatorPose.toMatrix(anchorMatrix, 0);
                     objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
                     objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
