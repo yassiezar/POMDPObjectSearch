@@ -406,9 +406,10 @@ public class SoundGenerator implements Runnable
                 wayPointTranslation[0] = (float)Math.sin(Math.sin(Math.PI/4));
             }*/
 
-            wayPointTranslation[0] = (float)Math.sin(Math.toRadians(ANGLE_INTERVAL*(pan - GRID_SIZE/2)));
-            wayPointTranslation[1] = (float)Math.sin(Math.toRadians(ANGLE_INTERVAL*(tilt - GRID_SIZE/2)));
-            wayPointTranslation[2] = phonePose.getTranslation()[2] - 1.f;
+            float z =  phonePose.getTranslation()[2] - 1.f;
+            wayPointTranslation[0] = -z*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL*(pan - GRID_SIZE/2)));
+            wayPointTranslation[1] = -z*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL*(tilt - GRID_SIZE/2)));
+            wayPointTranslation[2] = z;
 
             Log.i(TAG, String.format("new pan: %d new tilt: %d", pan, tilt));
             Log.i(TAG, String.format("translation x %f translation y: %f", wayPointTranslation[0], wayPointTranslation[1]));
