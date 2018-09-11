@@ -81,34 +81,36 @@ public class ActivityCamera extends AppCompatActivity
             public boolean onNavigationItemSelected(@NonNull MenuItem item)
             {
                 int code = barcodeScanner.getCode();
+                int target = 0;
                 switch (item.getItemId())
                 {
                     case R.id.item_object_mug:
-                        soundGenerator.setTarget(T_MUG, code);
+                        target = T_MUG;
                         break;
                     case R.id.item_object_laptop:
-                        soundGenerator.setTarget(T_LAPTOP, code);
+                        target = T_WINDOW;
                         break;
                     case R.id.item_object_desk:
-                        soundGenerator.setTarget(T_DESK, code);
+                        target = T_DESK;
                         break;
                     case R.id.item_object_office_supplies:
-                        soundGenerator.setTarget(T_OFFICE_SUPPLIES, code);
+                        target = T_OFFICE_SUPPLIES;
                         break;
                     case R.id.item_object_keyboard:
-                        soundGenerator.setTarget(T_COMPUTER_KEYBOARD, code);
+                        target = T_COMPUTER_KEYBOARD;
                         break;
                     case R.id.item_object_monitor:
-                        soundGenerator.setTarget(T_COMPUTER_MONITOR, code);
+                        target = T_COMPUTER_MONITOR;
                         break;
                     case R.id.item_object_mouse:
-                        soundGenerator.setTarget(T_COMPUTER_MOUSE, code);
+                        target = T_COMPUTER_MOUSE;
                         break;
                     case R.id.item_object_window:
-                        soundGenerator.setTarget(T_WINDOW, code);
+                        target = T_WINDOW;
                         break;
                 }
 
+                soundGenerator.setTarget(target, code);
                 soundGenerator.markOffsetPose();
                 item.setCheckable(true);
 
