@@ -3,13 +3,12 @@ package com.example.jaycee.pomdpobjectsearch.rendering;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.opengl.GLES11;
 import android.opengl.GLES20;
 import android.opengl.GLES30;
 import android.opengl.GLUtils;
 import android.opengl.Matrix;
 
-import com.example.jaycee.pomdpobjectsearch.TGAReader;
+import com.example.jaycee.pomdpobjectsearch.helpers.TGAReaderHelper;
 
 import de.javagl.obj.Obj;
 import de.javagl.obj.ObjData;
@@ -124,9 +123,9 @@ public class ObjectRenderer
             byte [] buffer = new byte[fis.available()];
             context.getAssets().open(diffuseTextureAssetName).read(buffer);
 
-            int [] pixels = TGAReader.read(buffer, TGAReader.ARGB);
-            int width = TGAReader.getWidth(buffer);
-            int height = TGAReader.getHeight(buffer);
+            int [] pixels = TGAReaderHelper.read(buffer, TGAReaderHelper.ARGB);
+            int width = TGAReaderHelper.getWidth(buffer);
+            int height = TGAReaderHelper.getHeight(buffer);
 
             ByteBuffer byteBuffer = ByteBuffer.allocateDirect(pixels.length*4);
             byteBuffer.order(ByteOrder.nativeOrder());

@@ -400,7 +400,7 @@ public class SoundGenerator implements Runnable
             float x = pose.getTranslation()[0];
             float y = pose.getTranslation()[1];
 
-            Log.i(TAG, String.format("x: %f y %f", Math.sin(pan) - x, Math.sin(tilt) - y));
+            Log.d(TAG, String.format("x: %f y %f", Math.sin(pan) - x, Math.sin(tilt) - y));
             // Compensate for Z-axis going in negative direction, rotating pan around y-axis
             return Math.abs(Math.sin(tilt) - y) < 0.1 && Math.abs(Math.cos(-pan+Math.PI/2) - x) < 0.1;
         }
@@ -467,8 +467,10 @@ public class SoundGenerator implements Runnable
         private void addObservation(long observation, float fpan, float ftilt)
         {
             // Origin is top right, not bottom left
-            int pan = (int) (-Math.round(Math.toDegrees(-fpan) / ANGLE_INTERVAL) + GRID_SIZE / 2 - 1);
-            int tilt = (int) (-Math.round(Math.toDegrees(-ftilt) / ANGLE_INTERVAL) + GRID_SIZE / 2 - 1);
+            int pan = (int) (Math.round(Math.toDegrees(fpan) / ANGLE_INTERVAL) + GRID_SIZE / 2 - 1);
+            int tilt = (int) (Math.round(Math.toDegrees(ftilt) / ANGLE_INTERVAL) + GRID_SIZE / 2 - 1);
+            Log.i(TAG, String.format("x: %f y %f", fpan, ftilt));
+            Log.i(TAG, String.format("x: %d y %d", pan, tilt));
 
             this.observation = observation;
             if(this.steps != MAX_STEPS-1) this.steps ++;
