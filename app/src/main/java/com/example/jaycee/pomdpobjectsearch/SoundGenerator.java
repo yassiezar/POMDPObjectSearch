@@ -103,7 +103,7 @@ public class SoundGenerator implements Runnable
 
         // Get Euler angles from vector wrt axis system
         // pitch = tilt, yaw = pan
-        ClassHelpers.mVector cameraVector = getCameraVector(phonePose, false);
+        ClassHelpers.mVector cameraVector = getCameraVector(phonePose);
         float[] phoneRotationAngles = cameraVector.getEuler();
         float cameraPan = phoneRotationAngles[2];
         float cameraTilt = phoneRotationAngles[1];
@@ -121,13 +121,11 @@ public class SoundGenerator implements Runnable
 
             long action = policy.getAction(state);
             Log.i(TAG, String.format("Object found or found waypoint, action: %d", action));
-            // waypoint.updateWaypoint(phonePose, state, action);
-            waypoint.updateWaypoint(cameraPan, cameraTilt, state, action);
+            waypoint.updateWaypoint(cameraPan, cameraTilt, action);
             waypointAnchor = session.createAnchor(waypoint.getPose());
             prevCameraObservation = newCameraObservation;
             state.addObservation(newCameraObservation, cameraPan, cameraTilt);
         }
-        // ClassHelpers.mVector waypointVector = getRotation(waypoint.getPose(), false);
         ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(waypoint.pose.getTranslation());
         float[] waypointRotationAngles = waypointVector.getEuler();
         float waypointTilt = waypointRotationAngles[1];
@@ -161,7 +159,7 @@ public class SoundGenerator implements Runnable
         if(!stop) handler.postDelayed(this, 40);
     }
 
-    private ClassHelpers.mVector getCameraVector(Pose pose, boolean isWaypointPose)
+    private ClassHelpers.mVector getCameraVector(Pose pose)
     {
         // Get rotation angles and convert to pan/tilt angles
         // Start by rotating vector by quaternion (camera vector = -z)
@@ -169,20 +167,6 @@ public class SoundGenerator implements Runnable
         phoneRotationQuaternion.normalise();
         ClassHelpers.mVector vector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
         vector.rotateByQuaternion(phoneRotationQuaternion);
-        // vector.normalise();
-
-        if(!isWaypointPose)
-        {
-            // Add initial offset pose
-/*            ClassHelpers.mQuaternion offsetRotationQuaternion = new ClassHelpers.mQuaternion(offsetPose.getRotationQuaternion());
-            offsetRotationQuaternion.normalise();
-            ClassHelpers.mVector offsetVector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
-            offsetVector.rotateByQuaternion(offsetRotationQuaternion);*/
-            // offsetVector.normalise();
-
-/*            vector.x -= offsetVector.x;
-            vector.y -= offsetVector.y;*/
-        }
 
         return vector;
     }
@@ -329,16 +313,13 @@ public class SoundGenerator implements Runnable
 
         Pose getPose() { return pose; }
 
-        void updateWaypoint(float fpan, float ftilt, State state, long action)
+        void updateWaypoint(float fpan, float ftilt, long action)
         {
             float[] wayPointTranslation = new float[3];
             //long[] stateVector = state.getEncodedState();
 
             // Assume the current waypoint is where the camera is pointing.
             // Reasonable since this function only called when pointing to new target
-            // ClassHelpers.mVector waypointVector = getCameraVector(phonePose, true);
-            // ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(this.pose.getTranslation());
-
             // Discretise pan/tilt into grid
             int pan = (int) (Math.floor(Math.toDegrees(fpan) / ANGLE_INTERVAL)) + GRID_SIZE / 2;
             int tilt = (int) (Math.floor(Math.toDegrees(ftilt) / ANGLE_INTERVAL)) + GRID_SIZE / 2;
@@ -354,33 +335,21 @@ public class SoundGenerator implements Runnable
             {
 
                 pan -= 1;
-/*                wayPointTranslation[0] = waypointVector.x - 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
-                wayPointTranslation[1] = waypointVector.y;*/
-                //stateVector[0] += 1;
                 currentInstruction = Arrow.Direction.LEFT;
             }
             else if(action == Policy.A_RIGHT)
             {
                 pan += 1;
-/*                wayPointTranslation[0] = waypointVector.x + 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));
-                wayPointTranslation[1] = waypointVector.y;*/
-                //stateVector[0] -= 1;
                 currentInstruction = Arrow.Direction.RIGHT;
             }
             else if(action == Policy.A_UP)
             {
                 tilt += 1;
-/*                wayPointTranslation[0] = waypointVector.x;
-                wayPointTranslation[1] = waypointVector.y + 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));*/
-                //stateVector[1] -= 1;
                 currentInstruction = Arrow.Direction.UP;
             }
             else if(action == Policy.A_DOWN)
             {
                 tilt -= 1;
-/*                wayPointTranslation[0] = waypointVector.x;
-                wayPointTranslation[1] = waypointVector.y - 1.f*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL));*/
-                //stateVector[1] += 1;
                 currentInstruction = Arrow.Direction.DOWN;
             }
 
@@ -389,22 +358,6 @@ public class SoundGenerator implements Runnable
             if(pan > GRID_SIZE-1) pan = 0;
             if(tilt < 0) tilt = GRID_SIZE-1;
             if(tilt > GRID_SIZE-1) tilt = 0;
-/*            if(Math.asin(wayPointTranslation[1]) > Math.PI/4)
-            {
-                wayPointTranslation[1] = -(float)Math.sin(Math.sin(Math.PI/4));
-            }
-            if(Math.asin(wayPointTranslation[1]) < -Math.PI/4)
-            {
-                wayPointTranslation[1] = (float)Math.sin(Math.sin(Math.PI/4));
-            }
-            if(Math.asin(wayPointTranslation[0]) > Math.PI/4)
-            {
-                wayPointTranslation[0] = -(float)Math.sin(Math.sin(Math.PI/4));
-            }
-            if(Math.asin(wayPointTranslation[0]) < -Math.PI/4)
-            {
-                wayPointTranslation[0] = (float)Math.sin(Math.sin(Math.PI/4));
-            }*/
 
             float z =  phonePose.getTranslation()[2] - 1.f;
             wayPointTranslation[0] = -z*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL*(pan - GRID_SIZE/2)));
@@ -414,7 +367,6 @@ public class SoundGenerator implements Runnable
             Log.i(TAG, String.format("new pan: %d new tilt: %d", pan, tilt));
             Log.i(TAG, String.format("translation x %f translation y: %f", wayPointTranslation[0], wayPointTranslation[1]));
 
-            // pose = new Pose(wayPointTranslation, phonePose.getRotationQuaternion());
             pose = new Pose(wayPointTranslation, new float[]{0.f, 0.f, 0.f, 1.f});
         }
 
