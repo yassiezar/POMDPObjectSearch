@@ -88,7 +88,7 @@ public class ActivityCamera extends AppCompatActivity
                         target = T_MUG;
                         break;
                     case R.id.item_object_laptop:
-                        target = T_WINDOW;
+                        target = T_LAPTOP;
                         break;
                     case R.id.item_object_desk:
                         target = T_DESK;
