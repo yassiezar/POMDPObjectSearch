@@ -120,8 +120,8 @@ public class SoundGenerator implements Runnable
             // Get current state and generate new waypoint if agent is in new state or sees new object
             Log.d(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
             Log.d(TAG, String.format("Object: %d Step: %d Visited: %d", state.getEncodedState()[0], state.getEncodedState()[1], state.getEncodedState()[2]));
-            Log.i(TAG, String.format("x: %f y %f", Math.toDegrees(cameraPan), Math.toDegrees(cameraTilt)));
-            if(waypoint != null && waypoint.waypointReached(cameraPan, cameraTilt) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
+            Log.d(TAG, String.format("x: %f y %f", Math.toDegrees(cameraPan), Math.toDegrees(cameraTilt)));
+            if(waypoint.waypointReached(cameraPan, cameraTilt) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
             {
                 if(waypointAnchor != null)
                 {
@@ -129,7 +129,9 @@ public class SoundGenerator implements Runnable
                 }
 
                 long action = policy.getAction(state);
-                Log.i(TAG, String.format("Object found or found waypoint, action: %d", action));
+                Log.d(TAG, String.format("Object found or found waypoint, action: %d", action));
+                long[] testState = state.getEncodedState();
+                Log.i(TAG, String.format("State %d obs %d steps %d prev %d", state.getDecodedState(), testState[0], testState[1], testState[2]));
                 waypoint.updateWaypoint(cameraPan, cameraTilt, action);
                 waypointAnchor = session.createAnchor(waypoint.getPose());
                 prevCameraObservation = newCameraObservation;
@@ -281,7 +283,7 @@ public class SoundGenerator implements Runnable
             val = "Unknown";
         }
         this.observation = observation;
-        metrics.updateObservation(observation);
+        this.metrics.updateObservation(observation);
 
         if(observation != O_NOTHING && observation != -1)
         {
@@ -332,11 +334,12 @@ public class SoundGenerator implements Runnable
             // Assume the current waypoint is where the camera is pointing.
             // Reasonable since this function only called when pointing to new target
             // Discretise pan/tilt into grid
-            int pan = (int)((Math.floor(Math.toDegrees(fpan) / ANGLE_INTERVAL)) + GRID_SIZE / 2);
-            int tilt = (int)((Math.floor(Math.toDegrees(ftilt) / ANGLE_INTERVAL)) + GRID_SIZE / 2);
-            //Log.i(TAG, String.format("x: %f y %f", Math.toDegrees(fpan), Math.toDegrees(ftilt)));
-            //Log.i(TAG, String.format("raw pan %f raw tilt %f", Math.toDegrees(fpan) / ANGLE_INTERVAL + GRID_SIZE / 2, Math.toDegrees(ftilt) / ANGLE_INTERVAL + GRID_SIZE / 2));
-            //Log.i(TAG, String.format("x: %d y %d", pan, tilt));
+            int pan = (int)((Math.floor(Math.toDegrees(fpan)/ANGLE_INTERVAL)) + GRID_SIZE/2 - 1);
+            int tilt = (int)((Math.floor(Math.toDegrees(ftilt)/ANGLE_INTERVAL)) + GRID_SIZE/2 - 1);
+
+            Log.i(TAG, String.format("x: %f y %f", Math.toDegrees(fpan), Math.toDegrees(ftilt)));
+            Log.i(TAG, String.format("raw pan %f raw tilt %f", Math.toDegrees(fpan)/ANGLE_INTERVAL + GRID_SIZE/2 - 1, Math.toDegrees(ftilt)/ANGLE_INTERVAL + GRID_SIZE/2 - 1));
+            Log.i(TAG, String.format("x: %d y %d", pan, tilt));
 
             /*waypointVector.x /= waypointVector.z;
             waypointVector.y /= waypointVector.z;
@@ -452,13 +455,13 @@ public class SoundGenerator implements Runnable
         private void addObservation(long observation, float fpan, float ftilt)
         {
             // Origin is top right, not bottom left
-            int pan = (int) (Math.floor(Math.toDegrees(fpan) / ANGLE_INTERVAL) + GRID_SIZE / 2);
-            int tilt = (int) (Math.floor(Math.toDegrees(ftilt) / ANGLE_INTERVAL) + GRID_SIZE / 2);
+            int pan = (int)((Math.floor(Math.toDegrees(fpan)/ANGLE_INTERVAL)) + GRID_SIZE/2 - 1);
+            int tilt = (int)((Math.floor(Math.toDegrees(ftilt)/ANGLE_INTERVAL)) + GRID_SIZE/2 - 1);
 
-            if(pan < 0) pan = GRID_SIZE-1;
-            if(pan > GRID_SIZE-1) pan = 0;
-            if(tilt < 0) tilt = GRID_SIZE-1;
-            if(tilt > GRID_SIZE-1) tilt = 0;
+            if(pan < 0) pan = GRID_SIZE - 1;
+            if(pan > GRID_SIZE - 1) pan = 0;
+            if(tilt < 0) tilt = GRID_SIZE - 1;
+            if(tilt > GRID_SIZE - 1) tilt = 0;
 
             this.observation = observation;
             if(this.steps != MAX_STEPS-1) this.steps ++;
