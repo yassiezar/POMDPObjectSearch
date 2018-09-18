@@ -125,6 +125,7 @@ public class SoundGenerator implements Runnable
             waypointAnchor = session.createAnchor(waypoint.getPose());
             prevCameraObservation = newCameraObservation;
             state.addObservation(newCameraObservation, cameraPan, cameraTilt);
+            Log.i(TAG, "Setting new waypoint");
         }
         ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(waypoint.pose.getTranslation());
         float[] waypointRotationAngles = waypointVector.getEuler();
@@ -132,9 +133,9 @@ public class SoundGenerator implements Runnable
 
         // Set direction arrow
         ClassHelpers.mVector vectorToWaypoint = waypointVector.translate(cameraVector);
-        // Log.i(TAG, String.format("x %f y %f z %f", vectorToWaypoint.x, vectorToWaypoint.y, vectorToWaypoint.z));
-        // Log.i(TAG, String.format("x %f y %f z %f", cameraVector.x, cameraVector.y, cameraVector.z));
-        // Log.i(TAG, String.format("x %f y %f z %f", waypointVector.x, waypointVector.y, waypointVector.z));
+        Log.d(TAG, String.format("x %f y %f z %f", vectorToWaypoint.x, vectorToWaypoint.y, vectorToWaypoint.z));
+        Log.d(TAG, String.format("x %f y %f z %f", cameraVector.x, cameraVector.y, cameraVector.z));
+        Log.d(TAG, String.format("x %f y %f z %f", waypointVector.x, waypointVector.y, waypointVector.z));
         ((ActivityCamera)context).getCentreView().resetArrows();
         if(vectorToWaypoint.x > 0.1)
         {
