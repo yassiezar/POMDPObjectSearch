@@ -105,6 +105,7 @@ public class SoundGenerator implements Runnable
             renderer.setDrawWaypoint(false);
             waypointAnchor.detach();
             waypoint = null;
+            state = null;
         }
 
         if(waypoint != null)
@@ -246,29 +247,25 @@ public class SoundGenerator implements Runnable
     {
         /* TODO: Translate between barcode and state encoding for object observations */
         final String val;
-        if(observation == 3)
+        if(observation == 1)
         {
-            val = "Mouse";
-        }
-        else if(observation == 5)
-        {
-            val = "Laptop";
+            val = "Monitor";
         }
         else if(observation == 2)
         {
             val = "Keyboard";
         }
-        else if(observation == 1)
+        else if(observation == 3)
         {
-            val = "Monitor";
-        }
-        else if(observation == 8)
-        {
-            val = "Window";
+            val = "Mouse";
         }
         else if(observation == 4)
         {
             val = "Desk";
+        }
+        else if(observation == 5)
+        {
+            val = "Laptop";
         }
         else if(observation == 6)
         {
@@ -277,6 +274,10 @@ public class SoundGenerator implements Runnable
         else if(observation == 7)
         {
             val = "Office supplies";
+        }
+        else if(observation == 8)
+        {
+            val = "Window";
         }
         else
         {
@@ -478,8 +479,13 @@ public class SoundGenerator implements Runnable
 
     class Policy
     {
-        private static final int O_MUG = 6;
+        private static final int O_COMPUTER_MONITOR = 1;
+        private static final int O_COMPUTER_KEYBOARD = 2;
+        private static final int O_COMPUTER_MOUSE = 3;
+        private static final int O_DESK = 4;
         private static final int O_LAPTOP = 5;
+        private static final int O_MUG = 6;
+        private static final int O_OFFICE_SUPPLIES = 7;
         private static final int O_WINDOW = 8;
 
         private static final int A_UP = 0;
@@ -495,11 +501,26 @@ public class SoundGenerator implements Runnable
         {
             switch(target)
             {
-                case O_MUG:
-                    this.fileName += "mug.txt";
+                case O_COMPUTER_MONITOR:
+                    this.fileName += "monitor.txt";
+                    break;
+                case O_COMPUTER_KEYBOARD:
+                    this.fileName += "keyboard.txt";
+                    break;
+                case O_COMPUTER_MOUSE:
+                    this.fileName += "mouse.txt";
+                    break;
+                case O_DESK:
+                    this.fileName += "desk.txt";
                     break;
                 case O_LAPTOP:
                     this.fileName += "laptop.txt";
+                    break;
+                case O_MUG:
+                    this.fileName += "mug.txt";
+                    break;
+                case O_OFFICE_SUPPLIES:
+                    this.fileName += "office_supplies.txt";
                     break;
                 case O_WINDOW:
                     this.fileName += "window.txt";
