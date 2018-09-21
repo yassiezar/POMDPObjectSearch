@@ -29,6 +29,9 @@ public class SoundGenerator implements Runnable
 
     private static final int O_NOTHING = 0;
 
+    private static final double ANGLE_INTERVAL = 15;
+    private static final int GRID_SIZE = 6;
+
     private Context context;
     private SurfaceRenderer renderer;
 
@@ -312,12 +315,7 @@ public class SoundGenerator implements Runnable
 
     class Waypoint
     {
-        private static final double ANGLE_INTERVAL = 10;
-        private static final int GRID_SIZE = 6;
-
         private Pose pose;
-
-        private Arrow.Direction currentInstruction;
 
         Waypoint(Pose pose)
         {
@@ -338,9 +336,9 @@ public class SoundGenerator implements Runnable
             int pan = (int)((Math.floor(Math.toDegrees(fpan)/ANGLE_INTERVAL)) + GRID_SIZE/2 - 1);
             int tilt = (int)((Math.floor(Math.toDegrees(ftilt)/ANGLE_INTERVAL)) + GRID_SIZE/2 - 1);
 
-            Log.i(TAG, String.format("x: %f y %f", Math.toDegrees(fpan), Math.toDegrees(ftilt)));
-            Log.i(TAG, String.format("raw pan %f raw tilt %f", Math.toDegrees(fpan)/ANGLE_INTERVAL + GRID_SIZE/2 - 1, Math.toDegrees(ftilt)/ANGLE_INTERVAL + GRID_SIZE/2 - 1));
-            Log.i(TAG, String.format("x: %d y %d", pan, tilt));
+            Log.d(TAG, String.format("x: %f y %f", Math.toDegrees(fpan), Math.toDegrees(ftilt)));
+            Log.d(TAG, String.format("raw pan %f raw tilt %f", Math.toDegrees(fpan)/ANGLE_INTERVAL + GRID_SIZE/2 - 1, Math.toDegrees(ftilt)/ANGLE_INTERVAL + GRID_SIZE/2 - 1));
+            Log.i(TAG, String.format("old pan: %d old tilt %d", pan, tilt));
 
             /*waypointVector.x /= waypointVector.z;
             waypointVector.y /= waypointVector.z;
@@ -349,22 +347,18 @@ public class SoundGenerator implements Runnable
             if(action == Policy.A_LEFT)
             {
                 pan -= 1;
-                currentInstruction = Arrow.Direction.LEFT;
             }
             else if(action == Policy.A_RIGHT)
             {
                 pan += 1;
-                currentInstruction = Arrow.Direction.RIGHT;
             }
             else if(action == Policy.A_UP)
             {
                 tilt += 1;
-                currentInstruction = Arrow.Direction.UP;
             }
             else if(action == Policy.A_DOWN)
             {
                 tilt -= 1;
-                currentInstruction = Arrow.Direction.DOWN;
             }
 
             // Wrap the world
@@ -374,11 +368,11 @@ public class SoundGenerator implements Runnable
             if(tilt > GRID_SIZE-1) tilt = 0;
 
             float z =  phonePose.getTranslation()[2] - 1.f;
-            wayPointTranslation[0] = -z*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL*(pan - GRID_SIZE/2)));
-            wayPointTranslation[1] = -z*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL*(tilt - GRID_SIZE/2)));
+            wayPointTranslation[0] = (float)Math.sin(Math.toRadians(ANGLE_INTERVAL*(pan - GRID_SIZE/2 + 1)));
+            wayPointTranslation[1] = (float)Math.sin(Math.toRadians(ANGLE_INTERVAL*(tilt - GRID_SIZE/2 + 1)));
             wayPointTranslation[2] = z;
 
-            //Log.i(TAG, String.format("new pan: %d new tilt: %d", pan, tilt));
+            Log.i(TAG, String.format("new pan: %d new tilt: %d", pan, tilt));
             //Log.i(TAG, String.format("translation x %f translation y: %f", wayPointTranslation[0], wayPointTranslation[1]));
 
             pose = new Pose(wayPointTranslation, new float[]{0.f, 0.f, 0.f, 1.f});
@@ -397,9 +391,6 @@ public class SoundGenerator implements Runnable
 
     class State
     {
-        private static final double ANGLE_INTERVAL = 10;
-        private static final int GRID_SIZE = 6;
-
         private static final int NUM_OBJECTS = 9;
         private static final int MAX_STEPS = 12;
 
