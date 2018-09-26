@@ -9,6 +9,7 @@ import com.google.ar.core.Session;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Vibrator;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -99,63 +100,76 @@ public class SoundGenerator implements Runnable
             observation = O_NOTHING;
             vibrator.vibrate(350);
             gain = 0.f;
+
+            ((ActivityCamera)context).getCentreView().resetArrows();
+            renderer.setDrawWaypoint(false);
+            waypointAnchor.detach();
+            waypoint = null;
+            state = null;
         }
 
-        // Get Euler angles from vector wrt axis system
-        // pitch = tilt, yaw = pan
-        ClassHelpers.mVector cameraVector = getCameraVector(phonePose);
-        float[] phoneRotationAngles = cameraVector.getEuler();
-        float cameraPan = phoneRotationAngles[2];
-        float cameraTilt = phoneRotationAngles[1];
-        long newCameraObservation = this.observation;
-
-        // Get current state and generate new waypoint if agent is in new state or sees new object
-        Log.d(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
-        Log.d(TAG, String.format("Object: %d Step: %d Visited: %d", state.getEncodedState()[0], state.getEncodedState()[1], state.getEncodedState()[2]));
-        if(waypoint.waypointReached(cameraPan, cameraTilt) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
+        if(waypoint != null)
         {
-            if(waypointAnchor != null)
+            // Get Euler angles from vector wrt axis system
+            // pitch = tilt, yaw = pan
+            ClassHelpers.mVector cameraVector = getCameraVector(phonePose);
+            float[] phoneRotationAngles = cameraVector.getEuler();
+            float cameraPan = phoneRotationAngles[2];
+            float cameraTilt = phoneRotationAngles[1];
+            long newCameraObservation = this.observation;
+
+            // Get current state and generate new waypoint if agent is in new state or sees new object
+            Log.d(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
+            Log.d(TAG, String.format("Object: %d Step: %d Visited: %d", state.getEncodedState()[0], state.getEncodedState()[1], state.getEncodedState()[2]));
+            Log.d(TAG, String.format("x: %f y %f", Math.toDegrees(cameraPan), Math.toDegrees(cameraTilt)));
+            if(waypoint.waypointReached(cameraPan, cameraTilt) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
             {
-                waypointAnchor.detach();
+                if(waypointAnchor != null)
+                {
+                    waypointAnchor.detach();
+                }
+
+                long action = policy.getAction(state);
+                Log.d(TAG, String.format("Object found or found waypoint, action: %d", action));
+                long[] testState = state.getEncodedState();
+                Log.i(TAG, String.format("State %d obs %d steps %d prev %d", state.getDecodedState(), testState[0], testState[1], testState[2]));
+                waypoint.updateWaypoint(cameraPan, cameraTilt, action);
+                waypointAnchor = session.createAnchor(waypoint.getPose());
+                prevCameraObservation = newCameraObservation;
+                state.addObservation(newCameraObservation, cameraPan, cameraTilt);
+                Log.i(TAG, "Setting new waypoint");
+            }
+            ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(waypoint.pose.getTranslation());
+            float[] waypointRotationAngles = waypointVector.getEuler();
+            float waypointTilt = waypointRotationAngles[1];
+
+            // Set direction arrow
+            ClassHelpers.mVector vectorToWaypoint = waypointVector.translate(cameraVector);
+            Log.d(TAG, String.format("x %f y %f z %f", vectorToWaypoint.x, vectorToWaypoint.y, vectorToWaypoint.z));
+            Log.d(TAG, String.format("x %f y %f z %f", cameraVector.x, cameraVector.y, cameraVector.z));
+            Log.d(TAG, String.format("x %f y %f z %f", waypointVector.x, waypointVector.y, waypointVector.z));
+            ((ActivityCamera)context).getCentreView().resetArrows();
+            if(vectorToWaypoint.x > 0.1)
+            {
+                ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.RIGHT, 255);
+            }
+            else if (vectorToWaypoint.x < -0.1)
+            {
+                ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.LEFT, 255);
+            }
+            if(vectorToWaypoint.y > 0.1)
+            {
+                ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.UP, 255);
+            }
+            if(vectorToWaypoint.y < -0.1)
+            {
+                ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.DOWN, 255);
             }
 
-            long action = policy.getAction(state);
-            Log.i(TAG, String.format("Object found or found waypoint, action: %d", action));
-            waypoint.updateWaypoint(cameraPan, cameraTilt, action);
-            waypointAnchor = session.createAnchor(waypoint.getPose());
-            prevCameraObservation = newCameraObservation;
-            state.addObservation(newCameraObservation, cameraPan, cameraTilt);
-        }
-        ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(waypoint.pose.getTranslation());
-        float[] waypointRotationAngles = waypointVector.getEuler();
-        float waypointTilt = waypointRotationAngles[1];
+            JNIBridge.playSound(waypoint.getPose().getTranslation(), cameraVector.asFloat(), gain, getPitch(waypointTilt - cameraTilt));
 
-        // Set direction arrow
-        ClassHelpers.mVector vectorToWaypoint = waypointVector.translate(cameraVector);
-        // Log.i(TAG, String.format("x %f y %f z %f", vectorToWaypoint.x, vectorToWaypoint.y, vectorToWaypoint.z));
-        // Log.i(TAG, String.format("x %f y %f z %f", cameraVector.x, cameraVector.y, cameraVector.z));
-        // Log.i(TAG, String.format("x %f y %f z %f", waypointVector.x, waypointVector.y, waypointVector.z));
-        ((ActivityCamera)context).getCentreView().resetArrows();
-        if(vectorToWaypoint.x > 0.1)
-        {
-            ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.RIGHT, 255);
+            metrics.writeWifi();
         }
-        else if (vectorToWaypoint.x < -0.1)
-        {
-            ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.LEFT, 255);
-        }
-        if(vectorToWaypoint.y > 0.1)
-        {
-            ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.UP, 255);
-        }
-        if(vectorToWaypoint.y < -0.1)
-        {
-            ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.DOWN, 255);
-        }
-
-        JNIBridge.playSound(waypoint.getPose().getTranslation(), cameraVector.asFloat(), gain, getPitch(waypointTilt - cameraTilt));
-
-        metrics.writeWifi();
         if(!stop) handler.postDelayed(this, 40);
     }
 
@@ -233,29 +247,25 @@ public class SoundGenerator implements Runnable
     {
         /* TODO: Translate between barcode and state encoding for object observations */
         final String val;
-        if(observation == 3)
+        if(observation == 1)
         {
-            val = "Mouse";
-        }
-        else if(observation == 5)
-        {
-            val = "Laptop";
+            val = "Monitor";
         }
         else if(observation == 2)
         {
             val = "Keyboard";
         }
-        else if(observation == 1)
+        else if(observation == 3)
         {
-            val = "Monitor";
-        }
-        else if(observation == 8)
-        {
-            val = "Window";
+            val = "Mouse";
         }
         else if(observation == 4)
         {
             val = "Desk";
+        }
+        else if(observation == 5)
+        {
+            val = "Laptop";
         }
         else if(observation == 6)
         {
@@ -265,12 +275,16 @@ public class SoundGenerator implements Runnable
         {
             val = "Office supplies";
         }
+        else if(observation == 8)
+        {
+            val = "Window";
+        }
         else
         {
             val = "Unknown";
         }
         this.observation = observation;
-        metrics.updateObservation(observation);
+        this.metrics.updateObservation(observation);
 
         if(observation != O_NOTHING && observation != -1)
         {
@@ -298,7 +312,7 @@ public class SoundGenerator implements Runnable
 
     class Waypoint
     {
-        private static final long ANGLE_INTERVAL = 15;
+        private static final double ANGLE_INTERVAL = 10;
         private static final int GRID_SIZE = 6;
 
         private Pose pose;
@@ -321,10 +335,11 @@ public class SoundGenerator implements Runnable
             // Assume the current waypoint is where the camera is pointing.
             // Reasonable since this function only called when pointing to new target
             // Discretise pan/tilt into grid
-            int pan = (int) (Math.floor(Math.toDegrees(fpan) / ANGLE_INTERVAL)) + GRID_SIZE / 2;
-            int tilt = (int) (Math.floor(Math.toDegrees(ftilt) / ANGLE_INTERVAL)) + GRID_SIZE / 2;
-            Log.i(TAG, String.format("x: %f y %f", fpan, ftilt));
-            Log.i(TAG, String.format("raw pan %f raw tilt %f", Math.toDegrees(fpan) / ANGLE_INTERVAL + GRID_SIZE / 2, Math.toDegrees(ftilt) / ANGLE_INTERVAL + GRID_SIZE / 2));
+            int pan = (int)((Math.floor(Math.toDegrees(fpan)/ANGLE_INTERVAL)) + GRID_SIZE/2 - 1);
+            int tilt = (int)((Math.floor(Math.toDegrees(ftilt)/ANGLE_INTERVAL)) + GRID_SIZE/2 - 1);
+
+            Log.i(TAG, String.format("x: %f y %f", Math.toDegrees(fpan), Math.toDegrees(ftilt)));
+            Log.i(TAG, String.format("raw pan %f raw tilt %f", Math.toDegrees(fpan)/ANGLE_INTERVAL + GRID_SIZE/2 - 1, Math.toDegrees(ftilt)/ANGLE_INTERVAL + GRID_SIZE/2 - 1));
             Log.i(TAG, String.format("x: %d y %d", pan, tilt));
 
             /*waypointVector.x /= waypointVector.z;
@@ -333,7 +348,6 @@ public class SoundGenerator implements Runnable
 
             if(action == Policy.A_LEFT)
             {
-
                 pan -= 1;
                 currentInstruction = Arrow.Direction.LEFT;
             }
@@ -364,8 +378,8 @@ public class SoundGenerator implements Runnable
             wayPointTranslation[1] = -z*(float)Math.sin(Math.toRadians(ANGLE_INTERVAL*(tilt - GRID_SIZE/2)));
             wayPointTranslation[2] = z;
 
-            Log.i(TAG, String.format("new pan: %d new tilt: %d", pan, tilt));
-            Log.i(TAG, String.format("translation x %f translation y: %f", wayPointTranslation[0], wayPointTranslation[1]));
+            //Log.i(TAG, String.format("new pan: %d new tilt: %d", pan, tilt));
+            //Log.i(TAG, String.format("translation x %f translation y: %f", wayPointTranslation[0], wayPointTranslation[1]));
 
             pose = new Pose(wayPointTranslation, new float[]{0.f, 0.f, 0.f, 1.f});
         }
@@ -383,7 +397,7 @@ public class SoundGenerator implements Runnable
 
     class State
     {
-        private static final int ANGLE_INTERVAL = 15;
+        private static final double ANGLE_INTERVAL = 10;
         private static final int GRID_SIZE = 6;
 
         private static final int NUM_OBJECTS = 9;
@@ -442,8 +456,13 @@ public class SoundGenerator implements Runnable
         private void addObservation(long observation, float fpan, float ftilt)
         {
             // Origin is top right, not bottom left
-            int pan = (int) (Math.floor(Math.toDegrees(fpan) / ANGLE_INTERVAL) + GRID_SIZE / 2);
-            int tilt = (int) (Math.floor(Math.toDegrees(ftilt) / ANGLE_INTERVAL) + GRID_SIZE / 2);
+            int pan = (int)((Math.floor(Math.toDegrees(fpan)/ANGLE_INTERVAL)) + GRID_SIZE/2 - 1);
+            int tilt = (int)((Math.floor(Math.toDegrees(ftilt)/ANGLE_INTERVAL)) + GRID_SIZE/2 - 1);
+
+            if(pan < 0) pan = GRID_SIZE - 1;
+            if(pan > GRID_SIZE - 1) pan = 0;
+            if(tilt < 0) tilt = GRID_SIZE - 1;
+            if(tilt > GRID_SIZE - 1) tilt = 0;
 
             this.observation = observation;
             if(this.steps != MAX_STEPS-1) this.steps ++;
@@ -460,8 +479,13 @@ public class SoundGenerator implements Runnable
 
     class Policy
     {
-        private static final int O_MUG = 6;
+        private static final int O_COMPUTER_MONITOR = 1;
+        private static final int O_COMPUTER_KEYBOARD = 2;
+        private static final int O_COMPUTER_MOUSE = 3;
+        private static final int O_DESK = 4;
         private static final int O_LAPTOP = 5;
+        private static final int O_MUG = 6;
+        private static final int O_OFFICE_SUPPLIES = 7;
         private static final int O_WINDOW = 8;
 
         private static final int A_UP = 0;
@@ -477,11 +501,26 @@ public class SoundGenerator implements Runnable
         {
             switch(target)
             {
-                case O_MUG:
-                    this.fileName += "mug.txt";
+                case O_COMPUTER_MONITOR:
+                    this.fileName += "monitor.txt";
+                    break;
+                case O_COMPUTER_KEYBOARD:
+                    this.fileName += "keyboard.txt";
+                    break;
+                case O_COMPUTER_MOUSE:
+                    this.fileName += "mouse.txt";
+                    break;
+                case O_DESK:
+                    this.fileName += "desk.txt";
                     break;
                 case O_LAPTOP:
                     this.fileName += "laptop.txt";
+                    break;
+                case O_MUG:
+                    this.fileName += "mug.txt";
+                    break;
+                case O_OFFICE_SUPPLIES:
+                    this.fileName += "office_supplies.txt";
                     break;
                 case O_WINDOW:
                     this.fileName += "window.txt";

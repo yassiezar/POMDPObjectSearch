@@ -51,7 +51,9 @@ public class BarcodeScanner implements Runnable
             for(int i = 0; i < barcodes.size(); i++)
             {
                 int key = barcodes.keyAt(i);
-                Log.i(TAG, String.format("Object found, coords %d %d", barcodes.get(key).getBoundingBox().right, barcodes.get(key).getBoundingBox().bottom));
+                Log.d(TAG, String.format("Object found, coords %d %d", barcodes.get(key).getBoundingBox().right, barcodes.get(key).getBoundingBox().bottom));
+                Log.i(TAG, String.format("Barcode content: %s", barcodes.get(key).rawValue));
+                this.code = Integer.parseInt(barcodes.get(key).rawValue);
             }
         }
 
