@@ -44,6 +44,8 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     private int scannerWidth, scannerHeight;
     private int scannerX, scannerY;
 
+    private long timestamp;
+
     private final float[] anchorMatrix = new float[16];
 
     private boolean drawObjects = false;
@@ -139,6 +141,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
             Frame frame = session.update();
             Camera camera = frame.getCamera();
             devicePose = frame.getAndroidSensorPose();
+            timestamp = frame.getTimestamp();
 
             backgroundRenderer.draw(frame);
 
@@ -235,6 +238,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
 
     public Session getSession() { return surfaceView.getSession(); }
     public Pose getDevicePose() { return this.devicePose; }
+    public long getTimestamp() { return this.timestamp; }
 
     public int getWidth() { return this.width; }
     public int getHeight() { return this.height; }

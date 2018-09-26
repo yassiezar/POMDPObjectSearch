@@ -110,7 +110,7 @@ public class ActivityCamera extends AppCompatActivity
                         break;
                 }
 
-                soundGenerator.setTarget(target, code);
+                soundGenerator.setTarget(target);
                 soundGenerator.markOffsetPose();
                 item.setCheckable(true);
 

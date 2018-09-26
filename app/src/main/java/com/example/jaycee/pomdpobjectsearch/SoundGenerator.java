@@ -29,7 +29,7 @@ public class SoundGenerator implements Runnable
 
     private static final int O_NOTHING = 0;
 
-    private static final double ANGLE_INTERVAL = 15;
+    private static final double ANGLE_INTERVAL = 20;
     private static final int GRID_SIZE = 6;
 
     private Context context;
@@ -171,6 +171,10 @@ public class SoundGenerator implements Runnable
 
             JNIBridge.playSound(waypoint.getPose().getTranslation(), cameraVector.asFloat(), gain, getPitch(waypointTilt - cameraTilt));
 
+            metrics.updateTargetPosition(waypoint.getPose());
+            metrics.updatePhoneOrientation(phonePose);
+            metrics.updatePhonePosition(phonePose);
+            metrics.updateTimestamp(renderer.getTimestamp());
             metrics.writeWifi();
         }
         if(!stop) handler.postDelayed(this, 40);
@@ -188,7 +192,7 @@ public class SoundGenerator implements Runnable
         return vector;
     }
 
-    public void setTarget(long target, long observation)
+    public void setTarget(long target)
     {
         policy = new Policy((int)target);
         state = new State();
@@ -207,7 +211,7 @@ public class SoundGenerator implements Runnable
         this.targetSet = true;
         this.targetFound = false;
 
-        prevCameraObservation = observation;
+        prevCameraObservation = O_NOTHING;//observation;
 
         metrics.updateTarget(target);
 
@@ -248,7 +252,6 @@ public class SoundGenerator implements Runnable
 
     public void setObservation(long observation)
     {
-        /* TODO: Translate between barcode and state encoding for object observations */
         final String val;
         if(observation == 1)
         {
@@ -336,8 +339,8 @@ public class SoundGenerator implements Runnable
             int pan = (int)((Math.floor(Math.toDegrees(fpan)/ANGLE_INTERVAL)) + GRID_SIZE/2 - 1);
             int tilt = (int)((Math.floor(Math.toDegrees(ftilt)/ANGLE_INTERVAL)) + GRID_SIZE/2 - 1);
 
-            Log.d(TAG, String.format("x: %f y %f", Math.toDegrees(fpan), Math.toDegrees(ftilt)));
-            Log.d(TAG, String.format("raw pan %f raw tilt %f", Math.toDegrees(fpan)/ANGLE_INTERVAL + GRID_SIZE/2 - 1, Math.toDegrees(ftilt)/ANGLE_INTERVAL + GRID_SIZE/2 - 1));
+            Log.i(TAG, String.format("x: %f y %f", Math.toDegrees(fpan), Math.toDegrees(ftilt)));
+            Log.i(TAG, String.format("raw pan %f raw tilt %f", Math.toDegrees(fpan)/ANGLE_INTERVAL + GRID_SIZE/2 - 1, Math.toDegrees(ftilt)/ANGLE_INTERVAL + GRID_SIZE/2 - 1));
             Log.i(TAG, String.format("old pan: %d old tilt %d", pan, tilt));
 
             /*waypointVector.x /= waypointVector.z;

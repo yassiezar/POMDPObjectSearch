@@ -207,10 +207,10 @@ namespace SoundGenerator
                 samples[i] = 32760 * sin(phi * i - phase + M_PI);
             }
 
-            if(i > bufferSize - 5 || i < 5)
+            /*if(i > bufferSize - 5 || i < 5)
             {
                 __android_log_print(ANDROID_LOG_INFO, SOUNDLOG, "%d %f", samples[i], phase);
-            }
+            }*/
         }
 
         return samples;

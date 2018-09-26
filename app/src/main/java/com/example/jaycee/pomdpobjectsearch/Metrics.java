@@ -3,6 +3,8 @@ package com.example.jaycee.pomdpobjectsearch;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.google.ar.core.Pose;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -43,37 +45,42 @@ public class Metrics
         if(dataStreamer == null ||
                 dataStreamer.getStatus() != AsyncTask.Status.RUNNING)
         {
-            //dataStreamer = new WifiDataSend();
-            //dataStreamer.execute(wifiString);
+            dataStreamer = new WifiDataSend();
+            dataStreamer.execute(wifiString);
         }
     }
 
     public void updateTimestamp(double timestamp) { this.timestamp = timestamp; }
 
-    public void updateTargetPosition(double x, double y, double z)
+    public void updateTargetPosition(Pose pose)
     {
-        targetX = x;
-        targetY = y;
-        targetZ = z;
+        float[] pos = pose.getTranslation();
+
+        targetX = pos[0];
+        targetY = pos[1];
+        targetZ = pos[2];
     }
 
-    public void updatePhonePosition(double x, double y, double z)
+    public void updatePhonePosition(Pose pose)
     {
-        phoneX = x;
-        phoneY = y;
-        phoneZ = z;
+        float[] pos = pose.getTranslation();
+
+        phoneX = pos[0];
+        phoneY = pos[1];
+        phoneZ = pos[2];
     }
 
-    public void updatePhoneOrientation(double x, double y, double z, double w)
+    public void updatePhoneOrientation(Pose pose)
     {
-        phoneQx = x;
-        phoneQy = y;
-        phoneQz = z;
-        phoneQw = w;
+        float[] q = pose.getRotationQuaternion();
+
+        phoneQx = q[0];
+        phoneQy = q[1];
+        phoneQz = q[2];
+        phoneQw = q[3];
     }
 
     public void updateObservation(long observation) { this.observation = observation; }
-    public void updateTargetObservation(long targetObs) { this.targetObservation = targetObs; }
     public void updateTarget (long target) { this.target = target; }
 
     private static class WifiDataSend extends AsyncTask<String, Void, Void>
