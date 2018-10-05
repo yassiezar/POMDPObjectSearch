@@ -16,9 +16,6 @@
             android:id="@+id/item_object_desk"
             android:title="Desk" />
         <item
-            android:id="@+id/item_object_laptop"
-            android:title="Laptop" />
-        <item
             android:id="@+id/item_object_mug"
             android:title="Mug" />
         <item
