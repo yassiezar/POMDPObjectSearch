@@ -1,5 +1,0 @@
-/home/jaycee/AndroidStudioProjects/POMDPObjectSearch/app/CMakeFiles/rebuild_cache.dir
-/home/jaycee/AndroidStudioProjects/POMDPObjectSearch/app/CMakeFiles/edit_cache.dir
-/home/jaycee/AndroidStudioProjects/POMDPObjectSearch/app/CMakeFiles/JNI.dir
-/home/jaycee/AndroidStudioProjects/POMDPObjectSearch/app/CMakeFiles/AndroidMDP.dir
-/home/jaycee/AndroidStudioProjects/POMDPObjectSearch/app/CMakeFiles/MDP.dir
