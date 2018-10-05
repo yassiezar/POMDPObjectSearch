@@ -496,13 +496,13 @@ public class SoundGenerator implements Runnable
             switch(target)
             {
                 case O_COMPUTER_MONITOR:
-                    this.fileName += "monitor.txt";
+                    this.fileName += "computer_monitor.txt";
                     break;
                 case O_COMPUTER_KEYBOARD:
-                    this.fileName += "keyboard.txt";
+                    this.fileName += "computer_keyboard.txt";
                     break;
                 case O_COMPUTER_MOUSE:
-                    this.fileName += "mouse.txt";
+                    this.fileName += "computer_mouse.txt";
                     break;
                 case O_DESK:
                     this.fileName += "desk.txt";
