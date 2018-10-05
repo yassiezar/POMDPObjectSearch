@@ -42,10 +42,10 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /usr/local/bin/cmake
+CMAKE_COMMAND = /usr/bin/cmake
 
 # The command to remove a file.
-RM = /usr/local/bin/cmake -E remove -f
+RM = /usr/bin/cmake -E remove -f
 
 # Escaping for special characters.
 EQUALS = =
@@ -62,7 +62,7 @@ CMAKE_BINARY_DIR = /home/jaycee/AndroidStudioProjects/POMDPObjectSearch/app
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
-	/usr/local/bin/cmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/usr/bin/cmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -72,8 +72,8 @@ rebuild_cache/fast: rebuild_cache
 
 # Special rule for the target edit_cache
 edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "No interactive CMake dialog available..."
-	/usr/local/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
+	/usr/bin/ccmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -114,6 +114,32 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named MDP
+
+# Build rule for target.
+MDP: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 MDP
+.PHONY : MDP
+
+# fast build rule for target.
+MDP/fast:
+	$(MAKE) -f CMakeFiles/MDP.dir/build.make CMakeFiles/MDP.dir/build
+.PHONY : MDP/fast
+
+#=============================================================================
+# Target rules for targets named SoundGenerator
+
+# Build rule for target.
+SoundGenerator: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 SoundGenerator
+.PHONY : SoundGenerator
+
+# fast build rule for target.
+SoundGenerator/fast:
+	$(MAKE) -f CMakeFiles/SoundGenerator.dir/build.make CMakeFiles/SoundGenerator.dir/build
+.PHONY : SoundGenerator/fast
+
+#=============================================================================
 # Target rules for targets named JNI
 
 # Build rule for target.
@@ -139,18 +165,59 @@ AndroidMDP/fast:
 	$(MAKE) -f CMakeFiles/AndroidMDP.dir/build.make CMakeFiles/AndroidMDP.dir/build
 .PHONY : AndroidMDP/fast
 
-#=============================================================================
-# Target rules for targets named MDP
+src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.o: src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.cpp.o
 
-# Build rule for target.
-MDP: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 MDP
-.PHONY : MDP
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.o
 
-# fast build rule for target.
-MDP/fast:
-	$(MAKE) -f CMakeFiles/MDP.dir/build.make CMakeFiles/MDP.dir/build
-.PHONY : MDP/fast
+# target to build an object file
+src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.cpp.o:
+	$(MAKE) -f CMakeFiles/AndroidMDP.dir/build.make CMakeFiles/AndroidMDP.dir/src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.cpp.o
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.cpp.o
+
+src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.i: src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.cpp.i
+
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.i
+
+# target to preprocess a source file
+src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.cpp.i:
+	$(MAKE) -f CMakeFiles/AndroidMDP.dir/build.make CMakeFiles/AndroidMDP.dir/src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.cpp.i
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.cpp.i
+
+src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.s: src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.cpp.s
+
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.s
+
+# target to generate assembly for a file
+src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.cpp.s:
+	$(MAKE) -f CMakeFiles/AndroidMDP.dir/build.make CMakeFiles/AndroidMDP.dir/src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.cpp.s
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.cpp.s
+
+src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.o: src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.cpp.o
+
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.o
+
+# target to build an object file
+src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.cpp.o:
+	$(MAKE) -f CMakeFiles/AndroidMDP.dir/build.make CMakeFiles/AndroidMDP.dir/src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.cpp.o
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.cpp.o
+
+src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.i: src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.cpp.i
+
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.i
+
+# target to preprocess a source file
+src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.cpp.i:
+	$(MAKE) -f CMakeFiles/AndroidMDP.dir/build.make CMakeFiles/AndroidMDP.dir/src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.cpp.i
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.cpp.i
+
+src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.s: src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.cpp.s
+
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.s
+
+# target to generate assembly for a file
+src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.cpp.s:
+	$(MAKE) -f CMakeFiles/AndroidMDP.dir/build.make CMakeFiles/AndroidMDP.dir/src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.cpp.s
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.cpp.s
 
 src/main/cpp/src/AndroidMDP/MDP/SparseModel.o: src/main/cpp/src/AndroidMDP/MDP/SparseModel.cpp.o
 
@@ -178,6 +245,33 @@ src/main/cpp/src/AndroidMDP/MDP/SparseModel.s: src/main/cpp/src/AndroidMDP/MDP/S
 src/main/cpp/src/AndroidMDP/MDP/SparseModel.cpp.s:
 	$(MAKE) -f CMakeFiles/AndroidMDP.dir/build.make CMakeFiles/AndroidMDP.dir/src/main/cpp/src/AndroidMDP/MDP/SparseModel.cpp.s
 .PHONY : src/main/cpp/src/AndroidMDP/MDP/SparseModel.cpp.s
+
+src/main/cpp/src/AndroidMDP/MDP/Util.o: src/main/cpp/src/AndroidMDP/MDP/Util.cpp.o
+
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Util.o
+
+# target to build an object file
+src/main/cpp/src/AndroidMDP/MDP/Util.cpp.o:
+	$(MAKE) -f CMakeFiles/AndroidMDP.dir/build.make CMakeFiles/AndroidMDP.dir/src/main/cpp/src/AndroidMDP/MDP/Util.cpp.o
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Util.cpp.o
+
+src/main/cpp/src/AndroidMDP/MDP/Util.i: src/main/cpp/src/AndroidMDP/MDP/Util.cpp.i
+
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Util.i
+
+# target to preprocess a source file
+src/main/cpp/src/AndroidMDP/MDP/Util.cpp.i:
+	$(MAKE) -f CMakeFiles/AndroidMDP.dir/build.make CMakeFiles/AndroidMDP.dir/src/main/cpp/src/AndroidMDP/MDP/Util.cpp.i
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Util.cpp.i
+
+src/main/cpp/src/AndroidMDP/MDP/Util.s: src/main/cpp/src/AndroidMDP/MDP/Util.cpp.s
+
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Util.s
+
+# target to generate assembly for a file
+src/main/cpp/src/AndroidMDP/MDP/Util.cpp.s:
+	$(MAKE) -f CMakeFiles/AndroidMDP.dir/build.make CMakeFiles/AndroidMDP.dir/src/main/cpp/src/AndroidMDP/MDP/Util.cpp.s
+.PHONY : src/main/cpp/src/AndroidMDP/MDP/Util.cpp.s
 
 src/main/cpp/src/AndroidMDP/Util/Seed.o: src/main/cpp/src/AndroidMDP/Util/Seed.cpp.o
 
@@ -260,6 +354,33 @@ src/main/cpp/src/MDP/model.cpp.s:
 	$(MAKE) -f CMakeFiles/MDP.dir/build.make CMakeFiles/MDP.dir/src/main/cpp/src/MDP/model.cpp.s
 .PHONY : src/main/cpp/src/MDP/model.cpp.s
 
+src/main/cpp/src/SoundGenerator/SoundGenerator.o: src/main/cpp/src/SoundGenerator/SoundGenerator.cpp.o
+
+.PHONY : src/main/cpp/src/SoundGenerator/SoundGenerator.o
+
+# target to build an object file
+src/main/cpp/src/SoundGenerator/SoundGenerator.cpp.o:
+	$(MAKE) -f CMakeFiles/SoundGenerator.dir/build.make CMakeFiles/SoundGenerator.dir/src/main/cpp/src/SoundGenerator/SoundGenerator.cpp.o
+.PHONY : src/main/cpp/src/SoundGenerator/SoundGenerator.cpp.o
+
+src/main/cpp/src/SoundGenerator/SoundGenerator.i: src/main/cpp/src/SoundGenerator/SoundGenerator.cpp.i
+
+.PHONY : src/main/cpp/src/SoundGenerator/SoundGenerator.i
+
+# target to preprocess a source file
+src/main/cpp/src/SoundGenerator/SoundGenerator.cpp.i:
+	$(MAKE) -f CMakeFiles/SoundGenerator.dir/build.make CMakeFiles/SoundGenerator.dir/src/main/cpp/src/SoundGenerator/SoundGenerator.cpp.i
+.PHONY : src/main/cpp/src/SoundGenerator/SoundGenerator.cpp.i
+
+src/main/cpp/src/SoundGenerator/SoundGenerator.s: src/main/cpp/src/SoundGenerator/SoundGenerator.cpp.s
+
+.PHONY : src/main/cpp/src/SoundGenerator/SoundGenerator.s
+
+# target to generate assembly for a file
+src/main/cpp/src/SoundGenerator/SoundGenerator.cpp.s:
+	$(MAKE) -f CMakeFiles/SoundGenerator.dir/build.make CMakeFiles/SoundGenerator.dir/src/main/cpp/src/SoundGenerator/SoundGenerator.cpp.s
+.PHONY : src/main/cpp/src/SoundGenerator/SoundGenerator.cpp.s
+
 src/main/cpp/src/jniWrapper.o: src/main/cpp/src/jniWrapper.cpp.o
 
 .PHONY : src/main/cpp/src/jniWrapper.o
@@ -295,12 +416,22 @@ help:
 	@echo "... depend"
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
+	@echo "... MDP"
+	@echo "... SoundGenerator"
 	@echo "... JNI"
 	@echo "... AndroidMDP"
-	@echo "... MDP"
+	@echo "... src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.o"
+	@echo "... src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.i"
+	@echo "... src/main/cpp/src/AndroidMDP/MDP/Algorithms/ValueIteration.s"
+	@echo "... src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.o"
+	@echo "... src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.i"
+	@echo "... src/main/cpp/src/AndroidMDP/MDP/Policies/Policy.s"
 	@echo "... src/main/cpp/src/AndroidMDP/MDP/SparseModel.o"
 	@echo "... src/main/cpp/src/AndroidMDP/MDP/SparseModel.i"
 	@echo "... src/main/cpp/src/AndroidMDP/MDP/SparseModel.s"
+	@echo "... src/main/cpp/src/AndroidMDP/MDP/Util.o"
+	@echo "... src/main/cpp/src/AndroidMDP/MDP/Util.i"
+	@echo "... src/main/cpp/src/AndroidMDP/MDP/Util.s"
 	@echo "... src/main/cpp/src/AndroidMDP/Util/Seed.o"
 	@echo "... src/main/cpp/src/AndroidMDP/Util/Seed.i"
 	@echo "... src/main/cpp/src/AndroidMDP/Util/Seed.s"
@@ -310,6 +441,9 @@ help:
 	@echo "... src/main/cpp/src/MDP/model.o"
 	@echo "... src/main/cpp/src/MDP/model.i"
 	@echo "... src/main/cpp/src/MDP/model.s"
+	@echo "... src/main/cpp/src/SoundGenerator/SoundGenerator.o"
+	@echo "... src/main/cpp/src/SoundGenerator/SoundGenerator.i"
+	@echo "... src/main/cpp/src/SoundGenerator/SoundGenerator.s"
 	@echo "... src/main/cpp/src/jniWrapper.o"
 	@echo "... src/main/cpp/src/jniWrapper.i"
 	@echo "... src/main/cpp/src/jniWrapper.s"

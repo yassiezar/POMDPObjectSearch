@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC -g  -shared -Wl,-soname,libJNI.so -o libJNI.so CMakeFiles/JNI.dir/src/main/cpp/src/jniWrapper.cpp.o -llog libMDP.a libAndroidMDP.a 
