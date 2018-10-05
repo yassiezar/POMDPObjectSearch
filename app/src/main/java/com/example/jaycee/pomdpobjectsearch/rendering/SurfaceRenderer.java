@@ -162,9 +162,6 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
             // Update the debug object
             if(camera.getTrackingState() == TrackingState.TRACKING)
             {
-                Pose waypointPose = ((ActivityCamera)context).getWaypointAnchor().getPose();
-                Pose devicePose = this.devicePose;
-
                 if(drawObjects)
                 {
                     // Get pointing vector
@@ -185,6 +182,8 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
 
                 if(drawWaypoint)
                 {
+                    Pose waypointPose = ((ActivityCamera)context).getWaypointAnchor().getPose();
+
                     // Draw the waypoints as an Andyman
                     waypointPose.toMatrix(anchorMatrix, 0);
                     waypointRenderer.updateModelMatrix(anchorMatrix, scaleFactor);

@@ -87,9 +87,6 @@ public class ActivityCamera extends AppCompatActivity
                     case R.id.item_object_mug:
                         target = T_MUG;
                         break;
-                    case R.id.item_object_laptop:
-                        target = T_LAPTOP;
-                        break;
                     case R.id.item_object_desk:
                         target = T_DESK;
                         break;
