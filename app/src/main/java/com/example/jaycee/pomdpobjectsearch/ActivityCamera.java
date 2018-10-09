@@ -39,7 +39,6 @@ public class ActivityCamera extends AppCompatActivity
     private static final int T_COMPUTER_MOUSE = 3;
     private static final int T_COMPUTER_KEYBOARD = 2;
     private static final int T_DESK = 4;
-    private static final int T_LAPTOP = 5;
     private static final int T_MUG = 6;
     private static final int T_OFFICE_SUPPLIES = 7;
     private static final int T_WINDOW = 8;
@@ -80,7 +79,6 @@ public class ActivityCamera extends AppCompatActivity
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item)
             {
-                int code = barcodeScanner.getCode();
                 int target = 0;
                 switch (item.getItemId())
                 {
