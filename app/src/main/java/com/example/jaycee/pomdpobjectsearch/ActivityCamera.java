@@ -26,6 +26,9 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+
 public class ActivityCamera extends AppCompatActivity
 {
     private static final String TAG = ActivityCamera.class.getSimpleName();
@@ -50,7 +53,8 @@ public class ActivityCamera extends AppCompatActivity
     private CentreView centreView;
 
     private SoundGenerator soundGenerator;
-    private BarcodeScanner barcodeScanner;
+//    private BarcodeScanner barcodeScanner;
+    private ObjectDetector objectDetector;
 
     private boolean requestARCoreInstall = true;
 
@@ -198,10 +202,10 @@ public class ActivityCamera extends AppCompatActivity
     @Override
     protected void onPause()
     {
-        if(barcodeScanner != null)
+        if(objectDetector != null)
         {
-            barcodeScanner.stop();
-            barcodeScanner = null;
+            objectDetector.stop();
+            objectDetector = null;
         }
 
         if(soundGenerator != null)
@@ -246,26 +250,26 @@ public class ActivityCamera extends AppCompatActivity
         ActivityCompat.requestPermissions(this, new String[] {CAMERA_PERMISSION}, CAMERA_PERMISSION_CODE);
     }
 
-    public void stopBarcodeScanner()
+    public void stopObjectDetector()
     {
-        if(barcodeScanner != null)
+        if(objectDetector != null)
         {
-            barcodeScanner.stop();
-            barcodeScanner = null;
+            objectDetector.stop();
+            objectDetector = null;
         }
     }
 
-    public void startBarcodeScanner()
+    public void startObjectDetector()
     {
-        barcodeScanner = new BarcodeScanner(this, 525, 525, surfaceView.getRenderer());
-        barcodeScanner.run();
+        objectDetector = new ObjectDetector(this, 525, 525, surfaceView.getRenderer());
+        objectDetector.run();
     }
 
-    public int currentBarcodeScan()
+    public int currentObjectDetector()
     {
-        if(barcodeScanner != null)
+        if(objectDetector != null)
         {
-            return barcodeScanner.getCode();
+            return objectDetector.getCode();
         }
 
         return O_NOTHING;

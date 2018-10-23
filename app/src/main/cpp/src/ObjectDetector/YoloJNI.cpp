@@ -23,11 +23,13 @@ JULAYOM(void, create)(JNIEnv * env, jobject obj,
 }
 
 JULAYOM(void, classify)(JNIEnv * env, jobject obj,
-                           jlong input_frame, jlong output_frame){
+                           jlong input_frame, jlong results){
 
     cv::Mat& in_frame = *(cv::Mat*) input_frame;
     cv::Mat out_frame = yolo_classifier->classify(in_frame);
-    output_frame = (jlong) &out_frame;
+    results = (jlong) &out_frame;
+
+
 
 }
 

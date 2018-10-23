@@ -92,7 +92,7 @@ public class SoundGenerator implements Runnable
             return;
         }
 
-        setObservation(((ActivityCamera)context).currentBarcodeScan());
+        setObservation(((ActivityCamera)context).currentObjectDetector());
 
         float gain = 1.f;
         if(observation == target)

@@ -15,8 +15,7 @@ extern "C" {
 //class YoloJNI
 
 #define JULAYOM(rettype, name)                                             \
-  rettype JNIEXPORT JNICALL Java_uk_lcas_andreatramo_yolov3_1objectdetector_MainActivity_##name
-
+  rettype JNIEXPORT JNICALL Java_com_example_jaycee_pomdpobjectsearch_ObjectDetector_##name
 
     Yolo* yolo_classifier;
 

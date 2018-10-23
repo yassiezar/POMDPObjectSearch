@@ -48,14 +48,14 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height)
     {
         super.surfaceChanged(surfaceHolder, format, width, height);
-        ((ActivityCamera)context).startBarcodeScanner();
+        ((ActivityCamera)context).startObjectDetector();
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder surfaceHolder)
     {
         super.surfaceDestroyed(surfaceHolder);
-        ((ActivityCamera)context).stopBarcodeScanner();
+        ((ActivityCamera)context).stopObjectDetector();
     }
 
     @Override

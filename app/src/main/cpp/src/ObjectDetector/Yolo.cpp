@@ -34,7 +34,7 @@ Yolo::Yolo(const cv::String& cfg_file,
 
 Mat Yolo::classify(const Mat &frame) {
 
-    Mat result(frame.clone());
+    Mat result;
 
     if (result.channels() == 4)
         cvtColor(result, result, COLOR_BGRA2BGR);
@@ -51,24 +51,41 @@ Mat Yolo::classify(const Mat &frame) {
         double maxVal;
         minMaxLoc(scores, 0, &maxVal, 0, &maxLoc);
 
-        //draw box over the subject found
-        if (maxVal > my_confidence_threshold) {
+        //we look for this idx: 63, 1, 25, 57, 64, 65, 67
+        vector<int> labels = {1, 25, 57, 63, 64, 65, 67};
 
-            int idx = (int) maxLoc.x;
-            int x = (int) (output.at<float>(i, 0) * frame.cols);
-            int y = (int) (output.at<float>(i, 1) * frame.rows);
-            int w = (int) (output.at<float>(i, 2) * frame.cols);
-            int h = (int) (output.at<float>(i, 3) * frame.rows);
+        int idx = maxLoc.x;
 
-            Point p1(cvRound(x - w / 2), cvRound(y - h / 2));
-            Point p2(cvRound(x + w / 2), cvRound(y + h / 2));
+        if (maxVal > my_confidence_threshold && (std::find(labels.begin(), labels.end(), idx+1) != labels.end())) {
 
-            Rect object(p1, p2);
+            //we save the detected objects in a Mat
 
-            Scalar object_roi_color(0, 255, 0);
+            Mat tmp = Mat(1, 6, CV_32F);
 
-            rectangle(result, object, object_roi_color);
-            putText(result, class_names[idx], p1, FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,255,0), 2);
+            tmp.at<float>(0, 4) = idx;
+            tmp.at<float>(0, 0) = output.at<float>(i, 0) * frame.cols;
+            tmp.at<float>(0, 1) = output.at<float>(i, 1) * frame.rows;
+            tmp.at<float>(0, 2) = output.at<float>(i, 2) * frame.cols;
+            tmp.at<float>(0, 3) = output.at<float>(i, 3) * frame.rows;
+            tmp.at<float>(0, 5) = (float) maxVal;
+
+            result.push_back(tmp);
+
+//            int idx = maxLoc.x;
+//            int x = (int) (output.at<float>(i, 0) * frame.cols);
+//            int y = (int) (output.at<float>(i, 1) * frame.rows);
+//            int w = (int) (output.at<float>(i, 2) * frame.cols);
+//            int h = (int) (output.at<float>(i, 3) * frame.rows);
+
+//            Point p1(cvRound(x - w / 2), cvRound(y - h / 2));
+//            Point p2(cvRound(x + w / 2), cvRound(y + h / 2));
+//
+//            Rect object(p1, p2);
+//
+//            Scalar object_roi_color(0, 255, 0);
+//
+//            rectangle(result, object, object_roi_color);
+//            putText(result, class_names[idx], p1, FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,255,0), 2);
 
         }
 
