@@ -14,4 +14,9 @@ public class JNIBridge
     public static native boolean killSound();
     public static native void playSound(float[] src, float[] list, float gain, float pitch);
     public static native boolean stopSound();
+
+    // Object detectors
+    public static native void create(String cfg_file, String weights_file, float conf_thr, String classNames_file);
+    public static native void classify(long input_frame, long output_frame);
+
 }
