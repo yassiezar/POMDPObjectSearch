@@ -17,6 +17,6 @@ public class JNIBridge
 
     // Object detectors
     public static native void create(String cfg_file, String weights_file, float conf_thr, String classNames_file);
-    public static native void classify(long input_frame, long output_frame);
+    public static native double classify(long input_frame, float[] output_frame);
 
 }

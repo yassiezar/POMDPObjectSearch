@@ -1,6 +1,10 @@
 #include <ObjectDetector/ObjectDetector.hpp>
 #include <opencv2/core/cvstd.hpp>
 
+#include <android/log.h>
+#define APPNAME "DETECTED_OBJECT"
+#define LOGD(TAG) __android_log_print(ANDROID_LOG_DEBUG , APPNAME, TAG);
+
 namespace ObjectDetector
 {
     Yolo::Yolo(const cv::String& cfg_file,
@@ -29,15 +33,17 @@ namespace ObjectDetector
     }
 
 
-    cv::Mat Yolo::classify(const cv::Mat &frame)
+    std::vector<float> Yolo::classify(const cv::Mat &input_frame)
     {
-        cv::Mat result;
+        std::vector<float> results;
+        int result_counter = 0;
+        cv::Mat frame(input_frame.clone());
 
-        if (result.channels() == 4)
-            cvtColor(result, result, cv::COLOR_BGRA2BGR);
+        if (frame.channels() == 4)
+            cvtColor(input_frame, frame, cv::COLOR_BGRA2BGR);
 
         //create the blob for the network
-        cv::Mat blob = cv::dnn::blobFromImage(result, 1/255.F, cv::Size(416,416), cv::Scalar(), true, false);
+        cv::Mat blob = cv::dnn::blobFromImage(frame, 1/255.F, cv::Size(416,416), cv::Scalar(), true, false);
         net.setInput(blob, "data");
         cv::Mat output = net.forward(getOutputsNames());
 
@@ -50,26 +56,35 @@ namespace ObjectDetector
             minMaxLoc(scores, 0, &maxVal, 0, &maxLoc);
 
             //we look for this idx: 63, 1, 25, 57, 64, 65, 67
-            std::vector<int> labels = {1, 25, 57, 63, 64, 65, 67};
+            std::vector<int> labelsIdx = {1, 25, 57, 63, 64, 65, 67};
 
             int idx = maxLoc.x;
 
-            if (maxVal > confidenceThreshold && (std::find(labels.begin(), labels.end(), idx+1) != labels.end()))
+            bool condition;
+            for(int i=0; i<labelsIdx.size(); i++)
+                condition = condition || (idx+1 == labelsIdx[i]);
+
+            if (maxVal > 0)// && condition)
             {
                 //we save the detected objects in a Mat
+//                cv::Mat tmp = cv::Mat(1, 6, CV_32F);
+//
+//                tmp.at<float>(0, 0) = output.at<float>(i, 0) * frame.cols;
+//                tmp.at<float>(0, 1) = output.at<float>(i, 1) * frame.rows;
+//                tmp.at<float>(0, 2) = output.at<float>(i, 2) * frame.cols;
+//                tmp.at<float>(0, 3) = output.at<float>(i, 3) * frame.rows;
+//                tmp.at<float>(0, 4) = idx;
+//                tmp.at<float>(0, 5) = (float) maxVal;
 
-                cv::Mat tmp = cv::Mat(1, 6, CV_32F);
+                results.push_back(output.at<float>(i, 0) * frame.cols);
+                results.push_back(output.at<float>(i, 1) * frame.cols);
+                results.push_back(output.at<float>(i, 2) * frame.cols);
+                results.push_back(output.at<float>(i, 3) * frame.cols);
+                results.push_back(idx);
+                results.push_back((float) maxVal);
 
-                tmp.at<float>(0, 4) = idx;
-                tmp.at<float>(0, 0) = output.at<float>(i, 0) * frame.cols;
-                tmp.at<float>(0, 1) = output.at<float>(i, 1) * frame.rows;
-                tmp.at<float>(0, 2) = output.at<float>(i, 2) * frame.cols;
-                tmp.at<float>(0, 3) = output.at<float>(i, 3) * frame.rows;
-                tmp.at<float>(0, 5) = (float) maxVal;
 
-                result.push_back(tmp);
 
-//            int idx = maxLoc.x;
 //            int x = (int) (output.at<float>(i, 0) * frame.cols);
 //            int y = (int) (output.at<float>(i, 1) * frame.rows);
 //            int w = (int) (output.at<float>(i, 2) * frame.cols);
@@ -88,7 +103,8 @@ namespace ObjectDetector
             }
 
         }
-        return result;
+
+        return results;
     }
 
 
@@ -100,7 +116,7 @@ namespace ObjectDetector
         for (int i=0; i<outLayers.size(); i++)
             names[i] = layers[outLayers[i]-1];
 
-        return names[1];
+        return names[0];
     }
 
 

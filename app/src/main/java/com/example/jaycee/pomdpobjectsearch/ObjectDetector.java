@@ -27,7 +27,7 @@ import static org.opencv.imgproc.Imgproc.COLOR_RGB2BGRA;
 public class ObjectDetector implements Runnable
 {
 
-    private static final String TAG = ObjectDetector.class.getSimpleName();
+    private static final String TAG = "OBJECT_DETECTOR";//ObjectDetector.class.getSimpleName();
 
     private Handler handler = new Handler();
 
@@ -45,6 +45,8 @@ public class ObjectDetector implements Runnable
     private static final int O_NOTHING = 0;
     private int code = O_NOTHING;
 
+    private int counter;
+
 
     public ObjectDetector(Context context, int scannerWidth, int scannerHeight, SurfaceRenderer renderer)
     {
@@ -60,33 +62,46 @@ public class ObjectDetector implements Runnable
 
         JNIBridge.create(cfg_file, weigth_file, confidence_threshold, classNames_file);
 
+        counter = 0;
     }
 
     @Override
     public void run()
     {
-//        Log.v(TAG, "Running barcode scanner");
+
+        //Log.v(TAG, "Running Object Detector");
+
         code = O_NOTHING;
 
         bitmap.copyPixelsFromBuffer(renderer.getCurrentFrameBuffer());
 
-        //Frame bitmapFrame = new Frame.Builder().setRotation(180).setBitmap(bitmap).build();
-
-//        SparseArray<Barcode> barcodes = detector.detect(bitmapFrame);
 
         Mat inputFrame = new Mat();
         Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
         Utils.bitmapToMat(bmp32, inputFrame);
 
-        Mat results = new Mat();
-        Imgproc.cvtColor(inputFrame, results, COLOR_RGB2BGRA);
-        results.convertTo(results, CV_32F);
+        float[] results = null;
 
-        //JNIBridge.classify(inputFrame.getNativeObjAddr(), results.getNativeObjAddr());
+        double time = -1;
+        if(counter%15 == 0) {
+            time = JNIBridge.classify(inputFrame.getNativeObjAddr(), results);
+            int obj = 0;
+            if(results != null)
+                obj = results.length;
+            String t = "Time: " + time + " s - Found object: " + obj;
+            Log.v(TAG, t);
+        }
+        counter++;
 
-        int[] idx = new int[results.rows()];
 
-        double[] a  = results.get(0, 0);
+
+//        int[] idx = new int[results.rows()];
+//
+//        double[] a;
+//        if(results != null) {
+//            a = results.get(0, 0);
+//        }
+
 
 
 

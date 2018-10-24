@@ -30,8 +30,8 @@ JULAYOM(void, create)(JNIEnv * env, jobject obj,
                       jfloat conf_thr,
                       jstring classNames_file);
 
-JULAYOM(void, classify)(JNIEnv * env, jobject obj,
-                        jlong input_frame, jlong output_frame);
+JULAYOM(jdouble, classify)(JNIEnv * env, jobject obj,
+                        jlong input_frame, jfloatArray results);
 
 #ifdef __cplusplus
 }

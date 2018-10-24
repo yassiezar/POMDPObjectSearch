@@ -31,7 +31,7 @@ namespace ObjectDetector
              const cv::String&,
              const float,
              const cv::String );
-        cv::Mat classify(const cv::Mat& frame);
+        std::vector<float> classify(const cv::Mat& frame);
     };
 }
 

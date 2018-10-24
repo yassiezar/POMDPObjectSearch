@@ -47,12 +47,25 @@ JULAYOM(void, create)(JNIEnv * env, jobject obj,
 
 }
 
-JULAYOM(void, classify)(JNIEnv * env, jobject obj,
-                        jlong input_frame, jlong results){
+JULAYOM(jdouble, classify)(JNIEnv * env, jobject obj,
+                        jlong input_frame, jfloatArray results){
 
     cv::Mat& in_frame = *(cv::Mat*) input_frame;
-    cv::Mat out_frame = objectDetector->classify(in_frame);
-    results = (jlong) &out_frame;
+
+    int e1 = cv::getTickCount();
+
+    std::vector<float> finded_object = objectDetector->classify(in_frame);
+
+    int e2 = cv::getTickCount();
+    jdouble time = (e2 - e1)/ cv::getTickFrequency();
+
+    float* array = &finded_object[0];
+
+    int array_size = (int) finded_object.size();
+    results = env->NewFloatArray(array_size);
+    env->SetFloatArrayRegion(results, 0, array_size, array);
+
+    return time;
 }
 
 #ifdef __cplusplus
