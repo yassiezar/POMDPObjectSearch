@@ -58,7 +58,7 @@ public class ObjectDetector implements Runnable
         confidence_threshold = 0.5f;
         classNames_file = getPath(".names", context);
 
-        create(cfg_file, weigth_file, confidence_threshold, classNames_file);
+        JNIBridge.create(cfg_file, weigth_file, confidence_threshold, classNames_file);
 
     }
 
@@ -74,15 +74,15 @@ public class ObjectDetector implements Runnable
 
 //        SparseArray<Barcode> barcodes = detector.detect(bitmapFrame);
 
-        Mat input_frame = new Mat();
+        Mat inputFrame = new Mat();
         Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-        Utils.bitmapToMat(bmp32, input_frame);
+        Utils.bitmapToMat(bmp32, inputFrame);
 
         Mat results = new Mat();
-        Imgproc.cvtColor(results, results, COLOR_RGB2BGRA);
+        Imgproc.cvtColor(inputFrame, results, COLOR_RGB2BGRA);
         results.convertTo(results, CV_32F);
 
-        classify(input_frame.getNativeObjAddr(), results.getNativeObjAddr());
+        //JNIBridge.classify(inputFrame.getNativeObjAddr(), results.getNativeObjAddr());
 
         int[] idx = new int[results.rows()];
 
@@ -184,10 +184,5 @@ public class ObjectDetector implements Runnable
         }
         return "";
     }
-
-    public native void create(String cfg_file, String weights_file, float conf_thr, String classNames_file);
-
-    public native void classify(long input_frame, long output_frame);
-
 }
 

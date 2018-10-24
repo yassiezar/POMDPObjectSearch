@@ -3,20 +3,38 @@
 
 #include <jni.h>
 #include <android/log.h>
+
 #include <SoundGenerator/SoundGenerator.hpp>
+#include <ObjectDetector/ObjectDetector.hpp>
+#include <ObjectDetector/Helper.hpp>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-JNIEXPORT bool JNICALL Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_initSound(JNIEnv*, jobject);
-JNIEXPORT bool JNICALL Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_killSound(JNIEnv*, jobject);
-JNIEXPORT void JNICALL_Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_playSound(JNIEnv*, jobject, jfloatArray, jfloatArray, jfloat, jfloat);
+#define JULAYOM(rettype, name)                                             \
+  rettype JNIEXPORT JNICALL Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_##name
+
+SoundGenerator::SoundGenerator* soundGenerator;
+
+JULAYOM(bool, initSound)(JNIEnv* env, jobject obj);
+JULAYOM(bool, killSound)(JNIEnv* env, jobject obj);
+JULAYOM(void, playSound)(JNIEnv* env, jobject obj, jfloatArray src, jfloatArray list, jfloat gain, jfloat pitch);
+JULAYOM(bool, stopSound)(JNIEnv*, jobject);
+
+ObjectDetector::Yolo* objectDetector;
+
+JULAYOM(void, create)(JNIEnv * env, jobject obj,
+                      jstring cfg_file,
+                      jstring weights_file,
+                      jfloat conf_thr,
+                      jstring classNames_file);
+
+JULAYOM(void, classify)(JNIEnv * env, jobject obj,
+                        jlong input_frame, jlong output_frame);
 
 #ifdef __cplusplus
 }
 #endif
-
-static SoundGenerator::SoundGenerator soundGenerator;
 
 #endif
