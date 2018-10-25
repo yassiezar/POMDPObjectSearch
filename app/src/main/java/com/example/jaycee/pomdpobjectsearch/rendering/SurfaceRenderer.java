@@ -58,8 +58,8 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         this.context = context;
         this.surfaceView = surfaceView;
 
-        this.scannerWidth = 525;
-        this.scannerHeight = 525;
+        this.scannerWidth = 1440;
+        this.scannerHeight = 2280;
         this.scannerX = 450;
         this.scannerY = 1017;
 
@@ -217,7 +217,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         catch(NullPointerException e)
         {
             Log.e(TAG, "Frame buffer not yet initialised: " + e);
-            return IntBuffer.allocate(scannerWidth*scannerHeight);
+            return IntBuffer.allocate(width*height);
         }
     }
 

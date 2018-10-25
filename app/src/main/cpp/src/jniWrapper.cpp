@@ -47,8 +47,7 @@ JULAYOM(void, create)(JNIEnv * env, jobject obj,
 
 }
 
-JULAYOM(jdouble, classify)(JNIEnv * env, jobject obj,
-                        jlong input_frame, jfloatArray results){
+JULAYOM(jfloatArray, classify)(JNIEnv * env, jobject obj, jlong input_frame){
 
     cv::Mat& in_frame = *(cv::Mat*) input_frame;
 
@@ -62,10 +61,10 @@ JULAYOM(jdouble, classify)(JNIEnv * env, jobject obj,
     float* array = &finded_object[0];
 
     int array_size = (int) finded_object.size();
-    results = env->NewFloatArray(array_size);
+    jfloatArray results = env->NewFloatArray(array_size);
     env->SetFloatArrayRegion(results, 0, array_size, array);
 
-    return time;
+    return results;
 }
 
 #ifdef __cplusplus

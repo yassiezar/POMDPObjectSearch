@@ -261,7 +261,7 @@ public class ActivityCamera extends AppCompatActivity
 
     public void startObjectDetector()
     {
-        objectDetector = new ObjectDetector(this, 525, 525, surfaceView.getRenderer());
+        objectDetector = new ObjectDetector(this, surfaceView.getWidth(), surfaceView.getHeight(), surfaceView.getRenderer());
         objectDetector.run();
     }
 

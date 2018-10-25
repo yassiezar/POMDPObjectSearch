@@ -18,10 +18,15 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.Buffer;
+import java.nio.IntBuffer;
+
 import org.opencv.android.Utils;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import static org.opencv.core.CvType.CV_32F;
+import static org.opencv.core.CvType.CV_32SC1;
 import static org.opencv.imgproc.Imgproc.COLOR_RGB2BGRA;
 
 public class ObjectDetector implements Runnable
@@ -37,11 +42,6 @@ public class ObjectDetector implements Runnable
 
     private boolean stop = false;
 
-    private String cfg_file;
-    private String weigth_file;
-    private float confidence_threshold;
-    private String classNames_file;
-
     private static final int O_NOTHING = 0;
     private int code = O_NOTHING;
 
@@ -52,13 +52,13 @@ public class ObjectDetector implements Runnable
     {
         this.renderer = renderer;
 
-        //this.detector = new BarcodeDetector.Builder(context).setBarcodeFormats(Barcode.QR_CODE).build();
         this.bitmap = Bitmap.createBitmap(scannerWidth, scannerHeight, Bitmap.Config.ARGB_8888);
 
-        cfg_file = getPath(".cfg", context);
-        weigth_file = getPath(".weights", context);
-        confidence_threshold = 0.5f;
-        classNames_file = getPath(".names", context);
+        String cfg_file = getPath(".cfg", context);
+        String weigth_file = getPath(".weights", context);
+        float confidence_threshold = 0.5f;
+        String classNames_file = getPath(".names", context);
+        String prova = getPath(".jpg", context);
 
         JNIBridge.create(cfg_file, weigth_file, confidence_threshold, classNames_file);
 
@@ -73,83 +73,74 @@ public class ObjectDetector implements Runnable
 
         code = O_NOTHING;
 
+        Mat prova = Imgcodecs.imread("/data/user/0/com.example.jaycee.pomdpobjectsearch/files/person.jpg");
+
+        IntBuffer a = renderer.getCurrentFrameBuffer();
+
         bitmap.copyPixelsFromBuffer(renderer.getCurrentFrameBuffer());
 
+        String v = "Buffer: " + a.capacity() + " Bitmap: " + bitmap.getByteCount();
+        Log.v("BUFFER", v);
 
         Mat inputFrame = new Mat();
-        Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-        Utils.bitmapToMat(bmp32, inputFrame);
 
-        float[] results = null;
+        Utils.bitmapToMat(bitmap, inputFrame);
+
+        float[] results = new float[1];
 
         double time = -1;
-        if(counter%15 == 0) {
-            time = JNIBridge.classify(inputFrame.getNativeObjAddr(), results);
-            int obj = 0;
-            if(results != null)
-                obj = results.length;
-            String t = "Time: " + time + " s - Found object: " + obj;
-            Log.v(TAG, t);
-        }
+        if(counter%30 == 0)
+            results = JNIBridge.classify(inputFrame.getNativeObjAddr());
         counter++;
 
+        int result_length = results.length;
 
+        if(result_length > 5 && result_length%6 == 0)
+        {
 
-//        int[] idx = new int[results.rows()];
-//
-//        double[] a;
-//        if(results != null) {
-//            a = results.get(0, 0);
-//        }
+            String t = "Time: " + time + " s - Number of found objects: " + result_length/6;
+            Log.v(TAG, t);
 
+            int num_foundObject = result_length/6;
 
+            for(int i = 0; i < num_foundObject; i++)
+            {
 
+                int idx = (int) results[(i*6)+4]+1;
 
-//        if(results.rows() > 0 )
-//        {
-//            for(int i = 0; i < results.rows(); i++)
-//            {
-////                int key = barcodes.keyAt(i);
-////                Log.d(TAG, String.format("Object found, coords %d %d", barcodes.get(key).getBoundingBox().right, barcodes.get(key).getBoundingBox().bottom));
-////                Log.i(TAG, String.format("Barcode content: %s", barcodes.get(key).rawValue));
-////                this.code = Integer.parseInt(barcodes.get(key).rawValue);
-//
-//
-//                int buff[] = new int[(int)results.total() * results.channels()];
-//                results.get(0, 0);
-//
-//                idx[i] =
-//
-//                switch (result.getItemId())
-//                {
-//                    case R.id.item_object_mug:
-//                        target = T_MUG;
-//                        break;
-//                    case R.id.item_object_desk:
-//                        target = T_DESK;
-//                        break;
-//                    case R.id.item_object_office_supplies:
-//                        target = T_OFFICE_SUPPLIES;
-//                        break;
-//                    case R.id.item_object_keyboard:
-//                        target = T_COMPUTER_KEYBOARD;
-//                        break;
-//                    case R.id.item_object_monitor:
-//                        target = T_COMPUTER_MONITOR;
-//                        break;
-//                    case R.id.item_object_mouse:
-//                        target = T_COMPUTER_MOUSE;
-//                        break;
-//                    case R.id.item_object_window:
-//                        target = T_WINDOW;
-//                        break;
-//                }
-//
-//                this.code =
-//            }
-//        }
+                t = "Index: " + idx;
+                Log.v(TAG, t);
 
+                code = (int) results[(i*6)+4];
 
+                //we look for this idx: 63, 1, 25, 57, 64, 65, 67
+                switch (idx)
+                {
+                    case 6:
+                        code = 1;
+                        break;
+                    case 25:
+                        code = 2;
+                        break;
+                    case 57:
+                        code = 3;
+                        break;
+                    case 63:
+                        code = 4;
+                        break;
+                    case 64:
+                        code = 5;
+                        break;
+                    case 65:
+                        code = 6;
+                        break;
+                    case 67:
+                        code = 7;
+                        break;
+                }
+
+            }
+        }
 
         if(!stop) handler.postDelayed(this, 40);
 
@@ -199,5 +190,26 @@ public class ObjectDetector implements Runnable
         }
         return "";
     }
+
+    public void drawRectangle(float[] coordinates){
+
+        int x = (int) coordinates[0]*1440;
+        int y = (int) coordinates[1]*2280;
+        int w = (int) coordinates[2]*1440;
+        int h = (int) coordinates[3]*2280;
+
+//            Point p1(cvRound(x - w / 2), cvRound(y - h / 2));
+//            Point p2(cvRound(x + w / 2), cvRound(y + h / 2));
+//
+//            Rect object(p1, p2);
+//
+//            Scalar object_roi_color(0, 255, 0);
+//
+//            rectangle(result, object, object_roi_color);
+//            putText(result, class_names[idx], p1, FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,255,0), 2);
+
+    }
+
+
 }
 

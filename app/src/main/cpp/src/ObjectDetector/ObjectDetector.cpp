@@ -17,9 +17,6 @@ namespace ObjectDetector
 
         try
         {
-            //std::cout << "Model cfg: " << cfg_file << std::endl;
-            //std::cout << "Model weigth: " << weights_file << std::endl;
-            //import the model of the network
             net = cv::dnn::readNetFromDarknet(cfg_file, weights_file);
             net .setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
             net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
@@ -35,15 +32,15 @@ namespace ObjectDetector
 
     std::vector<float> Yolo::classify(const cv::Mat &input_frame)
     {
+
         std::vector<float> results;
-        int result_counter = 0;
         cv::Mat frame(input_frame.clone());
 
         if (frame.channels() == 4)
             cvtColor(input_frame, frame, cv::COLOR_BGRA2BGR);
 
         //create the blob for the network
-        cv::Mat blob = cv::dnn::blobFromImage(frame, 1/255.F, cv::Size(416,416), cv::Scalar(), true, false);
+        cv::Mat blob = cv::dnn::blobFromImage(frame, 1/255.F, cv::Size(416,416), cv::Scalar(0.5,0.5), true, false);
         net.setInput(blob, "data");
         cv::Mat output = net.forward(getOutputsNames());
 
@@ -66,15 +63,6 @@ namespace ObjectDetector
 
             if (maxVal > 0)// && condition)
             {
-                //we save the detected objects in a Mat
-//                cv::Mat tmp = cv::Mat(1, 6, CV_32F);
-//
-//                tmp.at<float>(0, 0) = output.at<float>(i, 0) * frame.cols;
-//                tmp.at<float>(0, 1) = output.at<float>(i, 1) * frame.rows;
-//                tmp.at<float>(0, 2) = output.at<float>(i, 2) * frame.cols;
-//                tmp.at<float>(0, 3) = output.at<float>(i, 3) * frame.rows;
-//                tmp.at<float>(0, 4) = idx;
-//                tmp.at<float>(0, 5) = (float) maxVal;
 
                 results.push_back(output.at<float>(i, 0) * frame.cols);
                 results.push_back(output.at<float>(i, 1) * frame.cols);
@@ -82,23 +70,6 @@ namespace ObjectDetector
                 results.push_back(output.at<float>(i, 3) * frame.cols);
                 results.push_back(idx);
                 results.push_back((float) maxVal);
-
-
-
-//            int x = (int) (output.at<float>(i, 0) * frame.cols);
-//            int y = (int) (output.at<float>(i, 1) * frame.rows);
-//            int w = (int) (output.at<float>(i, 2) * frame.cols);
-//            int h = (int) (output.at<float>(i, 3) * frame.rows);
-
-//            Point p1(cvRound(x - w / 2), cvRound(y - h / 2));
-//            Point p2(cvRound(x + w / 2), cvRound(y + h / 2));
-//
-//            Rect object(p1, p2);
-//
-//            Scalar object_roi_color(0, 255, 0);
-//
-//            rectangle(result, object, object_roi_color);
-//            putText(result, class_names[idx], p1, FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,255,0), 2);
 
             }
 
