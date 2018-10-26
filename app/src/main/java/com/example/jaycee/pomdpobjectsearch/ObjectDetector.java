@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.os.Handler;
 import android.util.Log;
 import android.util.SparseArray;
@@ -22,9 +23,13 @@ import java.nio.Buffer;
 import java.nio.IntBuffer;
 
 import org.opencv.android.Utils;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import static org.opencv.core.Core.FONT_HERSHEY_SIMPLEX;
 import static org.opencv.core.CvType.CV_32F;
 import static org.opencv.core.CvType.CV_32SC1;
 import static org.opencv.imgproc.Imgproc.COLOR_RGB2BGRA;
@@ -47,9 +52,14 @@ public class ObjectDetector implements Runnable
 
     private int counter;
 
+    BoundingBoxView boundingView;
 
-    public ObjectDetector(Context context, int scannerWidth, int scannerHeight, SurfaceRenderer renderer)
+
+    public ObjectDetector(Context context, int scannerWidth, int scannerHeight, SurfaceRenderer renderer, BoundingBoxView bbv)
     {
+
+        boundingView = bbv;
+
         this.renderer = renderer;
 
         this.bitmap = Bitmap.createBitmap(scannerWidth, scannerHeight, Bitmap.Config.ARGB_8888);
@@ -93,8 +103,13 @@ public class ObjectDetector implements Runnable
 
         int result_length = results.length;
 
+
+
         if(result_length > 5 && result_length%6 == 0)
         {
+
+            boundingView.setResults(results);
+            boundingView.invalidate();
 
             String t = "Time: " + time + " s - Number of found objects: " + result_length/6;
             Log.v(TAG, t);
@@ -137,6 +152,10 @@ public class ObjectDetector implements Runnable
                 }
 
             }
+        }
+        else{
+            boundingView.setResults(null);
+            boundingView.invalidate();
         }
 
         if(!stop) handler.postDelayed(this, 40);
@@ -188,22 +207,35 @@ public class ObjectDetector implements Runnable
         return "";
     }
 
-    public void drawRectangle(float[] coordinates){
 
-        int x = (int) coordinates[0]*1440;
-        int y = (int) coordinates[1]*2280;
-        int w = (int) coordinates[2]*1440;
-        int h = (int) coordinates[3]*2280;
+    public Bitmap drawRectangle(float[] coordinates){
 
-//            Point p1(cvRound(x - w / 2), cvRound(y - h / 2));
-//            Point p2(cvRound(x + w / 2), cvRound(y + h / 2));
-//
-//            Rect object(p1, p2);
-//
-//            Scalar object_roi_color(0, 255, 0);
-//
-//            rectangle(result, object, object_roi_color);
-//            putText(result, class_names[idx], p1, FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,255,0), 2);
+        Mat drawing = new Mat(2280,1440, CV_32F);
+        Bitmap btm = Bitmap.createBitmap(1440, 2280, Bitmap.Config.ARGB_8888);
+
+        for(int i=0; i<coordinates.length/6; i++) {
+
+            int x = (int) coordinates[(i*6)] * 1440;
+            int y = (int) coordinates[(i*6)+1] * 2280;
+            int w = (int) coordinates[(i*6)+2] * 1440;
+            int h = (int) coordinates[(i*6)+3] * 2280;
+            String idx = Float.toString(coordinates[(i*6)+4]);
+
+            Point p1 = new Point(Math.round(x - w / 2), Math.round(y - h / 2));
+            Point p2 = new Point(Math.round(x + w / 2), Math.round(y + h / 2));
+
+            //Rect object = new Rect(p1, p2);
+
+            Scalar object_roi_color = new Scalar(0, 255, 0);
+
+            Imgproc.rectangle(drawing, p1, p2, object_roi_color);
+            Imgproc.putText(drawing, idx, p1, FONT_HERSHEY_SIMPLEX, 0.75, new Scalar(0,255,0), 2);
+
+        }
+
+        Utils.matToBitmap(drawing, btm);
+
+        return btm;
 
     }
 

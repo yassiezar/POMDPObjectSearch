@@ -76,6 +76,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig)
     {
+
         GLES20.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
         Log.i(TAG, "Surface created");
@@ -232,6 +233,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
 
         this.drawObjects = !this.drawObjects;
     }
+
     public boolean isRendererReady() { return this.rendererReady; }
     public void setDrawWaypoint(boolean drawWaypoint) { this.drawWaypoint = drawWaypoint; }
 
