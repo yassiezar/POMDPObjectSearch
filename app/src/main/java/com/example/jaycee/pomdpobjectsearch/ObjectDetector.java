@@ -73,8 +73,6 @@ public class ObjectDetector implements Runnable
 
         code = O_NOTHING;
 
-        Mat prova = Imgcodecs.imread("/data/user/0/com.example.jaycee.pomdpobjectsearch/files/person.jpg");
-
         IntBuffer a = renderer.getCurrentFrameBuffer();
 
         bitmap.copyPixelsFromBuffer(renderer.getCurrentFrameBuffer());
@@ -89,7 +87,7 @@ public class ObjectDetector implements Runnable
         float[] results = new float[1];
 
         double time = -1;
-        if(counter%30 == 0)
+        if(counter%15 == 0)
             results = JNIBridge.classify(inputFrame.getNativeObjAddr());
         counter++;
 
@@ -113,28 +111,27 @@ public class ObjectDetector implements Runnable
 
                 code = (int) results[(i*6)+4];
 
-                //we look for this idx: 63, 1, 25, 57, 64, 65, 67
                 switch (idx)
                 {
-                    case 6:
+                    case 1: //person
                         code = 1;
                         break;
-                    case 25:
+                    case 25: //backpack
                         code = 2;
                         break;
-                    case 57:
+                    case 57: //chair
                         code = 3;
                         break;
-                    case 63:
+                    case 63: //tvmonitor
                         code = 4;
                         break;
-                    case 64:
+                    case 64: //laptop
                         code = 5;
                         break;
-                    case 65:
+                    case 65: //mouse
                         code = 6;
                         break;
-                    case 67:
+                    case 67: //keyboar
                         code = 7;
                         break;
                 }
