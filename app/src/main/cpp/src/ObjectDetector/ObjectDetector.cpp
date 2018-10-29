@@ -1,116 +1,124 @@
 #include <ObjectDetector/ObjectDetector.hpp>
-#include <opencv2/core/cvstd.hpp>
 
+/**
+ * The ObjectDetector class provide the functions to create and use a Deep Neural Network based on
+ * YOLOv3 algorithm (an object detector). It is implemented using OpenCV 3.4.3 library.
+ *
+ * @author  Andrea Gaetano Tramontano
+ * @version 1.0
+ * @since   2018-10-29
+*/
 namespace ObjectDetector
 {
-    Yolo::Yolo(const cv::String& cfg_file,
-               const cv::String& weights_file,
-               const float conf_thr,
-               const cv::String classNames_file):
-            confidenceThreshold(conf_thr)
+    /**
+     * Constructor: initialize the YOLOv3 network with the configuration file (.cfg), the weights of
+     * the model (.weights) and with the minimum confidence threshold
+     *
+     * @param cfg_file This is the path of the configuration file for the YOLO DNN.
+     * @param weights_file This is the path of the weights file for the YOLO DNN.
+     * @param confidence_threshold This is the minimum confidence threshold.
+     *
+    */
+    Yolo::Yolo(const cv::String& cfgFile,
+               const cv::String& weightsFile,
+               const float confidenceThreshold):
+            confidenceThreshold(confidenceThreshold) //initialize confidenceThreshold
     {
-        readClassNames(classNames_file);
-
+        //initialize the DNN with .cfg and .weights files
         try
         {
-            //std::cout << "Model cfg: " << cfg_file << std::endl;
-            //std::cout << "Model weigth: " << weights_file << std::endl;
-            //import the model of the network
-            net = cv::dnn::readNetFromDarknet(cfg_file, weights_file);
-            net .setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
+            net = cv::dnn::readNetFromDarknet(cfgFile, weightsFile);
+            net.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
             net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
         }
         catch (cv::Exception& e)
         {
-            std::cout << "WARNING: YOLOClassifier not initialized correctly!"
-                      << std::endl;
+            __android_log_write(ANDROID_LOG_WARN, OBJECTLOG, "WARNING: YOLOClassifier not initialized correctly!");
             std::cout << e.what() << std::endl;
         }
     }
 
-
-    cv::Mat Yolo::classify(const cv::Mat &frame)
+    /**
+     * The Classify method provide the object detection of a single frame and return the object
+     * detection results. It is possible to specify the object (or the group of object) you are
+     * looking for.
+     *
+     * @param &input_frame This is the frame we want to analyze and where we want to find object.
+     *
+     * @return vector<float> This the results of the object detection containing the coordinates of
+     * the objects bounding box, the index of the label name and the confidence threshold. For every
+     * object there are six parameters, so the vector length is a multiple of six
+     * (length=6 -> 1 object found, length=12 -> 2 object found).
+    */
+    std::vector<float> Yolo::classify(const cv::Mat &inputFrame)
     {
-        cv::Mat result;
+        //the vector where we will save the found objects
+        std::vector<float> objectResults;
+        cv::Mat frame(inputFrame.clone());
 
-        if (result.channels() == 4)
-            cvtColor(result, result, cv::COLOR_BGRA2BGR);
+        //the DNN work with BGR images
+        if (frame.channels() == 4)
+            cvtColor(inputFrame, frame, cv::COLOR_BGRA2BGR);
 
-        //create the blob for the network
-        cv::Mat blob = cv::dnn::blobFromImage(result, 1/255.F, cv::Size(416,416), cv::Scalar(), true, false);
-        net.setInput(blob, "data");
-        cv::Mat output = net.forward(getOutputsNames());
+        //create and set the blob for the DNN. We can change forth parameter if we want to rescale
+        // the image
+        cv::Mat blob = cv::dnn::blobFromImage(frame, 1/255.F, cv::Size(416,416), cv::Scalar(), true,
+                false);
+        net.setInput(blob);
 
-        for (int i=0; i<output.rows; i++)
+        //compute the object detection
+        cv::Mat forwardOutput = net.forward(getOutputsLayerNames());
+
+        //look if there are detected objects
+        for (int i = 0; i < forwardOutput.rows; i ++)
         {
-            cv::Mat scores = output.row(i).colRange(5, output.cols);
+            cv::Mat scores = forwardOutput.row(i).colRange(5, forwardOutput.cols);
 
             cv::Point maxLoc;
             double maxVal;
+            //find the max value in the scores Mat
             minMaxLoc(scores, 0, &maxVal, 0, &maxLoc);
 
-            //we look for this idx: 63, 1, 25, 57, 64, 65, 67
-            std::vector<int> labels = {1, 25, 57, 63, 64, 65, 67};
+            //we look for only this object indexes: 1, 25, 57, 63, 64, 65, 67
+            // (person, backpack, chair, tv-monitor, laptop, mouse, keyboard)
+            std::vector<int> labelsIdx = {1, 25, 57, 63, 64, 65, 67};
 
             int idx = maxLoc.x;
 
-            if (maxVal > confidenceThreshold && (std::find(labels.begin(), labels.end(), idx+1) != labels.end()))
+            //condition = TRUE, if an found object belongs to labelsIdx, otherwise condition = FALSE
+            bool condition;
+            for(int k = 0; k < labelsIdx.size(); k ++)
+                condition = condition || (idx+1 == labelsIdx[k]);
+
+            //we take object with a confidence higher than the minimum threshold
+            if (maxVal > confidenceThreshold && condition)
             {
-                //we save the detected objects in a Mat
-
-                cv::Mat tmp = cv::Mat(1, 6, CV_32F);
-
-                tmp.at<float>(0, 4) = idx;
-                tmp.at<float>(0, 0) = output.at<float>(i, 0) * frame.cols;
-                tmp.at<float>(0, 1) = output.at<float>(i, 1) * frame.rows;
-                tmp.at<float>(0, 2) = output.at<float>(i, 2) * frame.cols;
-                tmp.at<float>(0, 3) = output.at<float>(i, 3) * frame.rows;
-                tmp.at<float>(0, 5) = (float) maxVal;
-
-                result.push_back(tmp);
-
-//            int idx = maxLoc.x;
-//            int x = (int) (output.at<float>(i, 0) * frame.cols);
-//            int y = (int) (output.at<float>(i, 1) * frame.rows);
-//            int w = (int) (output.at<float>(i, 2) * frame.cols);
-//            int h = (int) (output.at<float>(i, 3) * frame.rows);
-
-//            Point p1(cvRound(x - w / 2), cvRound(y - h / 2));
-//            Point p2(cvRound(x + w / 2), cvRound(y + h / 2));
-//
-//            Rect object(p1, p2);
-//
-//            Scalar object_roi_color(0, 255, 0);
-//
-//            rectangle(result, object, object_roi_color);
-//            putText(result, class_names[idx], p1, FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0,255,0), 2);
-
+                objectResults.push_back(forwardOutput.at<float>(i, 0) * frame.cols); //bounding box X coordinates
+                objectResults.push_back(forwardOutput.at<float>(i, 1) * frame.cols); //bounding box Y coordinates
+                objectResults.push_back(forwardOutput.at<float>(i, 2) * frame.cols); //bounding box width
+                objectResults.push_back(forwardOutput.at<float>(i, 3) * frame.cols); //bounding box high
+                objectResults.push_back(idx); //label index
+                objectResults.push_back((float) maxVal); //confidence value
             }
-
         }
-        return result;
+
+        return objectResults;
     }
 
-
-    cv::String Yolo::getOutputsNames()
+    /**
+     * The getOutputsLayerNames method look for the name of the output layers of the DNN.
+     *
+     * @return String This is the name of the first output layer. We need only the first one and not
+     * the other for our purpose.
+    */
+    cv::String Yolo::getOutputsLayerNames()
     {
+        //the unconnected layers are the output ones
         std::vector<int> outLayers = net.getUnconnectedOutLayers();
-        std::vector<cv::String> layers = net.getLayerNames();
-        std::vector<cv::String> names = std::vector<cv::String>(outLayers.size());
-        for (int i=0; i<outLayers.size(); i++)
-            names[i] = layers[outLayers[i]-1];
+        std::vector<cv::String> layersName = net.getLayerNames();
 
-        return names[1];
-    }
-
-
-    void Yolo::readClassNames(cv::String path)
-    {
-        std::ifstream infile(path);
-        std::string line;
-        while( getline(infile, line) )
-            classNames.push_back(line);
-
+        //we can switch between outLayers[0] or outLayers[1]
+        return layersName[outLayers[0] - 1];
     }
 }
 

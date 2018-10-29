@@ -58,10 +58,10 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         this.context = context;
         this.surfaceView = surfaceView;
 
-        this.scannerWidth = 525;
-        this.scannerHeight = 525;
-        this.scannerX = 450;
-        this.scannerY = 1017;
+        this.scannerWidth = 1440;
+        this.scannerHeight = 2280;
+        this.scannerX = 0;
+        this.scannerY = 0;
 
         init();
     }
@@ -76,6 +76,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     @Override
     public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig)
     {
+
         GLES20.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
         Log.i(TAG, "Surface created");
@@ -217,7 +218,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         catch(NullPointerException e)
         {
             Log.e(TAG, "Frame buffer not yet initialised: " + e);
-            return IntBuffer.allocate(scannerWidth*scannerHeight);
+            return IntBuffer.allocate(width*height);
         }
     }
 
@@ -232,6 +233,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
 
         this.drawObjects = !this.drawObjects;
     }
+
     public boolean isRendererReady() { return this.rendererReady; }
     public void setDrawWaypoint(boolean drawWaypoint) { this.drawWaypoint = drawWaypoint; }
 

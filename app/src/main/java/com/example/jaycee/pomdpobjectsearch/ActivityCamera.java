@@ -49,11 +49,13 @@ public class ActivityCamera extends AppCompatActivity
     private Session session;
 
     private CameraSurface surfaceView;
+
+    private BoundingBoxView boundingBoxView; //to write bounding box of the found object
+
     private DrawerLayout drawerLayout;
     private CentreView centreView;
 
     private SoundGenerator soundGenerator;
-//    private BarcodeScanner barcodeScanner;
     private ObjectDetector objectDetector;
 
     private boolean requestARCoreInstall = true;
@@ -73,9 +75,12 @@ public class ActivityCamera extends AppCompatActivity
 
         surfaceView = findViewById(R.id.surfaceview);
 
+        boundingBoxView = findViewById(R.id.bounding);
+
         centreView = findViewById(R.id.centre_view);
 
         drawerLayout = findViewById(R.id.layout_drawer_objects);
+
         NavigationView navigationView = findViewById(R.id.navigation_view_objects);
 
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener()
@@ -261,7 +266,7 @@ public class ActivityCamera extends AppCompatActivity
 
     public void startObjectDetector()
     {
-        objectDetector = new ObjectDetector(this, 525, 525, surfaceView.getRenderer());
+        objectDetector = new ObjectDetector(this, surfaceView.getWidth(), surfaceView.getHeight(), surfaceView.getRenderer(), boundingBoxView);
         objectDetector.run();
     }
 

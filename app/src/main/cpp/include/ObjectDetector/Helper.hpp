@@ -4,9 +4,17 @@
 
 #include <opencv2/core.hpp>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 namespace ObjectDetector
 {
-    std::string jstr2str(JNIEnv * env, jobject obj, jstring jstr);
-    jstring str2jstr(JNIEnv * env, jobject obj, std::string str);
-    cv::String jstr2ostr(JNIEnv * env, jobject obj, jstring jstr);
+    std::string jstr2str(JNIEnv*, jobject, jstring);
+    jstring str2jstr(JNIEnv*, jobject, std::string);
+    cv::String jstr2cvstr(JNIEnv*, jobject, jstring);
 }
+
+#ifdef __cplusplus
+}
+#endif

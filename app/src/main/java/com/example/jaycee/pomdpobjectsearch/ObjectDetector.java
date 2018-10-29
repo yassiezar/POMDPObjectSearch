@@ -7,149 +7,190 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.util.Log;
-import android.util.SparseArray;
-
-import com.example.jaycee.pomdpobjectsearch.rendering.SurfaceRenderer;
-import com.google.android.gms.vision.Frame;
-
-import org.opencv.core.Mat;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import org.opencv.android.Utils;
-import org.opencv.imgproc.Imgproc;
+import org.opencv.core.Mat;
 
-import static org.opencv.core.CvType.CV_32F;
-import static org.opencv.imgproc.Imgproc.COLOR_RGB2BGRA;
+import com.example.jaycee.pomdpobjectsearch.rendering.SurfaceRenderer;
 
+
+/**
+ * The ObjectDetector class provide the functions to create and use a Deep Neural Network based on
+ * YOLOv3 algorithm (an object detector). It use native c++ code to reach the purpose (see
+ * ObjectDetector.cpp).
+ *
+ * @author  Andrea Gaetano Tramontano
+ * @version 1.0
+ * @since   2018-10-29
+ */
 public class ObjectDetector implements Runnable
 {
-
     private static final String TAG = ObjectDetector.class.getSimpleName();
+    private static final int O_NOTHING = 0;
+
+    //index of the found object. code=0 if no objects were found.
+    private int objectCode = O_NOTHING;
 
     private Handler handler = new Handler();
 
-    private Bitmap bitmap;
-
-    private SurfaceRenderer renderer;
-
     private boolean stop = false;
 
-    private String cfg_file;
-    private String weigth_file;
-    private float confidence_threshold;
-    private String classNames_file;
+    private Bitmap bitmap;
+    private SurfaceRenderer renderer;
 
-    private static final int O_NOTHING = 0;
-    private int code = O_NOTHING;
+    //variable that count the number of frame, useful to decide how many FPS we want to compute.
+    private int frameCounter = 0;
+    private BoundingBoxView boundingBoxView;
 
-
-    public ObjectDetector(Context context, int scannerWidth, int scannerHeight, SurfaceRenderer renderer)
+    /**
+     * Constructor: The constructor initialize the global variables and call the native method for the DNN creation.
+     *
+     * @param context The actual context activity.
+     * @param frameWidth This is the width of the analyzed frame.
+     * @param frameWidth This is the height of the analyzed frame.
+     * @param renderer This is the address of the SurfaceRenderer object, used to take the actual
+     *                 frame.
+     * @param bbv The bounding box view where will be drawn the bounding box of the object.
+     *
+     */
+    public ObjectDetector(Context context, int frameWidth, int frameHeight, SurfaceRenderer renderer,
+                          BoundingBoxView bbv)
     {
+        this.boundingBoxView = bbv;
         this.renderer = renderer;
+        //the bitmap where we will read the actual frame
+        this.bitmap = Bitmap.createBitmap(frameWidth, frameHeight, Bitmap.Config.ARGB_8888);
 
-        //this.detector = new BarcodeDetector.Builder(context).setBarcodeFormats(Barcode.QR_CODE).build();
-        this.bitmap = Bitmap.createBitmap(scannerWidth, scannerHeight, Bitmap.Config.ARGB_8888);
+        String cfgFilePath = getPath(".cfg", context);
+        String weightFilepat = getPath(".weights", context);
+        float confidence_threshold = 0;
 
-        cfg_file = getPath(".cfg", context);
-        weigth_file = getPath(".weights", context);
-        confidence_threshold = 0.5f;
-        classNames_file = getPath(".names", context);
-
-        JNIBridge.create(cfg_file, weigth_file, confidence_threshold, classNames_file);
-
+        //this method call the native code for the DNN creation
+        JNIBridge.create(cfgFilePath, weightFilepat, confidence_threshold);
     }
 
+
+    /**
+     * The run method start the thread: take a new frame, call the native code for analyze the frame,
+     * look for found object and save the results in a variable.
+     */
     @Override
     public void run()
     {
-//        Log.v(TAG, "Running barcode scanner");
-        code = O_NOTHING;
-
+        objectCode = O_NOTHING;
+        //read the actual frame
         bitmap.copyPixelsFromBuffer(renderer.getCurrentFrameBuffer());
 
-        //Frame bitmapFrame = new Frame.Builder().setRotation(180).setBitmap(bitmap).build();
-
-//        SparseArray<Barcode> barcodes = detector.detect(bitmapFrame);
-
         Mat inputFrame = new Mat();
-        Bitmap bmp32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-        Utils.bitmapToMat(bmp32, inputFrame);
+        Utils.bitmapToMat(bitmap, inputFrame);
 
-        Mat results = new Mat();
-        Imgproc.cvtColor(inputFrame, results, COLOR_RGB2BGRA);
-        results.convertTo(results, CV_32F);
+        double time = -1;
 
-        //JNIBridge.classify(inputFrame.getNativeObjAddr(), results.getNativeObjAddr());
+        int cameraFPS = 30;
+        //we decide to compute 2 FPS
+        int yoloFPS = 2;
 
-        int[] idx = new int[results.rows()];
+        if(frameCounter%(cameraFPS/yoloFPS) == 0)
+        {
+            //call for the native classification method
+            float[] objectResults = JNIBridge.classify(inputFrame.getNativeObjAddr());
 
-        double[] a  = results.get(0, 0);
+            int resultLength = objectResults.length;
+            //we look if there are found object (result_length > 5) and if the array is correctly
+            // set (result_length % 6 == 0). Remember that for every object we have 6 parameters.
+            if (resultLength > 5 && resultLength % 6 == 0)
+            {
+                //give the results to the bounding box view
+                boundingBoxView.setResults(objectResults);
+                //update bounding box view
+                boundingBoxView.invalidate();
 
+                Log.v(TAG, String.format("Time: %f s - Number of found objects: %d ", time, resultLength/6));
 
+                int numFoundObjects = resultLength / 6;
 
-//        if(results.rows() > 0 )
-//        {
-//            for(int i = 0; i < results.rows(); i++)
-//            {
-////                int key = barcodes.keyAt(i);
-////                Log.d(TAG, String.format("Object found, coords %d %d", barcodes.get(key).getBoundingBox().right, barcodes.get(key).getBoundingBox().bottom));
-////                Log.i(TAG, String.format("Barcode content: %s", barcodes.get(key).rawValue));
-////                this.code = Integer.parseInt(barcodes.get(key).rawValue);
-//
-//
-//                int buff[] = new int[(int)results.total() * results.channels()];
-//                results.get(0, 0);
-//
-//                idx[i] =
-//
-//                switch (result.getItemId())
-//                {
-//                    case R.id.item_object_mug:
-//                        target = T_MUG;
-//                        break;
-//                    case R.id.item_object_desk:
-//                        target = T_DESK;
-//                        break;
-//                    case R.id.item_object_office_supplies:
-//                        target = T_OFFICE_SUPPLIES;
-//                        break;
-//                    case R.id.item_object_keyboard:
-//                        target = T_COMPUTER_KEYBOARD;
-//                        break;
-//                    case R.id.item_object_monitor:
-//                        target = T_COMPUTER_MONITOR;
-//                        break;
-//                    case R.id.item_object_mouse:
-//                        target = T_COMPUTER_MOUSE;
-//                        break;
-//                    case R.id.item_object_window:
-//                        target = T_WINDOW;
-//                        break;
-//                }
-//
-//                this.code =
-//            }
-//        }
+                //connect every object found with the correct code
+                //TODO: delete this part, because when we will have the our trained model, we don't
+                //TODO: need to make this operation
+                for (int i = 0; i < numFoundObjects; i++)
+                {
+                    int idx = (int) objectResults[(i * 6) + 4] + 1;
 
+                    Log.v(TAG, String.format("Index: %d", idx));
 
+                    objectCode = (int)objectResults[(i * 6) + 4];
 
-        if(!stop) handler.postDelayed(this, 40);
+                    switch (idx)
+                    {
+                        case 1: //person
+                            objectCode = 1;
+                            break;
+                        case 25: //backpack
+                            objectCode = 2;
+                            break;
+                        case 57: //chair
+                            objectCode = 3;
+                            break;
+                        case 63: //tvmonitor
+                            objectCode = 4;
+                            break;
+                        case 64: //laptop
+                            objectCode = 5;
+                            break;
+                        case 65: //mouse
+                            objectCode = 6;
+                            break;
+                        case 67: //keyboard
+                            objectCode = 7;
+                            break;
+                        default: objectCode = O_NOTHING;
+                    }
+                }
+            }
+            else
+            {
+                boundingBoxView.setResults(null);
+                boundingBoxView.invalidate();
+            }
 
+        }
+        frameCounter++;
+
+        if(!stop)
+            handler.postDelayed(this, 40);
     }
 
+
+    /**
+     * The stop method stop the thread.
+     */
     public void stop()
     {
         this.stop = true;
         handler = null;
     }
 
-    public int getCode() { return this.code; }
 
+    /**
+     * The getCode method return the actual code of the found object.
+     *
+     * @return int The actual code.
+     */
+    public int getCode()
+    {
+        return this.objectCode;
+    }
+
+    //TODO: I would like to delete this method and use direct path of the assets directory
     @SuppressLint("LongLogTag")
-    private static String getPath(String fileType, Context context) {
+    /**
+     * This method take file from asset directory, read them and save them in a different directory:
+     * File. So the file could be accessible from the native code.
+     */
+    public static String getPath(String fileType, Context context) {
         AssetManager assetManager = context.getAssets();
         String[] pathNames = {};
         String fileName = "";
@@ -185,4 +226,3 @@ public class ObjectDetector implements Runnable
         return "";
     }
 }
-

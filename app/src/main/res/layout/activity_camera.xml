@@ -31,6 +31,13 @@
             android:layout_centerInParent="true"
             android:id="@+id/centre_view">
         </com.example.jaycee.pomdpobjectsearch.CentreView>
+        <com.example.jaycee.pomdpobjectsearch.BoundingBoxView
+            android:id="@+id/bounding"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/toolbar"
+            android:contentDescription="Drawing bounding box on detected object" >
+        </com.example.jaycee.pomdpobjectsearch.BoundingBoxView>
     </RelativeLayout>
     <android.support.design.widget.NavigationView
         android:id="@+id/navigation_view_objects"
