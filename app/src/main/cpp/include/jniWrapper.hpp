@@ -17,19 +17,19 @@ extern "C" {
 
 SoundGenerator::SoundGenerator* soundGenerator;
 
-JULAYOM(bool, initSound)(JNIEnv* env, jobject obj);
-JULAYOM(bool, killSound)(JNIEnv* env, jobject obj);
-JULAYOM(void, playSound)(JNIEnv* env, jobject obj, jfloatArray src, jfloatArray list, jfloat gain, jfloat pitch);
+JULAYOM(bool, initSound)(JNIEnv*, jobject);
+JULAYOM(bool, killSound)(JNIEnv*, jobject);
+JULAYOM(void, playSound)(JNIEnv*, jobject, jfloatArray, jfloatArray, jfloat, jfloat);
 JULAYOM(bool, stopSound)(JNIEnv*, jobject);
 
 ObjectDetector::Yolo* objectDetector;
 
-JULAYOM(void, create)(JNIEnv * env, jobject obj,
-                      jstring cfg_file,
-                      jstring weights_file,
-                      jfloat conf_thr);
+JULAYOM(void, create)(JNIEnv*, jobject,
+                      jstring,
+                      jstring,
+                      jfloat);
 
-JULAYOM(jfloatArray, classify)(JNIEnv * env, jobject obj, jlong input_frame);
+JULAYOM(jfloatArray, classify)(JNIEnv*, jobject, jlong);
 
 #ifdef __cplusplus
 }

@@ -28,23 +28,22 @@ import com.example.jaycee.pomdpobjectsearch.rendering.SurfaceRenderer;
  */
 public class ObjectDetector implements Runnable
 {
-
-    private static final String TAG = "OBJECT_DETECTOR";
+    private static final String TAG = ObjectDetector.class.getSimpleName();
     private static final int O_NOTHING = 0;
 
     //index of the found object. code=0 if no objects were found.
-    private int code = O_NOTHING;
+    private int objectCode = O_NOTHING;
 
     private Handler handler = new Handler();
+
     private boolean stop = false;
 
     private Bitmap bitmap;
     private SurfaceRenderer renderer;
 
     //variable that count the number of frame, useful to decide how many FPS we want to compute.
-    private int counter;
+    private int frameCounter = 0;
     private BoundingBoxView boundingBoxView;
-
 
     /**
      * Constructor: The constructor initialize the global variables and call the native method for the DNN creation.
@@ -60,20 +59,17 @@ public class ObjectDetector implements Runnable
     public ObjectDetector(Context context, int frameWidth, int frameHeight, SurfaceRenderer renderer,
                           BoundingBoxView bbv)
     {
-
-        boundingBoxView = bbv;
+        this.boundingBoxView = bbv;
         this.renderer = renderer;
         //the bitmap where we will read the actual frame
         this.bitmap = Bitmap.createBitmap(frameWidth, frameHeight, Bitmap.Config.ARGB_8888);
 
-        String cfg_file = getPath(".cfg", context);
-        String weigth_file = getPath(".weights", context);
+        String cfgFilePath = getPath(".cfg", context);
+        String weightFilepat = getPath(".weights", context);
         float confidence_threshold = 0;
 
         //this method call the native code for the DNN creation
-        JNIBridge.create(cfg_file, weigth_file, confidence_threshold);
-
-        counter = 0;
+        JNIBridge.create(cfgFilePath, weightFilepat, confidence_threshold);
     }
 
 
@@ -84,90 +80,87 @@ public class ObjectDetector implements Runnable
     @Override
     public void run()
     {
-
-        code = O_NOTHING;
+        objectCode = O_NOTHING;
         //read the actual frame
         bitmap.copyPixelsFromBuffer(renderer.getCurrentFrameBuffer());
 
-        Mat input_frame = new Mat();
-        Utils.bitmapToMat(bitmap, input_frame);
+        Mat inputFrame = new Mat();
+        Utils.bitmapToMat(bitmap, inputFrame);
 
         double time = -1;
 
-        int camera_FPS = 30;
+        int cameraFPS = 30;
         //we decide to compute 2 FPS
-        int yolo_FPS = 2;
+        int yoloFPS = 2;
 
-        if(counter%(camera_FPS/yolo_FPS) == 0) {
-
+        if(frameCounter%(cameraFPS/yoloFPS) == 0)
+        {
             //call for the native classification method
-            float[] results = JNIBridge.classify(input_frame.getNativeObjAddr());
+            float[] objectResults = JNIBridge.classify(inputFrame.getNativeObjAddr());
 
-            int result_length = results.length;
+            int resultLength = objectResults.length;
             //we look if there are found object (result_length > 5) and if the array is correctly
             // set (result_length % 6 == 0). Remember that for every object we have 6 parameters.
-            if (result_length > 5 && result_length % 6 == 0) {
-
+            if (resultLength > 5 && resultLength % 6 == 0)
+            {
                 //give the results to the bounding box view
-                boundingBoxView.setResults(results);
+                boundingBoxView.setResults(objectResults);
                 //update bounding box view
                 boundingBoxView.invalidate();
 
-                String t = "Time: " + time + " s - Number of found objects: " + result_length / 6;
-                Log.v(TAG, t);
+                Log.v(TAG, String.format("Time: %f s - Number of found objects: %d ", time, resultLength/6));
 
-                int num_foundObject = result_length / 6;
+                int numFoundObjects = resultLength / 6;
 
                 //connect every object found with the correct code
                 //TODO: delete this part, because when we will have the our trained model, we don't
                 //TODO: need to make this operation
-                for (int i = 0; i < num_foundObject; i++) {
+                for (int i = 0; i < numFoundObjects; i++)
+                {
+                    int idx = (int) objectResults[(i * 6) + 4] + 1;
 
-                    int idx = (int) results[(i * 6) + 4] + 1;
+                    Log.v(TAG, String.format("Index: %d", idx));
 
-                    t = "Index: " + idx;
-                    Log.v(TAG, t);
+                    objectCode = (int)objectResults[(i * 6) + 4];
 
-                    code = (int) results[(i * 6) + 4];
-
-                    switch (idx) {
+                    switch (idx)
+                    {
                         case 1: //person
-                            code = 1;
+                            objectCode = 1;
                             break;
                         case 25: //backpack
-                            code = 2;
+                            objectCode = 2;
                             break;
                         case 57: //chair
-                            code = 3;
+                            objectCode = 3;
                             break;
                         case 63: //tvmonitor
-                            code = 4;
+                            objectCode = 4;
                             break;
                         case 64: //laptop
-                            code = 5;
+                            objectCode = 5;
                             break;
                         case 65: //mouse
-                            code = 6;
+                            objectCode = 6;
                             break;
                         case 67: //keyboard
-                            code = 7;
+                            objectCode = 7;
                             break;
+                        default: objectCode = O_NOTHING;
                     }
-
                 }
-
             }
-            else {
+            else
+            {
                 boundingBoxView.setResults(null);
                 boundingBoxView.invalidate();
             }
 
         }
-        counter++;
+        frameCounter++;
 
         if(!stop)
             handler.postDelayed(this, 40);
-
     }
 
 
@@ -186,10 +179,10 @@ public class ObjectDetector implements Runnable
      *
      * @return int The actual code.
      */
-    public int getCode() {
-        return this.code;
+    public int getCode()
+    {
+        return this.objectCode;
     }
-
 
     //TODO: I would like to delete this method and use direct path of the assets directory
     @SuppressLint("LongLogTag")
@@ -232,7 +225,4 @@ public class ObjectDetector implements Runnable
         }
         return "";
     }
-
 }
-
-

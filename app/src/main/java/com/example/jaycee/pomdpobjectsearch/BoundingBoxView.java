@@ -23,14 +23,17 @@ import java.util.Scanner;
  * @version 1.0
  * @since   2018-10-29
  */
-public class BoundingBoxView extends View {
+public class BoundingBoxView extends View
+{
+    private static final String TAG = BoundingBoxView.class.getSimpleName();
 
     //the coordinates of the bounding box + the label index of the bounding box + the confidence
     // threshold of the found object
     private float[] coordinates;
     private final Paint fgPaint, textPaint, trPaint;
+    private RectF bbox;
 
-    String labelsName_file;
+    String labelsFilePath;
 
     /**
      * Constructor: The constructor initialize the global variables needed to draw the bounding box.
@@ -38,10 +41,11 @@ public class BoundingBoxView extends View {
      * @param context The actual context activity.
      * @param set The attributes of the view.
      */
-    public BoundingBoxView(final Context context, final AttributeSet set) {
+    public BoundingBoxView(final Context context, final AttributeSet set)
+    {
         super(context, set);
 
-        labelsName_file = ObjectDetector.getPath(".names", context);
+        labelsFilePath = ObjectDetector.getPath(".names", context);
 
         //setting for the bounding boxes around the objects
         fgPaint = new Paint();
@@ -60,19 +64,19 @@ public class BoundingBoxView extends View {
         textPaint.setStyle(Paint.Style.STROKE);
         textPaint.setTextSize(50);
 
+        bbox = new RectF();
     }
-
 
     /**
      * The setResults method set the coordinates of the bounding box we want to draw.
      *
      * @param results The coordinates of the bounding box.
      */
-    public void setResults(float[] results) {
+    public void setResults(float[] results)
+    {
         this.coordinates = results;
         postInvalidate();
     }
-
 
     /**
      * The onDraw method draw the bounding boxes of the found object.
@@ -80,80 +84,79 @@ public class BoundingBoxView extends View {
      * @param canvas The Canvas object needed to draw bounding boxes.
      */
     @Override
-    public void onDraw(final Canvas canvas) {
-
+    public void onDraw(final Canvas canvas)
+    {
         // Get view size.
-        float view_height_tmp = (float) this.getHeight();
-        float view_width_tmp = (float) this.getWidth();
-        float view_height = Math.max(view_height_tmp, view_width_tmp);
-        float view_width = Math.min(view_height_tmp, view_width_tmp);
+        float viewHeightTmp = (float) this.getHeight();
+        float viewWidthTmp = (float) this.getWidth();
+        float viewHeight = Math.max(viewHeightTmp, viewWidthTmp);
+        float viewWidth = Math.min(viewHeightTmp, viewWidthTmp);
 
-        String prediction_string = "width: " + Float.toString(view_width) +
-                " height: " + Float.toString(view_height);
-        Log.v("BoundingBox", prediction_string);
+        Log.v(TAG, String.format("BoundingBox width %f height %f", viewWidth, viewHeight));
 
         //if some object were found
-        if (coordinates != null) {
-
+        if (coordinates != null)
+        {
             //for every object found
-            for(int i=0; i<coordinates.length/6; i++) {
-
+            for(int i = 0; i < coordinates.length/6; i ++)
+            {
                 float x = coordinates[(i*6)];
                 float y = coordinates[(i*6)+1];
                 float width = coordinates[(i*6)+2];
                 float height = coordinates[(i*6)+3];
 
                 //compute the point of the bounding box
-                float p1_x = x - width / 2;
-                float p1_y = y - height / 2;
-                float p2_x = x + width / 2;
-                float p2_y = y + height / 2;
+                float p1X = x - width / 2;
+                float p1Y = y - height / 2;
+                float p2X = x + width / 2;
+                float p2Y = y + height / 2;
 
                 // Create new bounding box and draw it.
-                canvas.drawRect(new RectF(p1_x, p1_y, p2_x, p2_y), fgPaint);
+                bbox.set(p1X, p1Y, p2X, p2Y);
+                canvas.drawRect(bbox, fgPaint);
 
-                ArrayList<String> labels_name = readLabelsName(labelsName_file);
-                String label = labels_name.get((int)coordinates[(i*6)+4]);
+                ArrayList<String> labelNames = readLabelsName(labelsFilePath);
+                String label = labelNames.get((int)coordinates[(i*6)+4]);
 
                 // Create the label name on the bounding box.
-                float text_width = textPaint.measureText(label)/2;
-                float text_size = textPaint.getTextSize();
-                float text_center_x = p1_x - 2;
-                float text_center_y = p1_y - text_size;
+                float textWidth = textPaint.measureText(label)/2;
+                float textSize = textPaint.getTextSize();
+                float textCentreX = p1X - 2;
+                float textCentreY = p1Y - textSize;
                 textPaint.setTextAlign(Paint.Align.CENTER);
-                canvas.drawRect(text_center_x, text_center_y, text_center_x + 2 * text_width, text_center_y + text_size, trPaint);
-                canvas.drawText(label, text_center_x + text_width, text_center_y + text_size, textPaint);
-
+                canvas.drawRect(textCentreX, textCentreY, textCentreX + 2 * textWidth, textCentreY + textSize, trPaint);
+                canvas.drawText(label, textCentreX + textWidth, textCentreY + textSize, textPaint);
             }
         }
     }
-
 
     /**
      * The readLabelsName method read the name of the object label from the file and save them in a
      * variable.
      *
-     * @param labelsName_file The file path where to read the labels name.
+     * @param labelsFilePath The file path where to read the labels name.
      *
      * @return ArrayList<String> The ArrayList where are saved the labels name.
      */
-    private static ArrayList<String> readLabelsName(String labelsName_file){
-
-        File file = new File(labelsName_file);
+    private static ArrayList<String> readLabelsName(String labelsFilePath)
+    {
+        File file = new File(labelsFilePath);
         Scanner sc = null;
-        try{
+        try
+        {
             sc = new Scanner(file);
         }
-        catch(FileNotFoundException e){
-
+        catch(FileNotFoundException e)
+        {
+            Log.w(TAG, "Label file not found " + e);
         }
 
-        ArrayList<String> labels_name = new ArrayList<String>();
+        ArrayList<String> labelNames = new ArrayList<String>();
 
         for(int i=0; sc.hasNextLine(); i++)
-            labels_name.add(sc.nextLine());
+            labelNames.add(sc.nextLine());
 
-        return labels_name;
+        return labelNames;
 
     }
 }

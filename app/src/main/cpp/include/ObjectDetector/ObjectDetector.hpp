@@ -14,23 +14,32 @@
 
 #include <jni.h>
 
+#include <android/log.h>
+
+#define OBJECTLOG "ObjectDetector"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 namespace ObjectDetector
 {
-
     class Yolo
     {
     private:
-
         cv::dnn::Net net;
-        const double confidence_threshold;
+        const double confidenceThreshold;
 
         cv::String getOutputsLayerNames();
 
     public:
         Yolo(const cv::String&, const cv::String&, const float);
-        std::vector<float> classify(const cv::Mat& frame);
+        std::vector<float> classify(const cv::Mat&);
     };
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

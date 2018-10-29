@@ -9,7 +9,6 @@
 */
 namespace ObjectDetector
 {
-
     /**
      * The jstr2str method transform a jString in a std::string.
      *
@@ -23,7 +22,6 @@ namespace ObjectDetector
         return str;
     }
 
-
     /**
      * The str2jstr method transform a std::string in a jString.
      *
@@ -33,10 +31,8 @@ namespace ObjectDetector
     */
     jstring str2jstr(JNIEnv * env, jobject obj, std::string str)
     {
-
         return env->NewStringUTF(str.c_str());
     }
-
 
     /**
      * The jstr2cvstr method transform a jString in a cv::String.
