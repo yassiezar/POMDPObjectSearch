@@ -14,24 +14,22 @@
 
 #include <jni.h>
 
+
 namespace ObjectDetector
 {
+
     class Yolo
     {
     private:
-        cv::dnn::Net net;
-        const double confidenceThreshold;
-        std::vector<cv::String> classNames;
 
-        cv::String getOutputsNames();
-        void readClassNames(cv::String);
+        cv::dnn::Net net;
+        const double confidence_threshold;
+
+        cv::String getOutputsLayerNames();
 
     public:
-        Yolo(const cv::String&,
-             const cv::String&,
-             const float,
-             const cv::String );
-        cv::Mat classify(const cv::Mat& frame);
+        Yolo(const cv::String&, const cv::String&, const float);
+        std::vector<float> classify(const cv::Mat& frame);
     };
 }
 

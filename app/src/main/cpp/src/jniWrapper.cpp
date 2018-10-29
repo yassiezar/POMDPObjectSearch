@@ -34,25 +34,36 @@ JULAYOM(bool, stopSound)(JNIEnv*, jobject)
 JULAYOM(void, create)(JNIEnv * env, jobject obj,
                       jstring cfg,
                       jstring weights,
-                      jfloat conf_t,
-                      jstring classNames ){
+                      jfloat conf_t){
 
 
-    const cv::String& cfg_file = ObjectDetector::jstr2ostr(env, obj, cfg);
-    const cv::String& weights_file = ObjectDetector::jstr2ostr(env, obj, weights);
+    const cv::String& cfg_file = ObjectDetector::jstr2cvstr(env, obj, cfg);
+    const cv::String& weights_file = ObjectDetector::jstr2cvstr(env, obj, weights);
     const float conf_thr = conf_t;
-    const cv::String classNames_file = ObjectDetector::jstr2ostr(env, obj, classNames);
 
-    objectDetector = new ObjectDetector::Yolo(cfg_file, weights_file, conf_thr, classNames_file);
+    objectDetector = new ObjectDetector::Yolo(cfg_file, weights_file, conf_thr);
 
 }
 
-JULAYOM(void, classify)(JNIEnv * env, jobject obj,
-                        jlong input_frame, jlong results){
+JULAYOM(jfloatArray, classify)(JNIEnv * env, jobject obj, jlong input_frame){
 
     cv::Mat& in_frame = *(cv::Mat*) input_frame;
-    cv::Mat out_frame = objectDetector->classify(in_frame);
-    results = (jlong) &out_frame;
+
+    int e1 = cv::getTickCount();
+
+    std::vector<float> finded_object = objectDetector->classify(in_frame);
+
+    int e2 = cv::getTickCount();
+    jdouble time = (e2 - e1)/ cv::getTickFrequency();
+
+    float* array = &finded_object[0];
+
+    //method to transform a c++ array in a Java array
+    int array_size = (int) finded_object.size();
+    jfloatArray results = env->NewFloatArray(array_size);
+    env->SetFloatArrayRegion(results, 0, array_size, array);
+
+    return results;
 }
 
 #ifdef __cplusplus
