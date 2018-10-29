@@ -27,8 +27,7 @@ ObjectDetector::Yolo* objectDetector;
 JULAYOM(void, create)(JNIEnv * env, jobject obj,
                       jstring cfg_file,
                       jstring weights_file,
-                      jfloat conf_thr,
-                      jstring classNames_file);
+                      jfloat conf_thr);
 
 JULAYOM(jfloatArray, classify)(JNIEnv * env, jobject obj, jlong input_frame);
 

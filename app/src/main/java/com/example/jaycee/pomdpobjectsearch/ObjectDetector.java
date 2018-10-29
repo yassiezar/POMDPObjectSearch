@@ -5,173 +5,199 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.os.Handler;
 import android.util.Log;
-import android.util.SparseArray;
-
-import com.example.jaycee.pomdpobjectsearch.rendering.SurfaceRenderer;
-import com.google.android.gms.vision.Frame;
-
-import org.opencv.core.Mat;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.Buffer;
-import java.nio.IntBuffer;
-
 import org.opencv.android.Utils;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
+import org.opencv.core.Mat;
 
-import static org.opencv.core.Core.FONT_HERSHEY_SIMPLEX;
-import static org.opencv.core.CvType.CV_32F;
-import static org.opencv.core.CvType.CV_32SC1;
-import static org.opencv.imgproc.Imgproc.COLOR_RGB2BGRA;
+import com.example.jaycee.pomdpobjectsearch.rendering.SurfaceRenderer;
 
+
+/**
+ * The ObjectDetector class provide the functions to create and use a Deep Neural Network based on
+ * YOLOv3 algorithm (an object detector). It use native c++ code to reach the purpose (see
+ * ObjectDetector.cpp).
+ *
+ * @author  Andrea Gaetano Tramontano
+ * @version 1.0
+ * @since   2018-10-29
+ */
 public class ObjectDetector implements Runnable
 {
 
-    private static final String TAG = "OBJECT_DETECTOR";//ObjectDetector.class.getSimpleName();
-
-    private Handler handler = new Handler();
-
-    private Bitmap bitmap;
-
-    private SurfaceRenderer renderer;
-
-    private boolean stop = false;
-
+    private static final String TAG = "OBJECT_DETECTOR";
     private static final int O_NOTHING = 0;
+
+    //index of the found object. code=0 if no objects were found.
     private int code = O_NOTHING;
 
+    private Handler handler = new Handler();
+    private boolean stop = false;
+
+    private Bitmap bitmap;
+    private SurfaceRenderer renderer;
+
+    //variable that count the number of frame, useful to decide how many FPS we want to compute.
     private int counter;
+    private BoundingBoxView boundingBoxView;
 
-    BoundingBoxView boundingView;
 
-
-    public ObjectDetector(Context context, int scannerWidth, int scannerHeight, SurfaceRenderer renderer, BoundingBoxView bbv)
+    /**
+     * Constructor: The constructor initialize the global variables and call the native method for the DNN creation.
+     *
+     * @param context The actual context activity.
+     * @param frameWidth This is the width of the analyzed frame.
+     * @param frameWidth This is the height of the analyzed frame.
+     * @param renderer This is the address of the SurfaceRenderer object, used to take the actual
+     *                 frame.
+     * @param bbv The bounding box view where will be drawn the bounding box of the object.
+     *
+     */
+    public ObjectDetector(Context context, int frameWidth, int frameHeight, SurfaceRenderer renderer,
+                          BoundingBoxView bbv)
     {
 
-        boundingView = bbv;
-
+        boundingBoxView = bbv;
         this.renderer = renderer;
-
-        this.bitmap = Bitmap.createBitmap(scannerWidth, scannerHeight, Bitmap.Config.ARGB_8888);
+        //the bitmap where we will read the actual frame
+        this.bitmap = Bitmap.createBitmap(frameWidth, frameHeight, Bitmap.Config.ARGB_8888);
 
         String cfg_file = getPath(".cfg", context);
         String weigth_file = getPath(".weights", context);
-        float confidence_threshold = 0.5f;
-        String classNames_file = getPath(".names", context);
-        String prova = getPath(".jpg", context);
+        float confidence_threshold = 0;
 
-        JNIBridge.create(cfg_file, weigth_file, confidence_threshold, classNames_file);
+        //this method call the native code for the DNN creation
+        JNIBridge.create(cfg_file, weigth_file, confidence_threshold);
 
         counter = 0;
     }
 
+
+    /**
+     * The run method start the thread: take a new frame, call the native code for analyze the frame,
+     * look for found object and save the results in a variable.
+     */
     @Override
     public void run()
     {
 
-        //Log.v(TAG, "Running Object Detector");
-
         code = O_NOTHING;
-
-        IntBuffer a = renderer.getCurrentFrameBuffer();
-
+        //read the actual frame
         bitmap.copyPixelsFromBuffer(renderer.getCurrentFrameBuffer());
 
-        String v = "Buffer: " + a.capacity() + " Bitmap: " + bitmap.getByteCount();
-        Log.v("BUFFER", v);
-
-        Mat inputFrame = new Mat();
-
-        Utils.bitmapToMat(bitmap, inputFrame);
-
-        float[] results = new float[1];
+        Mat input_frame = new Mat();
+        Utils.bitmapToMat(bitmap, input_frame);
 
         double time = -1;
-        if(counter%15 == 0)
-            results = JNIBridge.classify(inputFrame.getNativeObjAddr());
-        counter++;
 
-        int result_length = results.length;
+        int camera_FPS = 30;
+        //we decide to compute 2 FPS
+        int yolo_FPS = 2;
 
+        if(counter%(camera_FPS/yolo_FPS) == 0) {
 
+            //call for the native classification method
+            float[] results = JNIBridge.classify(input_frame.getNativeObjAddr());
 
-        if(result_length > 5 && result_length%6 == 0)
-        {
+            int result_length = results.length;
+            //we look if there are found object (result_length > 5) and if the array is correctly
+            // set (result_length % 6 == 0). Remember that for every object we have 6 parameters.
+            if (result_length > 5 && result_length % 6 == 0) {
 
-            boundingView.setResults(results);
-            boundingView.invalidate();
+                //give the results to the bounding box view
+                boundingBoxView.setResults(results);
+                //update bounding box view
+                boundingBoxView.invalidate();
 
-            String t = "Time: " + time + " s - Number of found objects: " + result_length/6;
-            Log.v(TAG, t);
-
-            int num_foundObject = result_length/6;
-
-            for(int i = 0; i < num_foundObject; i++)
-            {
-
-                int idx = (int) results[(i*6)+4]+1;
-
-                t = "Index: " + idx;
+                String t = "Time: " + time + " s - Number of found objects: " + result_length / 6;
                 Log.v(TAG, t);
 
-                code = (int) results[(i*6)+4];
+                int num_foundObject = result_length / 6;
 
-                switch (idx)
-                {
-                    case 1: //person
-                        code = 1;
-                        break;
-                    case 25: //backpack
-                        code = 2;
-                        break;
-                    case 57: //chair
-                        code = 3;
-                        break;
-                    case 63: //tvmonitor
-                        code = 4;
-                        break;
-                    case 64: //laptop
-                        code = 5;
-                        break;
-                    case 65: //mouse
-                        code = 6;
-                        break;
-                    case 67: //keyboar
-                        code = 7;
-                        break;
+                //connect every object found with the correct code
+                //TODO: delete this part, because when we will have the our trained model, we don't
+                //TODO: need to make this operation
+                for (int i = 0; i < num_foundObject; i++) {
+
+                    int idx = (int) results[(i * 6) + 4] + 1;
+
+                    t = "Index: " + idx;
+                    Log.v(TAG, t);
+
+                    code = (int) results[(i * 6) + 4];
+
+                    switch (idx) {
+                        case 1: //person
+                            code = 1;
+                            break;
+                        case 25: //backpack
+                            code = 2;
+                            break;
+                        case 57: //chair
+                            code = 3;
+                            break;
+                        case 63: //tvmonitor
+                            code = 4;
+                            break;
+                        case 64: //laptop
+                            code = 5;
+                            break;
+                        case 65: //mouse
+                            code = 6;
+                            break;
+                        case 67: //keyboard
+                            code = 7;
+                            break;
+                    }
+
                 }
 
             }
-        }
-        else{
-            boundingView.setResults(null);
-            boundingView.invalidate();
-        }
+            else {
+                boundingBoxView.setResults(null);
+                boundingBoxView.invalidate();
+            }
 
-        if(!stop) handler.postDelayed(this, 40);
+        }
+        counter++;
+
+        if(!stop)
+            handler.postDelayed(this, 40);
 
     }
 
+
+    /**
+     * The stop method stop the thread.
+     */
     public void stop()
     {
         this.stop = true;
         handler = null;
     }
 
-    public int getCode() { return this.code; }
 
+    /**
+     * The getCode method return the actual code of the found object.
+     *
+     * @return int The actual code.
+     */
+    public int getCode() {
+        return this.code;
+    }
+
+
+    //TODO: I would like to delete this method and use direct path of the assets directory
     @SuppressLint("LongLogTag")
-    private static String getPath(String fileType, Context context) {
+    /**
+     * This method take file from asset directory, read them and save them in a different directory:
+     * File. So the file could be accessible from the native code.
+     */
+    public static String getPath(String fileType, Context context) {
         AssetManager assetManager = context.getAssets();
         String[] pathNames = {};
         String fileName = "";
@@ -207,38 +233,6 @@ public class ObjectDetector implements Runnable
         return "";
     }
 
-
-    public Bitmap drawRectangle(float[] coordinates){
-
-        Mat drawing = new Mat(2280,1440, CV_32F);
-        Bitmap btm = Bitmap.createBitmap(1440, 2280, Bitmap.Config.ARGB_8888);
-
-        for(int i=0; i<coordinates.length/6; i++) {
-
-            int x = (int) coordinates[(i*6)] * 1440;
-            int y = (int) coordinates[(i*6)+1] * 2280;
-            int w = (int) coordinates[(i*6)+2] * 1440;
-            int h = (int) coordinates[(i*6)+3] * 2280;
-            String idx = Float.toString(coordinates[(i*6)+4]);
-
-            Point p1 = new Point(Math.round(x - w / 2), Math.round(y - h / 2));
-            Point p2 = new Point(Math.round(x + w / 2), Math.round(y + h / 2));
-
-            //Rect object = new Rect(p1, p2);
-
-            Scalar object_roi_color = new Scalar(0, 255, 0);
-
-            Imgproc.rectangle(drawing, p1, p2, object_roi_color);
-            Imgproc.putText(drawing, idx, p1, FONT_HERSHEY_SIMPLEX, 0.75, new Scalar(0,255,0), 2);
-
-        }
-
-        Utils.matToBitmap(drawing, btm);
-
-        return btm;
-
-    }
-
-
 }
+
 
