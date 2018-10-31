@@ -65,6 +65,11 @@ JULAYOM(jfloatArray, classify)(JNIEnv * env, jobject obj, jlong inputFrame)
     return results;
 }
 
+JULAYOM(jboolean, isImageProcessed) (JNIEnv* env, jobject obj)
+{
+    return objectDetector->isImageProcessed();
+}
+
 #ifdef __cplusplus
 }
 #endif

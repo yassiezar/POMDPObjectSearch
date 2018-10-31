@@ -80,6 +80,19 @@ public class ObjectDetector implements Runnable
     @Override
     public void run()
     {
+        int cameraFPS = 30;
+        //we decide to compute 2 FPS
+        int yoloFPS = 2;
+
+        if(frameCounter%(cameraFPS/yoloFPS) != 0 || JNIBridge.isImageProcessed())
+        {
+            boundingBoxView.setResults(null);
+            boundingBoxView.invalidate();
+
+            handler.postDelayed(this, 40);
+
+            return;
+        }
         objectCode = O_NOTHING;
         //read the actual frame
         bitmap.copyPixelsFromBuffer(renderer.getCurrentFrameBuffer());
@@ -89,80 +102,66 @@ public class ObjectDetector implements Runnable
 
         double time = -1;
 
-        int cameraFPS = 30;
-        //we decide to compute 2 FPS
-        int yoloFPS = 2;
+        //call for the native classification method
+        float[] objectResults = JNIBridge.classify(inputFrame.getNativeObjAddr());
 
-        if(frameCounter%(cameraFPS/yoloFPS) == 0)
+        int resultLength = objectResults.length;
+        //we look if there are found object (result_length > 5) and if the array is correctly
+        // set (result_length % 6 == 0). Remember that for every object we have 6 parameters.
+        if (resultLength > 5 && resultLength % 6 == 0)
         {
-            //call for the native classification method
-            float[] objectResults = JNIBridge.classify(inputFrame.getNativeObjAddr());
+            //give the results to the bounding box view
+            boundingBoxView.setResults(objectResults);
+            //update bounding box view
+            boundingBoxView.invalidate();
 
-            int resultLength = objectResults.length;
-            //we look if there are found object (result_length > 5) and if the array is correctly
-            // set (result_length % 6 == 0). Remember that for every object we have 6 parameters.
-            if (resultLength > 5 && resultLength % 6 == 0)
+            Log.v(TAG, String.format("Time: %f s - Number of found objects: %d ", time, resultLength/6));
+
+            int numFoundObjects = resultLength / 6;
+
+            //connect every object found with the correct code
+            //TODO: delete this part, because when we will have the our trained model, we don't
+            //TODO: need to make this operation
+            for (int i = 0; i < numFoundObjects; i++)
             {
-                //give the results to the bounding box view
-                boundingBoxView.setResults(objectResults);
-                //update bounding box view
-                boundingBoxView.invalidate();
+                int idx = (int) objectResults[(i * 6) + 4] + 1;
 
-                Log.v(TAG, String.format("Time: %f s - Number of found objects: %d ", time, resultLength/6));
+                Log.v(TAG, String.format("Index: %d", idx));
 
-                int numFoundObjects = resultLength / 6;
+                objectCode = (int)objectResults[(i * 6) + 4];
 
-                //connect every object found with the correct code
-                //TODO: delete this part, because when we will have the our trained model, we don't
-                //TODO: need to make this operation
-                for (int i = 0; i < numFoundObjects; i++)
+                switch (idx)
                 {
-                    int idx = (int) objectResults[(i * 6) + 4] + 1;
-
-                    Log.v(TAG, String.format("Index: %d", idx));
-
-                    objectCode = (int)objectResults[(i * 6) + 4];
-
-                    switch (idx)
-                    {
-                        case 1: //person
-                            objectCode = 1;
-                            break;
-                        case 25: //backpack
-                            objectCode = 2;
-                            break;
-                        case 57: //chair
-                            objectCode = 3;
-                            break;
-                        case 63: //tvmonitor
-                            objectCode = 4;
-                            break;
-                        case 64: //laptop
-                            objectCode = 5;
-                            break;
-                        case 65: //mouse
-                            objectCode = 6;
-                            break;
-                        case 67: //keyboard
-                            objectCode = 7;
-                            break;
-                        default: objectCode = O_NOTHING;
-                    }
+                    case 1: //person
+                        objectCode = 1;
+                        break;
+                    case 25: //backpack
+                        objectCode = 2;
+                        break;
+                    case 57: //chair
+                        objectCode = 3;
+                        break;
+                    case 63: //tvmonitor
+                        objectCode = 4;
+                        break;
+                    case 64: //laptop
+                        objectCode = 5;
+                        break;
+                    case 65: //mouse
+                        objectCode = 6;
+                        break;
+                    case 67: //keyboard
+                        objectCode = 7;
+                        break;
+                    default: objectCode = O_NOTHING;
                 }
             }
-            else
-            {
-                boundingBoxView.setResults(null);
-                boundingBoxView.invalidate();
-            }
-
         }
-        frameCounter++;
+    frameCounter++;
 
-        if(!stop)
-            handler.postDelayed(this, 40);
+    if(!stop)
+        handler.postDelayed(this, 40);
     }
-
 
     /**
      * The stop method stop the thread.

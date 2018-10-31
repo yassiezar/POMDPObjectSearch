@@ -30,6 +30,7 @@ JULAYOM(void, create)(JNIEnv*, jobject,
                       jfloat);
 
 JULAYOM(jfloatArray, classify)(JNIEnv*, jobject, jlong);
+JULAYOM(jboolean, isImageProcessed) (JNIEnv*, jobject);
 
 #ifdef __cplusplus
 }

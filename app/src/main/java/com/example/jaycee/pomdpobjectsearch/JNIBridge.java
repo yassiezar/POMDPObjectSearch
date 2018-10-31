@@ -18,5 +18,5 @@ public class JNIBridge
     // Object detectors
     public static native void create(String cfg_file, String weights_file, float conf_thr);
     public static native float[] classify(long input_frame);
-
+    public static native boolean isImageProcessed();
 }
