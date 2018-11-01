@@ -32,11 +32,6 @@ target_link_libraries(SoundGenerator
                       log
                       )
 
-add_library(JNI
-            SHARED
-            src/main/cpp/src/jniWrapper.cpp
-            )
-
 
 # OpenCV lib linking
 add_library(Yolo
@@ -51,9 +46,29 @@ target_link_libraries(Yolo
         libopencv_java3
         )
 
+# GLRenderer linkin
+add_library(Renderer
+        src/main/cpp/src/GLRenderer/Renderer.cpp
+        src/main/cpp/src/GLRenderer/RendererYUV420.cpp
+        src/main/cpp/src/GLRenderer/RendererContext.cpp
+        src/main/cpp/src/GLRenderer/GLUtils.cpp
+        )
+
+target_link_libraries(Renderer
+        GLESv2
+        log
+        )
+
 # Link OpenAL and OpenCV into single JNI lib
+
+add_library(JNI
+        SHARED
+        src/main/cpp/src/jniWrapper.cpp
+        )
+
 target_link_libraries(JNI
         SoundGenerator
         Yolo
+        Renderer
         )
 

@@ -22,7 +22,7 @@ public class JNIBridge
     // GLRenderer
      public native static void createGLRenderer();
      public native static void destroyGLRenderer();
-     public native static void init(int width, int height);
+     public native static void initGLRenderer(int width, int height);
      public native static void renderFrame();
      public native static void drawFrame(byte[] data, int width, int height, int rotation);
      public native static void applyFilter(int filter);

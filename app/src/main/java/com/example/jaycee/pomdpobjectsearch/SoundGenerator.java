@@ -92,7 +92,7 @@ public class SoundGenerator implements Runnable
             return;
         }
 
-        setObservation(((ActivityCamera)context).currentObjectDetector());
+        // setObservation(((ActivityCamera)context).currentObjectDetector());
 
         float gain = 1.f;
         if(observation == target)
@@ -104,7 +104,7 @@ public class SoundGenerator implements Runnable
             vibrator.vibrate(350);
             gain = 0.f;
 
-            ((ActivityCamera)context).getCentreView().resetArrows();
+            // ((ActivityCamera)context).getCentreView().resetArrows();
             renderer.setDrawWaypoint(false);
             waypointAnchor.detach();
             waypoint = null;
@@ -151,22 +151,22 @@ public class SoundGenerator implements Runnable
             Log.d(TAG, String.format("x %f y %f z %f", vectorToWaypoint.x, vectorToWaypoint.y, vectorToWaypoint.z));
             Log.d(TAG, String.format("x %f y %f z %f", cameraVector.x, cameraVector.y, cameraVector.z));
             Log.d(TAG, String.format("x %f y %f z %f", waypointVector.x, waypointVector.y, waypointVector.z));
-            ((ActivityCamera)context).getCentreView().resetArrows();
+            //((ActivityCamera)context).getCentreView().resetArrows();
             if(vectorToWaypoint.x > 0.1)
             {
-                ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.RIGHT, 255);
+              //  ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.RIGHT, 255);
             }
             else if (vectorToWaypoint.x < -0.1)
             {
-                ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.LEFT, 255);
+                //((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.LEFT, 255);
             }
             if(vectorToWaypoint.y > 0.1)
             {
-                ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.UP, 255);
+                //((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.UP, 255);
             }
             if(vectorToWaypoint.y < -0.1)
             {
-                ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.DOWN, 255);
+                //((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.DOWN, 255);
             }
 
             JNIBridge.playSound(waypoint.getPose().getTranslation(), cameraVector.asFloat(), gain, getPitch(waypointTilt - cameraTilt));

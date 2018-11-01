@@ -5,8 +5,11 @@
 #include <android/log.h>
 
 #include <SoundGenerator/SoundGenerator.hpp>
+
 #include <ObjectDetector/ObjectDetector.hpp>
 #include <ObjectDetector/Helper.hpp>
+
+#include <GLRenderer/RendererContext.hpp>
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +33,12 @@ JULAYOM(void, create)(JNIEnv*, jobject,
                       jfloat);
 
 JULAYOM(jfloatArray, classify)(JNIEnv*, jobject, jlong);
+
+JULAYOM(void, createRenderer)(JNIEnv*, jobject);
+JULAYOM(void, destroyRenderer)(JNIEnv*, jobject);
+JULAYOM(void, initRenderer)(JNIEnv*, jobject, jint, jint);
+JULAYOM(void, renderFrame)(JNIEnv*, jobject);
+JULAYOM(void, drawFrame)(JNIEnv*, jobject, jbyteArray, jint, jint, jint);
 
 #ifdef __cplusplus
 }

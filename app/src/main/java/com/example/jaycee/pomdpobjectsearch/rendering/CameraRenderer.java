@@ -38,15 +38,12 @@ public class CameraRenderer implements GLSurfaceView.Renderer
     }
 
     @Override
-    public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig)
-    {
-
-    }
+    public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) { }
 
     @Override
-    public void onSurfaceChanged(GL10 gl10, int i, int i1)
+    public void onSurfaceChanged(GL10 gl10, int width, int height)
     {
-
+        JNIBridge.initGLRenderer(width, height);
     }
 
     @Override
