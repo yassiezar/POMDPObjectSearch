@@ -19,7 +19,7 @@ public class CameraRenderer implements GLSurfaceView.Renderer
     {
         this.surfaceView = (CameraSurface)surfaceView;
 
-        JNIBridge.createGLRenderer();
+        JNIBridge.createRenderer();
     }
 
     public void requestRender()
@@ -30,7 +30,7 @@ public class CameraRenderer implements GLSurfaceView.Renderer
         }
     }
 
-    public void destroyRenderer() { JNIBridge.destroyGLRenderer(); }
+    public void destroyRenderer() { JNIBridge.destroyRenderer(); }
 
     public void drawFrame(byte[] frame, int width, int height, int rotation)
     {
@@ -43,7 +43,7 @@ public class CameraRenderer implements GLSurfaceView.Renderer
     @Override
     public void onSurfaceChanged(GL10 gl10, int width, int height)
     {
-        JNIBridge.initGLRenderer(width, height);
+        JNIBridge.initRenderer(width, height);
     }
 
     @Override

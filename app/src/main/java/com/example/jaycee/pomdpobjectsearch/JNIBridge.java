@@ -20,11 +20,9 @@ public class JNIBridge
     public static native float[] classify(long input_frame);
 
     // GLRenderer
-     public native static void createGLRenderer();
-     public native static void destroyGLRenderer();
-     public native static void initGLRenderer(int width, int height);
+     public native static void createRenderer();
+     public native static void destroyRenderer();
+     public native static void initRenderer(int width, int height);
      public native static void renderFrame();
      public native static void drawFrame(byte[] data, int width, int height, int rotation);
-     public native static void applyFilter(int filter);
-     public native static int getMaxFilter();
 }

@@ -30,7 +30,7 @@ import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationExceptio
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
-public class ActivityCamera extends ActivityCameraBase implements ImageReader.OnImageAvailableListener
+public class ActivityCamera extends ActivityCameraBase implements ImageReader.OnImageAvailableListener, FrameHandler
 {
     private static final String TAG = ActivityCamera.class.getSimpleName();
 
@@ -265,4 +265,17 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
     {
         return centreView;
     }*/
+
+    @Override
+    public void onPreviewFrame(byte[] data, int width, int height)
+    {
+        Integer rotation = surfaceView.getOrientation();
+        surfaceView.getRenderer().drawFrame(data, width, height, rotation);
+        surfaceView.getRenderer().requestRender();
+    }
+
+    @Override
+    public void renderFrame()
+    {
+    }
 }
