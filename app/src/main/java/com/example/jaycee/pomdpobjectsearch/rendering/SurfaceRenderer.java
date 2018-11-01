@@ -183,12 +183,12 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
 
                 if(drawWaypoint)
                 {
-                    Pose waypointPose = ((ActivityCamera)context).getWaypointAnchor().getPose();
+/*                    Pose waypointPose = ((ActivityCamera)context).getWaypointAnchor().getPose();
 
                     // Draw the waypoints as an Andyman
                     waypointPose.toMatrix(anchorMatrix, 0);
                     waypointRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
-                    waypointRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
+                    waypointRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);*/
                 }
             }
             else

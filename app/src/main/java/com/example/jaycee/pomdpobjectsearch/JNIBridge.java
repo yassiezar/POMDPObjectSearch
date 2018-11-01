@@ -19,4 +19,12 @@ public class JNIBridge
     public static native void create(String cfg_file, String weights_file, float conf_thr);
     public static native float[] classify(long input_frame);
 
+    // GLRenderer
+     public native static void createGLRenderer();
+     public native static void destroyGLRenderer();
+     public native static void init(int width, int height);
+     public native static void renderFrame();
+     public native static void drawFrame(byte[] data, int width, int height, int rotation);
+     public native static void applyFilter(int filter);
+     public native static int getMaxFilter();
 }

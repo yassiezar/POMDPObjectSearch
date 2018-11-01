@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
+import com.example.jaycee.pomdpobjectsearch.rendering.CameraRenderer;
 import com.example.jaycee.pomdpobjectsearch.rendering.SurfaceRenderer;
 import com.google.ar.core.Session;
 
@@ -18,7 +19,7 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
 
     private Session session;
 
-    private SurfaceRenderer renderer;
+    private CameraRenderer renderer;
 
     public CameraSurface(Context context, AttributeSet attrs)
     {
@@ -26,7 +27,7 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
 
         this.context = context;
 
-        renderer = new SurfaceRenderer(context, this);
+        renderer = new CameraRenderer(this);
 
         getHolder().addCallback(this);
         getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -35,7 +36,7 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
         setEGLContextClientVersion(2);
         setEGLConfigChooser(8, 8, 8, 8, 16, 0);
         setRenderer(renderer);
-        setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+        setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
     }
 
     @Override
@@ -48,14 +49,14 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height)
     {
         super.surfaceChanged(surfaceHolder, format, width, height);
-        ((ActivityCamera)context).startObjectDetector();
+        // ((ActivityCamera)context).startObjectDetector();
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder surfaceHolder)
     {
         super.surfaceDestroyed(surfaceHolder);
-        ((ActivityCamera)context).stopObjectDetector();
+        // ((ActivityCamera)context).stopObjectDetector();
     }
 
     @Override
@@ -74,6 +75,7 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
         return super.onTouchEvent(event);
     }
 
+/*
     @Override
     public boolean performClick()
     {
@@ -88,7 +90,9 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     {
         return renderer;
     }
+*/
 
     public void setSession(Session session) { this.session = session; }
     public Session getSession() { return this.session; }
+    public int getRenderMode() { return this.getRenderMode(); }
 }

@@ -2,6 +2,7 @@ package com.example.jaycee.pomdpobjectsearch;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.media.ImageReader;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -29,14 +30,11 @@ import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationExceptio
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
-public class ActivityCamera extends AppCompatActivity
+public class ActivityCamera extends ActivityCameraBase implements ImageReader.OnImageAvailableListener
 {
     private static final String TAG = ActivityCamera.class.getSimpleName();
 
-    private static final int CAMERA_PERMISSION_CODE = 0;
-    private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
-
-    private static final int O_NOTHING = 0;
+/*    private static final int O_NOTHING = 0;
 
     private static final int T_COMPUTER_MONITOR = 1;
     private static final int T_COMPUTER_MOUSE = 3;
@@ -46,42 +44,34 @@ public class ActivityCamera extends AppCompatActivity
     private static final int T_OFFICE_SUPPLIES = 7;
     private static final int T_WINDOW = 8;
 
-    private Session session;
+    private Session session;*/
 
     private CameraSurface surfaceView;
 
-    private BoundingBoxView boundingBoxView; //to write bounding box of the found object
+    // private BoundingBoxView boundingBoxView; //to write bounding box of the found object
 
-    private DrawerLayout drawerLayout;
-    private CentreView centreView;
+    // private DrawerLayout drawerLayout;
+    // private CentreView centreView;
 
-    private SoundGenerator soundGenerator;
-    private ObjectDetector objectDetector;
+    // private SoundGenerator soundGenerator;
+    // private ObjectDetector objectDetector;
 
-    private boolean requestARCoreInstall = true;
+    // private boolean requestARCoreInstall = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_camera);
-
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
 
         surfaceView = findViewById(R.id.surfaceview);
 
-        boundingBoxView = findViewById(R.id.bounding);
+        // boundingBoxView = findViewById(R.id.bounding);
 
-        centreView = findViewById(R.id.centre_view);
+        // centreView = findViewById(R.id.centre_view);
 
-        drawerLayout = findViewById(R.id.layout_drawer_objects);
+        // drawerLayout = findViewById(R.id.layout_drawer_objects);
 
-        NavigationView navigationView = findViewById(R.id.navigation_view_objects);
+/*        NavigationView navigationView = findViewById(R.id.navigation_view_objects);
 
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener()
         {
@@ -122,15 +112,15 @@ public class ActivityCamera extends AppCompatActivity
 
                 return true;
             }
-        });
+        }); */
     }
 
     @Override
-    protected void onResume()
+    public synchronized void onResume()
     {
         super.onResume();
 
-        if(session == null)
+/*        if(session == null)
         {
             try
             {
@@ -143,11 +133,6 @@ public class ActivityCamera extends AppCompatActivity
                         return;
                 }
 
-                if(!hasCameraPermission())
-                {
-                    requestCameraPermission();
-                    return;
-                }
                 session = new Session(this);
 
                 // Set config settings
@@ -190,24 +175,24 @@ public class ActivityCamera extends AppCompatActivity
             session = null;
             Log.e(TAG, "Camera not available. Please restart app.");
             return;
-        }
+        }*/
 
-        surfaceView.setSession(session);
+        // surfaceView.setSession(session);
         surfaceView.onResume();
 
-        if(!JNIBridge.initSound())
+/*        if(!JNIBridge.initSound())
         {
             Log.e(TAG, "OpenAL init error");
-        }
+        }*/
 
-        soundGenerator = new SoundGenerator(this, surfaceView.getRenderer());
-        soundGenerator.run();
+        // soundGenerator = new SoundGenerator(this, surfaceView.getRenderer());
+        // soundGenerator.run();
     }
 
     @Override
-    protected void onPause()
+    public synchronized void onPause()
     {
-        if(objectDetector != null)
+/*        if(objectDetector != null)
         {
             objectDetector.stop();
             objectDetector = null;
@@ -228,7 +213,7 @@ public class ActivityCamera extends AppCompatActivity
         if(!JNIBridge.killSound())
         {
             Log.e(TAG, "OpenAL kill error");
-        }
+        }*/
 
         super.onPause();
     }
@@ -236,26 +221,16 @@ public class ActivityCamera extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
-        switch (item.getItemId())
+/*        switch (item.getItemId())
         {
             case android.R.id.home:
                 drawerLayout.openDrawer(GravityCompat.START);
                 return true;
-        }
+        }*/
         return super.onOptionsItemSelected(item);
     }
 
-    public boolean hasCameraPermission()
-    {
-        return ContextCompat.checkSelfPermission(this, CAMERA_PERMISSION) == PackageManager.PERMISSION_GRANTED;
-    }
-
-    public void requestCameraPermission()
-    {
-        ActivityCompat.requestPermissions(this, new String[] {CAMERA_PERMISSION}, CAMERA_PERMISSION_CODE);
-    }
-
-    public void stopObjectDetector()
+/*    public void stopObjectDetector()
     {
         if(objectDetector != null)
         {
@@ -282,12 +257,12 @@ public class ActivityCamera extends AppCompatActivity
 
     public Anchor getWaypointAnchor()
     {
-        /* TODO: Handle nullpointer crash here */
+        *//* TODO: Handle nullpointer crash here *//*
         return soundGenerator.getWaypointAnchor();
     }
 
     public CentreView getCentreView()
     {
         return centreView;
-    }
+    }*/
 }
