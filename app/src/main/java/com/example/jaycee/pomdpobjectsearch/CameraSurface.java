@@ -1,37 +1,51 @@
 package com.example.jaycee.pomdpobjectsearch;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
+import android.graphics.RectF;
+import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.ImageReader;
 import android.opengl.GLSurfaceView;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.Size;
 import android.view.MotionEvent;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 
 import com.example.jaycee.pomdpobjectsearch.rendering.CameraRenderer;
 import com.example.jaycee.pomdpobjectsearch.rendering.SurfaceRenderer;
 import com.google.ar.core.Session;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callback
 {
     private static final String TAG = CameraSurface.class.getSimpleName();
+
+    private static final int MINIMUM_PREVIEW_SIZE = 320;
 
     private Context context;
 
@@ -41,6 +55,9 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     private CameraDevice cameraDevice;
     private CameraCaptureSession cameraCaptureSession;
     private ImageReader imageReader;
+
+    private Size previewSize;
+    private Size inputSize;
 
     private Semaphore cameraOpenCloseLock = new Semaphore(1);
 
@@ -59,6 +76,7 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
         this.context = context;
 
         renderer = new CameraRenderer(this);
+        inputSize = ((ActivityCamera)context).getDesiredPreviewSize();
 
         getHolder().addCallback(this);
         // getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -139,6 +157,8 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
             for (String cameraId : manager.getCameraIdList())
             {
                 CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
+                final StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+                final Size largest =  Collections.max(Arrays.asList(map.getOutputSizes(ImageFormat.YUV_420_888)), new CompareSizesByArea());
 
                 // We don't use a front facing camera in this sample.
                 Integer facing = characteristics.get(CameraCharacteristics.LENS_FACING);
@@ -147,9 +167,13 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
                     continue;
                 }
                 sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+                previewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
+                                inputSize.getWidth(),
+                                inputSize.getHeight());
                 this.cameraId = cameraId;
             }
             manager.openCamera(cameraId, stateCallback, backgroundHandler);
+            ((ActivityCamera)context).onPreviewSizeChosen(previewSize, sensorOrientation);
         }
         catch (CameraAccessException e)
         {
@@ -321,6 +345,57 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
         }
     }
 
+    private static Size chooseOptimalSize(final Size[] choices, final int width, final int height)
+    {
+        final int minSize = Math.max(Math.min(width, height), MINIMUM_PREVIEW_SIZE);
+        final Size desiredSize = new Size(width, height);
+
+        // Collect the supported resolutions that are at least as big as the preview Surface
+        boolean exactSizeFound = false;
+        final List<Size> bigEnough = new ArrayList<Size>();
+        final List<Size> tooSmall = new ArrayList<Size>();
+        for (final Size option : choices)
+        {
+            if (option.equals(desiredSize))
+            {
+                // Set the size but don't return yet so that remaining sizes will still be logged.
+                exactSizeFound = true;
+            }
+
+            if (option.getHeight() >= minSize && option.getWidth() >= minSize)
+            {
+                bigEnough.add(option);
+            }
+            else
+            {
+                tooSmall.add(option);
+            }
+        }
+
+        Log.i(TAG, "Desired size: " + desiredSize + ", min size: " + minSize + "x" + minSize);
+        Log.i(TAG, "Valid preview sizes: [" + TextUtils.join(", ", bigEnough) + "]");
+        Log.i(TAG, "Rejected preview sizes: [" + TextUtils.join(", ", tooSmall) + "]");
+
+        if (exactSizeFound)
+        {
+            Log.i(TAG, "Exact size match found.");
+            return desiredSize;
+        }
+
+        // Pick the smallest of those, assuming we found any
+        if (bigEnough.size() > 0)
+        {
+            final Size chosenSize = Collections.min(bigEnough, new CompareSizesByArea());
+            Log.i(TAG, "Chosen size: " + chosenSize.getWidth() + "x" + chosenSize.getHeight());
+            return chosenSize;
+        }
+        else
+        {
+            Log.e(TAG, "Couldn't find any suitable preview size");
+            return choices[0];
+        }
+    }
+
     public CameraRenderer getRenderer()
     {
         return renderer;
@@ -329,4 +404,15 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     public void setSession(Session session) { this.session = session; }
     public Session getSession() { return this.session; }
     public Integer getSensorOrientation() { return this.sensorOrientation; }
+
+    static class CompareSizesByArea implements Comparator<Size>
+    {
+        @Override
+        public int compare(final Size lhs, final Size rhs)
+        {
+            // We cast here to ensure the multiplications won't overflow
+            return Long.signum(
+                    (long) lhs.getWidth() * lhs.getHeight() - (long) rhs.getWidth() * rhs.getHeight());
+        }
+    }
 }

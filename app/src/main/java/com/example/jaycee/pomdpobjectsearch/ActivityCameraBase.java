@@ -32,8 +32,8 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
 
     private static final int PERMISSIONS_REQUEST = 0;
 
-    protected int previewWidth = 640;
-    protected int previewHeight = 480;
+    protected int previewWidth = 0;
+    protected int previewHeight = 0;
     private int yRowStride;
 
     private int[] rgbBytes = null;
@@ -296,7 +296,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
     // protected abstract void renderFrame();
     // protected abstract void processImage();
 
-    // protected abstract void onPreviewSizeChosen(final Size size, final int rotation);
-    // protected abstract Size getDesiredPreviewFrameSize();
+    protected abstract void onPreviewSizeChosen(final Size size, final int rotation);
+    protected abstract Size getDesiredPreviewSize();
     // protected abstract int getLayoutId();
 }

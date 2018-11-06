@@ -36,6 +36,8 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
 {
     private static final String TAG = ActivityCamera.class.getSimpleName();
 
+    private Size DESIRED_PREVIEW_SIZE = new Size(1440, 2560);
+
 /*    private static final int O_NOTHING = 0;
 
     private static final int T_COMPUTER_MONITOR = 1;
@@ -49,6 +51,8 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
     private Session session;*/
 
     private CameraSurface surfaceView;
+
+    private Integer sensorOrientation;
 
     // private BoundingBoxView boundingBoxView; //to write bounding box of the found object
 
@@ -278,10 +282,19 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
         surfaceView.getRenderer().requestRender();
     }
 
-/*    @Override
+    @Override
+    public Size getDesiredPreviewSize() { return DESIRED_PREVIEW_SIZE; }
+
+    @Override
     public void onPreviewSizeChosen(final Size size, final int rotation)
     {
         previewWidth = size.getWidth();
         previewHeight = size.getHeight();
-    }*/
+
+        sensorOrientation = rotation - getScreenOrientation();
+
+       Log.i(TAG, String.format("Camera orientation relative to screen canvas: %d", sensorOrientation));
+
+        Log.i(TAG, String.format("Initializing at size %dx%d", previewWidth, previewHeight));
+    }
 }
