@@ -59,6 +59,15 @@ target_link_libraries(Renderer
         log
         )
 
+add_library(render
+        SHARED
+        src/main/cpp/src/renderWrapper.cpp
+        )
+
+target_link_libraries(render
+        Renderer
+        )
+
 # Link OpenAL and OpenCV into single JNI lib
 
 add_library(JNI
@@ -69,6 +78,5 @@ add_library(JNI
 target_link_libraries(JNI
         SoundGenerator
         Yolo
-        Renderer
         )
 

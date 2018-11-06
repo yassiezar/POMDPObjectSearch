@@ -1,9 +1,9 @@
 package com.example.jaycee.pomdpobjectsearch.rendering;
 
 import android.opengl.GLSurfaceView;
+import android.util.Log;
 
 import com.example.jaycee.pomdpobjectsearch.CameraSurface;
-import com.example.jaycee.pomdpobjectsearch.JNIBridge;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -19,7 +19,8 @@ public class CameraRenderer implements GLSurfaceView.Renderer
     {
         this.surfaceView = (CameraSurface)surfaceView;
 
-        JNIBridge.createRenderer();
+        Log.i(TAG, "Renderer init");
+        nativeCreateRenderer();
     }
 
     public void requestRender()
@@ -30,11 +31,11 @@ public class CameraRenderer implements GLSurfaceView.Renderer
         }
     }
 
-    public void destroyRenderer() { JNIBridge.destroyRenderer(); }
+    public void destroyRenderer() { nativeDestroyRenderer(); }
 
     public void drawFrame(byte[] frame, int width, int height, int rotation)
     {
-        JNIBridge.drawFrame(frame, width, height, rotation);
+        nativeDrawFrame(frame, width, height, rotation);
     }
 
     @Override
@@ -43,12 +44,24 @@ public class CameraRenderer implements GLSurfaceView.Renderer
     @Override
     public void onSurfaceChanged(GL10 gl10, int width, int height)
     {
-        JNIBridge.initRenderer(width, height);
+        nativeInitRenderer(width, height);
     }
 
     @Override
     public void onDrawFrame(GL10 gl10)
     {
-        JNIBridge.renderFrame();
+        nativeRenderFrame();
+    }
+
+    // GLRenderer
+    private native void nativeCreateRenderer();
+    private native void nativeDestroyRenderer();
+    private native void nativeInitRenderer(int width, int height);
+    private native void nativeRenderFrame();
+    private native void nativeDrawFrame(byte[] data, int width, int height, int rotation);
+
+    static
+    {
+        System.loadLibrary("render");
     }
 }

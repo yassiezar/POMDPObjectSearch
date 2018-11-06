@@ -13,9 +13,11 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Trace;
 import android.util.Log;
+import android.util.Size;
 import android.view.Surface;
 import android.view.WindowManager;
 import android.widget.Toast;
+import android.widget.Toolbar;
 
 import com.example.jaycee.pomdpobjectsearch.helpers.ImageUtils;
 
@@ -30,8 +32,8 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
 
     private static final int PERMISSIONS_REQUEST = 0;
 
-    private int previewWidth = 0;
-    private int previewHeight = 0;
+    protected int previewWidth = 640;
+    protected int previewHeight = 480;
     private int yRowStride;
 
     private int[] rgbBytes = null;
@@ -56,6 +58,9 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.activity_camera);
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setActionBar(toolbar);
 
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
@@ -141,6 +146,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
     @Override
     public void onImageAvailable(final ImageReader reader)
     {
+        Log.w(TAG, "REQUESTING RENDER");
         // Need to have preview sizes set
         if(previewHeight == 0 || previewWidth == 0) return;
 
@@ -152,8 +158,9 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         try
         {
             final Image image = reader.acquireLatestImage();
-
             if(image == null) return;
+            frameHandler.onPreviewFrame(YUV_420_888_data(image), image.getWidth(), image.getHeight());
+            // renderFrame();
 
             if(isProcessingFrame)
             {
@@ -192,8 +199,6 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
                     isProcessingFrame = false;
                 }
             };
-
-            frameHandler.onPreviewFrame(YUV_420_888_data(image), image.getWidth(), image.getHeight());
 
             // CALL CLASSIFIER HERE
             // processImage();
@@ -288,7 +293,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         return data;
     }
 
-    protected abstract void renderFrame();
+    // protected abstract void renderFrame();
     // protected abstract void processImage();
 
     // protected abstract void onPreviewSizeChosen(final Size size, final int rotation);

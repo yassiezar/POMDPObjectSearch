@@ -3,11 +3,17 @@ package com.example.jaycee.pomdpobjectsearch;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CaptureRequest;
+import android.media.ImageReader;
 import android.opengl.GLSurfaceView;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
@@ -32,22 +38,30 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     private Session session;
 
     private CameraRenderer renderer;
+    private CameraDevice cameraDevice;
+    private CameraCaptureSession cameraCaptureSession;
+    private ImageReader imageReader;
 
     private Semaphore cameraOpenCloseLock = new Semaphore(1);
 
     private String cameraId;
     private Integer sensorOrientation;
 
+    private Handler backgroundHandler;
+    private HandlerThread backgroundThread;
+
     public CameraSurface(Context context, AttributeSet attrs)
     {
         super(context, attrs);
+
+        Log.i(TAG, "Surface init");
 
         this.context = context;
 
         renderer = new CameraRenderer(this);
 
         getHolder().addCallback(this);
-        getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        // getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
         setPreserveEGLContextOnPause(true);
         setEGLContextClientVersion(2);
@@ -66,7 +80,12 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height)
     {
         super.surfaceChanged(surfaceHolder, format, width, height);
-        openCamera();
+        if(imageReader == null)
+        {
+            imageReader = ImageReader.newInstance(640, 480, ImageFormat.YUV_420_888, 2);
+            imageReader.setOnImageAvailableListener((ActivityCamera)context, backgroundHandler);
+            openCamera();
+        }
         // ((ActivityCamera)context).startObjectDetector();
     }
 
@@ -77,7 +96,7 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
         // ((ActivityCamera)context).stopObjectDetector();
     }
 
-    @Override
+/*    @Override
     public boolean onTouchEvent(MotionEvent event)
     {
         Log.i(TAG, "Pressed");
@@ -91,7 +110,7 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
             }
         }
         return super.onTouchEvent(event);
-    }
+    }*/
 
 /*
     @Override
@@ -142,19 +161,53 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
         }
     }
 
-    private final CameraDevice.StateCallback mStateCallback = new CameraDevice.StateCallback()
+    public void closeCamera()
+    {
+        try
+        {
+            cameraOpenCloseLock.acquire();
+
+            if (null != cameraCaptureSession)
+            {
+                cameraCaptureSession.close();
+                cameraCaptureSession = null;
+            }
+            if (null != cameraDevice)
+            {
+                cameraDevice.close();
+                cameraDevice = null;
+            }
+            if (null != imageReader)
+            {
+                imageReader.close();
+                imageReader = null;
+            }
+        }
+        catch (InterruptedException e)
+        {
+            throw new RuntimeException("Interrupted while trying to lock camera closing.", e);
+        }
+        finally
+        {
+            cameraOpenCloseLock.release();
+        }
+
+        Log.i(TAG, "closeCamera");
+    }
+
+    private final CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback()
     {
         @Override
-        public void onOpened(@NonNull CameraDevice cameraDevice)
+        public void onOpened(@NonNull CameraDevice camera)
         {
             // This method is called when the camera is opened.  We start camera preview here.
             cameraOpenCloseLock.release();
-            this.cameraDevice = cameraDevice;
+            cameraDevice = camera;
             createCaptureSession();
         }
 
         @Override
-        public void onDisconnected(@NonNull CameraDevice cameraDevice)
+        public void onDisconnected(@NonNull CameraDevice camera)
         {
             cameraOpenCloseLock.release();
             cameraDevice.close();
@@ -162,22 +215,109 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
         }
 
         @Override
-        public void onError(@NonNull CameraDevice cameraDevice, int error) {
+        public void onError(@NonNull CameraDevice camera, int error) {
             cameraOpenCloseLock.release();
             cameraDevice.close();
             cameraDevice = null;
         }
     };
 
-    private void createCaptureSession() {
+    private void createCaptureSession()
+    {
         try
         {
             if (null == cameraDevice || null == imageReader) return;
-            mCameraDevice.createCaptureSession(Collections.singletonList(mImageReader.getSurface()),
-                    sessionStateCallback, mBackgroundHandler);
+            cameraDevice.createCaptureSession(Collections.singletonList(imageReader.getSurface()),
+                    sessionStateCallback, backgroundHandler);
 
         } catch (CameraAccessException e) {
             Log.e(TAG, "createCaptureSession " + e.toString());
+        }
+    }
+
+    public void startBackgroundThread()
+    {
+        backgroundThread = new HandlerThread("CameraBackground");
+        backgroundThread.start();
+        backgroundHandler = new Handler(backgroundThread.getLooper());
+    }
+
+    public void stopBackgroundThread()
+    {
+        backgroundThread.quitSafely();
+        try
+        {
+            backgroundThread.join();
+            backgroundThread = null;
+            backgroundHandler = null;
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        startBackgroundThread();
+    }
+
+    @Override
+    public void onPause()
+    {
+        closeCamera();
+        stopBackgroundThread();
+        super.onPause();
+    }
+
+    private CameraCaptureSession.StateCallback sessionStateCallback = new CameraCaptureSession.StateCallback()
+    {
+        @Override
+        public void onConfigured(@NonNull CameraCaptureSession session)
+        {
+            cameraCaptureSession = session;
+            try
+            {
+                CaptureRequest captureRequest = createCaptureRequest();
+                if (captureRequest != null)
+                {
+                    session.setRepeatingRequest(captureRequest, null, backgroundHandler);
+                }
+                else
+                {
+                    Log.e(TAG, "captureRequest is null");
+                }
+            }
+            catch (CameraAccessException e)
+            {
+                Log.e(TAG, "onConfigured " + e.toString());
+            }
+        }
+
+        @Override
+        public void onConfigureFailed(@NonNull CameraCaptureSession session)
+        {
+            Log.e(TAG, "onConfigureFailed");
+        }
+    };
+
+    private CaptureRequest createCaptureRequest()
+    {
+        if (null == cameraDevice) return null;
+        try
+        {
+            CaptureRequest.Builder builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+            builder.addTarget(imageReader.getSurface());
+
+            return builder.build();
+        }
+        catch (CameraAccessException e)
+        {
+            Log.e(TAG, e.getMessage());
+
+            return null;
         }
     }
 
@@ -188,6 +328,5 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
 
     public void setSession(Session session) { this.session = session; }
     public Session getSession() { return this.session; }
-    public int getRenderMode() { return this.getRenderMode(); }
     public Integer getSensorOrientation() { return this.sensorOrientation; }
 }

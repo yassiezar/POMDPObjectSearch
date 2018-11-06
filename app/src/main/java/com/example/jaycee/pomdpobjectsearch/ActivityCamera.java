@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.media.ImageReader;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -14,6 +15,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.util.Size;
 import android.view.MenuItem;
 
 import com.google.ar.core.Anchor;
@@ -215,6 +217,7 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
             Log.e(TAG, "OpenAL kill error");
         }*/
 
+        surfaceView.onPause();
         super.onPause();
     }
 
@@ -266,16 +269,19 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
         return centreView;
     }*/
 
+    // CHECK THAT THIS IS CALLED
     @Override
     public void onPreviewFrame(byte[] data, int width, int height)
     {
-        Integer rotation = surfaceView.getOrientation();
+        Integer rotation = surfaceView.getSensorOrientation();
         surfaceView.getRenderer().drawFrame(data, width, height, rotation);
         surfaceView.getRenderer().requestRender();
     }
 
-    @Override
-    public void renderFrame()
+/*    @Override
+    public void onPreviewSizeChosen(final Size size, final int rotation)
     {
-    }
+        previewWidth = size.getWidth();
+        previewHeight = size.getHeight();
+    }*/
 }

@@ -40,10 +40,11 @@ void RendererContext::storeContext(JNIEnv* env, jobject obj, RendererContext* co
         return;
     }
 
-    jniFields.context = env->GetFieldID(cls, "nativeContext", "J");
+    jfieldID debug = env->GetFieldID(cls, "glContext", "J");
+    jniFields.context = env->GetFieldID(cls, "glContext", "J");
     if(jniFields.context == NULL)
     {
-        LOGE("Could not find mNativeContext.");
+        LOGE("Could not find glContext.");
         return;
     }
 

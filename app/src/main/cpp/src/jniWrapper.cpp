@@ -65,39 +65,6 @@ JULAYOM(jfloatArray, classify)(JNIEnv * env, jobject obj, jlong inputFrame)
     return results;
 }
 
-JULAYOM(void, createRenderer)(JNIEnv* env, jobject obj)
-{
-    RendererContext::createContext(env, obj);
-}
-
-JULAYOM(void, destroyRenderer)(JNIEnv* env, jobject obj)
-{
-    RendererContext::deleteContext(env, obj);
-}
-
-JULAYOM(void, initRenderer)(JNIEnv* env, jobject obj, jint width, jint height)
-{
-    RendererContext* context = RendererContext::getContext(env, obj);
-    if(context) context->initRenderer((size_t)width, (size_t)height);
-}
-
-JULAYOM(void, renderFrame)(JNIEnv* env, jobject obj)
-{
-    RendererContext* context = RendererContext::getContext(env, obj);
-    if(context) context->renderFrame();
-}
-
-JULAYOM(void, drawFrame)(JNIEnv* env, jobject obj, jbyteArray frame, jint width, jint height, jint rotation)
-{
-    jbyte* framePtr = env->GetByteArrayElements(frame, 0);
-    jsize  arrayLen = env->GetArrayLength(frame);
-
-    RendererContext* context = RendererContext::getContext(env, obj);
-    if(context) context->drawFrame((uint8_t*)framePtr, (size_t)arrayLen, (size_t)width, (size_t)height, rotation);
-
-    env->ReleaseByteArrayElements(frame, framePtr, 0);
-}
-
 #ifdef __cplusplus
 }
 #endif
