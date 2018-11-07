@@ -66,18 +66,25 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
 
-        if(!hasPermission())
-        {
-            requestPermission();
-        }
-
         frameHandler = (FrameHandler)this;
+    }
+
+    @Override
+    public synchronized void onStart()
+    {
+        Log.d(TAG, "onStart " + this);
+        super.onStart();
     }
 
     @Override
     public synchronized void onResume()
     {
         super.onResume();
+
+        if(!hasPermission())
+        {
+            requestPermission();
+        }
 
         handlerThread = new HandlerThread("InferenceThread");
         handlerThread.start();
@@ -105,6 +112,19 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         }
 
         super.onPause();
+    }
+
+    @Override
+    public synchronized void onStop()
+    {
+        Log.d(TAG, "onStop " + this);
+        super.onStop();
+    }
+
+    @Override
+    public synchronized void onDestroy() {
+        Log.d(TAG, "onDestroy" + this);
+        super.onDestroy();
     }
 
     protected synchronized void runInBackground(final Runnable r)
@@ -146,7 +166,6 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
     @Override
     public void onImageAvailable(final ImageReader reader)
     {
-        Log.w(TAG, "REQUESTING RENDER");
         // Need to have preview sizes set
         if(previewHeight == 0 || previewWidth == 0) return;
 
@@ -294,7 +313,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
     }
 
     // protected abstract void renderFrame();
-    // protected abstract void processImage();
+    protected abstract void processImage();
 
     protected abstract void onPreviewSizeChosen(final Size size, final int rotation);
     protected abstract Size getDesiredPreviewSize();

@@ -98,9 +98,10 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height)
     {
         super.surfaceChanged(surfaceHolder, format, width, height);
+
         if(imageReader == null)
         {
-            imageReader = ImageReader.newInstance(640, 480, ImageFormat.YUV_420_888, 2);
+            imageReader = ImageReader.newInstance(width, height, ImageFormat.YUV_420_888, 2);
             imageReader.setOnImageAvailableListener((ActivityCamera)context, backgroundHandler);
             openCamera();
         }
@@ -111,6 +112,7 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     public void surfaceDestroyed(SurfaceHolder surfaceHolder)
     {
         super.surfaceDestroyed(surfaceHolder);
+        renderer.destroyRenderer();
         // ((ActivityCamera)context).stopObjectDetector();
     }
 
@@ -140,7 +142,6 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
 
         return true;
     }
-
 */
 
     public void openCamera()
@@ -183,6 +184,7 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
         {
             throw new RuntimeException("Interrupted while trying to lock camera opening.", e);
         }
+        Log.i(TAG, "openCamera");
     }
 
     public void closeCamera()
@@ -201,8 +203,9 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
                 cameraDevice.close();
                 cameraDevice = null;
             }
-            if (null != imageReader)
+            if (imageReader != null)
             {
+                Log.i(TAG, "nulling imagereader");
                 imageReader.close();
                 imageReader = null;
             }
@@ -234,14 +237,14 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
         public void onDisconnected(@NonNull CameraDevice camera)
         {
             cameraOpenCloseLock.release();
-            cameraDevice.close();
+            camera.close();
             cameraDevice = null;
         }
 
         @Override
         public void onError(@NonNull CameraDevice camera, int error) {
             cameraOpenCloseLock.release();
-            cameraDevice.close();
+            camera.close();
             cameraDevice = null;
         }
     };
@@ -254,14 +257,16 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
             cameraDevice.createCaptureSession(Collections.singletonList(imageReader.getSurface()),
                     sessionStateCallback, backgroundHandler);
 
-        } catch (CameraAccessException e) {
+        }
+        catch (CameraAccessException e)
+        {
             Log.e(TAG, "createCaptureSession " + e.toString());
         }
     }
 
     public void startBackgroundThread()
     {
-        backgroundThread = new HandlerThread("CameraBackground");
+        backgroundThread = new HandlerThread("CameraBackgroundThread");
         backgroundThread.start();
         backgroundHandler = new Handler(backgroundThread.getLooper());
     }
@@ -285,12 +290,14 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     public void onResume()
     {
         super.onResume();
+        Log.i(TAG, "Surface onResume");
         startBackgroundThread();
     }
 
     @Override
     public void onPause()
     {
+        Log.i(TAG, "Surface onPause");
         closeCamera();
         stopBackgroundThread();
         super.onPause();

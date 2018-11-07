@@ -122,7 +122,7 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
     }
 
     @Override
-    public synchronized void onResume()
+    public void onResume()
     {
         super.onResume();
 
@@ -196,7 +196,7 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
     }
 
     @Override
-    public synchronized void onPause()
+    public void onPause()
     {
 /*        if(objectDetector != null)
         {
@@ -221,6 +221,7 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
             Log.e(TAG, "OpenAL kill error");
         }*/
 
+        Log.i(TAG, "Activity onPause");
         surfaceView.onPause();
         super.onPause();
     }
@@ -296,5 +297,11 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
        Log.i(TAG, String.format("Camera orientation relative to screen canvas: %d", sensorOrientation));
 
         Log.i(TAG, String.format("Initializing at size %dx%d", previewWidth, previewHeight));
+    }
+
+    @Override
+    public void processImage()
+    {
+        readyForNextImage();
     }
 }

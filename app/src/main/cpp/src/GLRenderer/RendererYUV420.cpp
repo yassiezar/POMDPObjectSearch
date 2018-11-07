@@ -297,7 +297,6 @@ GLuint RendererYUV420::useProgram()
         glUniformMatrix4fv(uniformRotation, 1, 0, &rotationZ[0]);
 
         float scaleFactor = aspect_ratio_correction(false, backingWidth, backingHeight, width, height);
-
         GLfloat scale[16];
         mat4f_load_scale(scaleFactor, scaleFactor, 1.0f, scale);
         glUniformMatrix4fv(uniformScale, 1, 0, &scale[0]);
