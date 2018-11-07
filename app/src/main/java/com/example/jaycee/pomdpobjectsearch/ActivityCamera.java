@@ -294,7 +294,6 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
 
     public Anchor getWaypointAnchor()
     {
-        *//* TODO: Handle nullpointer crash here *//*
         return soundGenerator.getWaypointAnchor();
     }
 
