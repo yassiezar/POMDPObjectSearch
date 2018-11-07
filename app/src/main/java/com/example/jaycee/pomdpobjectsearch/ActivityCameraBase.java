@@ -190,24 +190,18 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
             isProcessingFrame = true;
             Trace.beginSection("ImageAvailable");
 
-            final Image.Plane[] planes = image.getPlanes();
-            fillBytes(planes, yuvBytes);
-
-            yRowStride = planes[0].getRowStride();
-            final int uvRowStride = planes[1].getRowStride();
-            final int uvPixelStride = planes[1].getPixelStride();
-
-            imageConverter = new Runnable()
+/*            imageConverter = new Runnable()
             {
                 @Override
                 public void run()
                 {
-                    ImageUtils.convertYUV420ToARGB8888(yuvBytes[0], yuvBytes[1], yuvBytes[2],
+                    byte[] temp = YUV_420_888_data(image);
+*//*                    ImageUtils.convertYUV420ToARGB8888(yuvBytes[0], yuvBytes[1], yuvBytes[2],
                             previewWidth, previewHeight,
                             yRowStride, uvRowStride, uvPixelStride,
-                            rgbBytes);
+                            rgbBytes);*//*
                 }
-            };
+            };*/
 
             postInferenceCallback = new Runnable()
             {
@@ -220,7 +214,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
             };
 
             // CALL CLASSIFIER HERE
-            // processImage();
+            processImage();
         }
         catch(final Exception e)
         {

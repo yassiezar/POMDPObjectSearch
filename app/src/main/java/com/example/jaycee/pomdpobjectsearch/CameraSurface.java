@@ -411,6 +411,7 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     public void setSession(Session session) { this.session = session; }
     public Session getSession() { return this.session; }
     public Integer getSensorOrientation() { return this.sensorOrientation; }
+    public void setSensorOrientation(int orientation) { this.sensorOrientation = orientation; }
 
     static class CompareSizesByArea implements Comparator<Size>
     {

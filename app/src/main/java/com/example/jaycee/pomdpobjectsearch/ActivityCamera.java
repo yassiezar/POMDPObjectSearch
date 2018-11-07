@@ -2,9 +2,11 @@ package com.example.jaycee.pomdpobjectsearch;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.media.ImageReader;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -238,6 +240,15 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
         return super.onOptionsItemSelected(item);
     }
 
+/*    @Override
+    public void onConfigurationChanged(Configuration newConfig)
+    {
+        super.onConfigurationChanged(newConfig);
+        // This overrides default action
+        Log.d(TAG, "Screen orientation change");
+        sensorOrientation = newConfig.orientation;
+    }*/
+
 /*    public void stopObjectDetector()
     {
         if(objectDetector != null)
@@ -278,8 +289,8 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
     @Override
     public void onPreviewFrame(byte[] data, int width, int height)
     {
-        Integer rotation = surfaceView.getSensorOrientation();
-        surfaceView.getRenderer().drawFrame(data, width, height, rotation);
+        // Integer rotation = surfaceView.getSensorOrientation();
+        surfaceView.getRenderer().drawFrame(data, width, height, sensorOrientation);
         surfaceView.getRenderer().requestRender();
     }
 
@@ -287,21 +298,30 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
     public Size getDesiredPreviewSize() { return DESIRED_PREVIEW_SIZE; }
 
     @Override
-    public void onPreviewSizeChosen(final Size size, final int rotation)
+    public void onPreviewSizeChosen(final Size size, final int orientation)
     {
         previewWidth = size.getWidth();
         previewHeight = size.getHeight();
 
-        sensorOrientation = rotation - getScreenOrientation();
-
-       Log.i(TAG, String.format("Camera orientation relative to screen canvas: %d", sensorOrientation));
-
         Log.i(TAG, String.format("Initializing at size %dx%d", previewWidth, previewHeight));
+
+        sensorOrientation = orientation - getScreenOrientation();
+        Log.i(TAG, String.format("Camera orientation relative to screen canvas: %d", sensorOrientation));
     }
 
     @Override
-    public void processImage()
+    protected void processImage()
     {
-        readyForNextImage();
+        Log.d(TAG, "Processing");
+        runInBackground(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                // Simulate 30fps delay
+                SystemClock.sleep(500);
+                readyForNextImage();
+            }
+        });
     }
 }
