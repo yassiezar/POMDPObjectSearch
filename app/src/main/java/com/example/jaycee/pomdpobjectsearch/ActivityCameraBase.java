@@ -34,11 +34,9 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
 
     protected int previewWidth = 0;
     protected int previewHeight = 0;
-    private int yRowStride;
 
-    private int[] rgbBytes = null;
-
-    private byte[][] yuvBytes = new byte[3][];
+    private byte[] previewBytes;
+    private byte[] processingBytes;
 
     private boolean isProcessingFrame = false;
 
@@ -46,7 +44,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
     private HandlerThread handlerThread;
 
     private Runnable postInferenceCallback;
-    private Runnable imageConverter;
+    private Runnable previewImageConverter, imageProcessingConverter;
 
     protected FrameHandler frameHandler;
 
@@ -122,7 +120,8 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
     }
 
     @Override
-    public synchronized void onDestroy() {
+    public synchronized void onDestroy()
+    {
         Log.d(TAG, "onDestroy" + this);
         super.onDestroy();
     }
@@ -169,17 +168,36 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         // Need to have preview sizes set
         if(previewHeight == 0 || previewWidth == 0) return;
 
-        if(rgbBytes == null)
+/*        if(rgbBytes == null)
         {
             rgbBytes = new int[previewWidth*previewHeight];
+        }*/
+
+        if(previewBytes == null)
+        {
+            previewBytes = new byte[previewHeight*previewWidth*4];
+        }
+
+        if(processingBytes == null)
+        {
+            processingBytes = new byte[previewHeight*previewWidth*4];
         }
 
         try
         {
             final Image image = reader.acquireLatestImage();
             if(image == null) return;
-            frameHandler.onPreviewFrame(YUV_420_888_data(image), image.getWidth(), image.getHeight());
-            // renderFrame();
+
+            previewImageConverter = new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    previewBytes = YUV_420_888_data(image);
+                }
+            };
+
+            frameHandler.onPreviewFrame(getPreviewBytes(), image.getWidth(), image.getHeight());
 
             if(isProcessingFrame)
             {
@@ -189,20 +207,6 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
 
             isProcessingFrame = true;
             Trace.beginSection("ImageAvailable");
-
-/*            imageConverter = new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    byte[] temp = YUV_420_888_data(image);
-*//*                    ImageUtils.convertYUV420ToARGB8888(yuvBytes[0], yuvBytes[1], yuvBytes[2],
-                            previewWidth, previewHeight,
-                            yRowStride, uvRowStride, uvPixelStride,
-                            rgbBytes);*//*
-                }
-            };*/
-
             postInferenceCallback = new Runnable()
             {
                 @Override
@@ -213,19 +217,33 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
                 }
             };
 
-            // CALL CLASSIFIER HERE
+            processingBytes = previewBytes.clone();
             processImage();
         }
         catch(final Exception e)
         {
-            Log.e(TAG, "Exception on imagereader: " + e);
+            Log.e(TAG, "Exception on ImageReader: " + e);
             Trace.endSection();
             return;
         }
         Trace.endSection();
     }
 
-    protected void fillBytes(final Image.Plane[] planes, final byte[][] yuvBytes)
+    protected byte[] getPreviewBytes()
+    {
+        if(previewImageConverter!= null)
+        {
+            previewImageConverter.run();
+        }
+        return previewBytes;
+    }
+
+    protected byte[] getProcessingBytes()
+    {
+        return processingBytes;
+    }
+
+/*    protected void fillBytes(final Image.Plane[] planes, final byte[][] yuvBytes)
     {
         // Because of the variable row stride it's not possible to know in
         // advance the actual necessary dimensions of the yuv planes.
@@ -239,7 +257,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
             }
             buffer.get(yuvBytes[i]);
         }
-    }
+    }*/
 
     protected void readyForNextImage()
     {
@@ -306,7 +324,6 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         return data;
     }
 
-    // protected abstract void renderFrame();
     protected abstract void processImage();
 
     protected abstract void onPreviewSizeChosen(final Size size, final int rotation);

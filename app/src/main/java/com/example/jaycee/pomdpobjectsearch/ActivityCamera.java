@@ -1,8 +1,11 @@
 package com.example.jaycee.pomdpobjectsearch;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.media.ImageReader;
 import android.os.Bundle;
 import android.os.Handler;
@@ -34,6 +37,11 @@ import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationExceptio
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 public class ActivityCamera extends ActivityCameraBase implements ImageReader.OnImageAvailableListener, FrameHandler
 {
     private static final String TAG = ActivityCamera.class.getSimpleName();
@@ -56,6 +64,8 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
 
     private Integer sensorOrientation;
 
+    private Bitmap rgbFrameBitmap;
+
     // private BoundingBoxView boundingBoxView; //to write bounding box of the found object
 
     // private DrawerLayout drawerLayout;
@@ -66,12 +76,19 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
 
     // private boolean requestARCoreInstall = true;
 
+    String cfgFilePath;
+    String weightFilepat;
+    float confidence_threshold = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
 
         surfaceView = findViewById(R.id.surfaceview);
+
+        cfgFilePath = getPath(".cfg", this);
+        weightFilepat = getPath(".weights", this);
 
         // boundingBoxView = findViewById(R.id.bounding);
 
@@ -187,6 +204,7 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
 
         // surfaceView.setSession(session);
         surfaceView.onResume();
+        JNIBridge.create(cfgFilePath, weightFilepat, confidence_threshold);
 
 /*        if(!JNIBridge.initSound())
         {
@@ -291,7 +309,7 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
     {
         // Integer rotation = surfaceView.getSensorOrientation();
         surfaceView.getRenderer().drawFrame(data, width, height, sensorOrientation);
-        surfaceView.getRenderer().requestRender();
+        surfaceView.requestRender();
     }
 
     @Override
@@ -307,6 +325,8 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
 
         sensorOrientation = orientation - getScreenOrientation();
         Log.i(TAG, String.format("Camera orientation relative to screen canvas: %d", sensorOrientation));
+
+        // rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Config.ARGB_8888);
     }
 
     @Override
@@ -319,9 +339,53 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
             public void run()
             {
                 // Simulate 30fps delay
-                SystemClock.sleep(500);
+                final long startTime = SystemClock.uptimeMillis();
+                float[] objectResults = JNIBridge.classifyNew(getProcessingBytes(), previewWidth, previewHeight);
+                long lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+                for(float result : objectResults)
+                {
+                    Log.d(TAG, String.format("Object Result %f", result));
+                }
+                Log.d(TAG, String.format("time %d", lastProcessingTimeMs));
                 readyForNextImage();
             }
         });
+    }
+
+    public static String getPath(String fileType, Context context)
+    {
+        AssetManager assetManager = context.getAssets();
+        String[] pathNames = {};
+        String fileName = "";
+        try {
+            pathNames = assetManager.list("yolo");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        for ( String filePath : pathNames ) {
+            if ( filePath.endsWith(fileType)) {
+                fileName = filePath;
+                break;
+            }
+        }
+        BufferedInputStream inputStream;
+        try {
+            // Read data from assets.
+            inputStream = new BufferedInputStream(assetManager.open("yolo/" + fileName));
+            byte[] data = new byte[inputStream.available()];
+            inputStream.read(data);
+            inputStream.close();
+
+            // Create copy file in storage.
+            File outFile = new File(context.getFilesDir(), fileName);
+            FileOutputStream os = new FileOutputStream(outFile);
+            os.write(data);
+            os.close();
+            // Return a path to file which may be read in common way.
+            return outFile.getAbsolutePath();
+        } catch (IOException ex) {
+            //Log.i(TAG, "Failed to upload a file");
+        }
+        return "";
     }
 }

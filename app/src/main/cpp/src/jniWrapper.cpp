@@ -44,6 +44,7 @@ JULAYOM(void, create)(JNIEnv * env, jobject obj,
 
 }
 
+// JULAYOM(jfloatArray, classify)(JNIEnv * env, jobject obj, jlong inputFrame)
 JULAYOM(jfloatArray, classify)(JNIEnv * env, jobject obj, jlong inputFrame)
 {
     cv::Mat& inputFrame_ = *(cv::Mat*) inputFrame;
@@ -61,6 +62,35 @@ JULAYOM(jfloatArray, classify)(JNIEnv * env, jobject obj, jlong inputFrame)
     int arraySize = (int) foundObjects.size();
     jfloatArray results = env->NewFloatArray(arraySize);
     env->SetFloatArrayRegion(results, 0, arraySize, objectArray);
+
+    return results;
+}
+
+JULAYOM(jfloatArray, classifyNew)(JNIEnv * env, jobject obj, jbyteArray inputFrameBuffer, jint width, jint height)
+{
+    jbyte* framePtr = env->GetByteArrayElements(inputFrameBuffer, 0);
+    jsize arrayLen = env->GetArrayLength(inputFrameBuffer);
+
+    cv::Mat inputFrame(height+height/2, width, CV_8UC1, (uint8_t*)framePtr);
+    cv::cvtColor(inputFrame, inputFrame, CV_YUV2RGBA_NV21);
+
+    // cv::Mat& inputFrame_ = *(cv::Mat*) inputFrame;
+
+    int64 e1 = cv::getTickCount();
+
+    std::vector<float> foundObjects = objectDetector->classify(inputFrame);
+
+    int64 e2 = cv::getTickCount();
+    jdouble time = (e2 - e1)/cv::getTickFrequency();
+
+    float* objectArray = &foundObjects[0];
+
+    //method to transform a c++ array in a Java array
+    int arraySize = (int) foundObjects.size();
+    jfloatArray results = env->NewFloatArray(arraySize);
+    env->SetFloatArrayRegion(results, 0, arraySize, objectArray);
+
+    env->ReleaseByteArrayElements(inputFrameBuffer, framePtr, 0);
 
     return results;
 }

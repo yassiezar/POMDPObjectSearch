@@ -40,7 +40,6 @@ void RendererContext::storeContext(JNIEnv* env, jobject obj, RendererContext* co
         return;
     }
 
-    jfieldID debug = env->GetFieldID(cls, "glContext", "J");
     jniFields.context = env->GetFieldID(cls, "glContext", "J");
     if(jniFields.context == NULL)
     {

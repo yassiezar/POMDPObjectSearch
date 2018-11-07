@@ -31,6 +31,7 @@ JULAYOM(void, create)(JNIEnv*, jobject,
                       jfloat);
 
 JULAYOM(jfloatArray, classify)(JNIEnv*, jobject, jlong);
+JULAYOM(jfloatArray, classifyNew)(JNIEnv*, jobject, jbyteArray, jint, jint);
 
 #ifdef __cplusplus
 }
