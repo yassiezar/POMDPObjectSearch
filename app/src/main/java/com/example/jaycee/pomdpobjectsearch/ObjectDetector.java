@@ -84,7 +84,7 @@ public class ObjectDetector implements Runnable
         //we decide to compute 2 FPS
         int yoloFPS = 2;
 
-        if(frameCounter%(cameraFPS/yoloFPS) != 0 || JNIBridge.isImageProcessed())
+        if(frameCounter%(cameraFPS/yoloFPS) != 0)
         {
             boundingBoxView.setResults(null);
             boundingBoxView.invalidate();
