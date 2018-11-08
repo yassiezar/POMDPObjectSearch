@@ -18,5 +18,5 @@ public class JNIBridge
     // Object detectors
     public static native void createObjectDetector(String cfg_file, String weights_file, float conf_thr);
     public static native float[] classify(long input_frame);
-    public static native float[] classifyNew(byte[] inputFrame, int width, int height);
+    public static native Recognition[] classifyNew(byte[] inputFrame, int width, int height);
 }

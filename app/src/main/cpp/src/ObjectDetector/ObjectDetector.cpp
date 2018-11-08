@@ -1,4 +1,5 @@
 #include <ObjectDetector/ObjectDetector.hpp>
+#include <GLRenderer/GLUtils.hpp>
 
 /**
  * The ObjectDetector class provide the functions to create and use a Deep Neural Network based on
@@ -50,10 +51,9 @@ namespace ObjectDetector
      * object there are six parameters, so the vector length is a multiple of six
      * (length=6 -> 1 object found, length=12 -> 2 object found).
     */
-    std::vector<float> Yolo::classify(const cv::Mat &inputFrame)
+    std::vector<Recognition> Yolo::classify(const cv::Mat &inputFrame)
     {
-        //the vector where we will save the found objects
-        std::vector<float> objectResults;
+        std::vector<Recognition> objectResults;
         cv::Mat frame(inputFrame.clone());
 
         //the DNN work with BGR images
@@ -64,6 +64,7 @@ namespace ObjectDetector
         // the image
         cv::Mat blob = cv::dnn::blobFromImage(frame, 1/255.F, cv::Size(416,416), cv::Scalar(), true,
                 false);
+        LOGI("Here");
         net.setInput(blob);
 
         //compute the object detection
@@ -81,9 +82,9 @@ namespace ObjectDetector
 
             //we look for only this object indexes: 1, 25, 57, 63, 64, 65, 67
             // (person, backpack, chair, tv-monitor, laptop, mouse, keyboard)
-            std::vector<int> labelsIdx = {1, 25, 57, 63, 64, 65, 67};
+            std::vector<size_t> labelsIdx = {1, 25, 57, 63, 64, 65, 67};
 
-            int idx = maxLoc.x;
+            size_t idx = maxLoc.x;
 
             // condition = TRUE, if an found object belongs to labelsIdx, otherwise condition = FALSE
             // Will be slow for large label vectors
@@ -94,12 +95,14 @@ namespace ObjectDetector
             //we take object with a confidence higher than the minimum threshold
             if (maxVal > confidenceThreshold && condition)
             {
-                objectResults.push_back(forwardOutput.at<float>(i, 0) * frame.cols); //bounding box X coordinates
-                objectResults.push_back(forwardOutput.at<float>(i, 1) * frame.cols); //bounding box Y coordinates
-                objectResults.push_back(forwardOutput.at<float>(i, 2) * frame.cols); //bounding box width
-                objectResults.push_back(forwardOutput.at<float>(i, 3) * frame.cols); //bounding box high
-                objectResults.push_back(idx); //label index
-                objectResults.push_back((float) maxVal); //confidence value
+                Recognition recognition;
+                recognition.x = forwardOutput.at<size_t>(i, 0) * frame.cols; //bounding box X coordinates
+                recognition.y = forwardOutput.at<size_t>(i, 1) * frame.cols; //bounding box Y coordinates
+                recognition.w = forwardOutput.at<size_t>(i, 2) * frame.cols; //bounding box width
+                recognition.h = forwardOutput.at<size_t>(i, 3) * frame.cols; //bounding box high
+                recognition.id = idx; //label index
+                recognition.conf = (float) maxVal; //confidence value
+                objectResults.push_back(recognition);
             }
         }
 

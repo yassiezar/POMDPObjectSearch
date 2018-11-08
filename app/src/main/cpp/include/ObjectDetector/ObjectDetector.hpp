@@ -26,7 +26,13 @@ namespace ObjectDetector
 {
     typedef struct Recognition
     {
-
+        size_t id;
+        std::string title;
+        size_t x;
+        size_t y;
+        size_t w;
+        size_t h;
+        float conf;
     };
 
     class Yolo
@@ -39,7 +45,7 @@ namespace ObjectDetector
 
     public:
         Yolo(const cv::String&, const cv::String&, const float);
-        std::vector<float> classify(const cv::Mat&);
+        std::vector<Recognition> classify(const cv::Mat&);
     };
 }
 

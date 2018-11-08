@@ -194,10 +194,11 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
                 public void run()
                 {
                     previewBytes = YUV_420_888_data(image);
+                    Log.d(TAG, "Converting image");
+
                 }
             };
-
-            frameHandler.onPreviewFrame(getPreviewBytes(), image.getWidth(), image.getHeight());
+            renderFrame(image);
 
             if(isProcessingFrame)
             {
@@ -217,7 +218,6 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
                 }
             };
 
-            processingBytes = previewBytes.clone();
             processImage();
         }
         catch(final Exception e)
@@ -240,6 +240,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
 
     protected byte[] getProcessingBytes()
     {
+        processingBytes = previewBytes;
         return processingBytes;
     }
 
@@ -282,7 +283,8 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         }
     }
 
-    private static byte[] YUV_420_888_data(Image image) {
+    private static byte[] YUV_420_888_data(Image image)
+    {
         final int imageWidth = image.getWidth();
         final int imageHeight = image.getHeight();
         final Image.Plane[] planes = image.getPlanes();
@@ -290,7 +292,8 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
                 ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888) / 8];
         int offset = 0;
 
-        for (int plane = 0; plane < planes.length; ++plane) {
+        for (int plane = 0; plane < planes.length; ++plane)
+        {
             final ByteBuffer buffer = planes[plane].getBuffer();
             final int rowStride = planes[plane].getRowStride();
             // Experimentally, U and V planes have |pixelStride| = 2, which
@@ -298,16 +301,21 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
             final int pixelStride = planes[plane].getPixelStride();
             final int planeWidth = (plane == 0) ? imageWidth : imageWidth / 2;
             final int planeHeight = (plane == 0) ? imageHeight : imageHeight / 2;
-            if (pixelStride == 1 && rowStride == planeWidth) {
+            if (pixelStride == 1 && rowStride == planeWidth)
+            {
                 // Copy whole plane from buffer into |data| at once.
                 buffer.get(data, offset, planeWidth * planeHeight);
                 offset += planeWidth * planeHeight;
-            } else {
+            }
+            else
+             {
                 // Copy pixels one by one respecting pixelStride and rowStride.
                 byte[] rowData = new byte[rowStride];
-                for (int row = 0; row < planeHeight - 1; ++row) {
+                for (int row = 0; row < planeHeight - 1; ++row)
+                {
                     buffer.get(rowData, 0, rowStride);
-                    for (int col = 0; col < planeWidth; ++col) {
+                    for (int col = 0; col < planeWidth; ++col)
+                    {
                         data[offset++] = rowData[col * pixelStride];
                     }
                 }
@@ -315,7 +323,8 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
                 // |rowStride| bytes of data.
                 // See http://developer.android.com/reference/android/media/Image.Plane.html#getBuffer()
                 buffer.get(rowData, 0, Math.min(rowStride, buffer.remaining()));
-                for (int col = 0; col < planeWidth; ++col) {
+                for (int col = 0; col < planeWidth; ++col)
+                {
                     data[offset++] = rowData[col * pixelStride];
                 }
             }
@@ -325,6 +334,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
     }
 
     protected abstract void processImage();
+    protected abstract void renderFrame(Image image);
 
     protected abstract void onPreviewSizeChosen(final Size size, final int rotation);
     protected abstract Size getDesiredPreviewSize();

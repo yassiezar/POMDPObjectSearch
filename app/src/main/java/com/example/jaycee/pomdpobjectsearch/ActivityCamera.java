@@ -1,46 +1,14 @@
 package com.example.jaycee.pomdpobjectsearch;
 
-import android.Manifest;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.content.res.AssetManager;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.ImageFormat;
+import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.SystemClock;
-import android.support.annotation.NonNull;
-import android.support.design.widget.NavigationView;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.Size;
 import android.view.MenuItem;
-
-import com.google.ar.core.Anchor;
-import com.google.ar.core.ArCoreApk;
-import com.google.ar.core.Config;
-import com.google.ar.core.Session;
-import com.google.ar.core.exceptions.CameraNotAvailableException;
-import com.google.ar.core.exceptions.UnavailableApkTooOldException;
-import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
-import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
-import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
-import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
-
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 public class ActivityCamera extends ActivityCameraBase implements ImageReader.OnImageAvailableListener, FrameHandler
 {
@@ -65,6 +33,8 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
     private Integer sensorOrientation;
 
     private Bitmap rgbFrameBitmap;
+
+    private Classifier classifier;
 
     // private BoundingBoxView boundingBoxView; //to write bounding box of the found object
 
@@ -317,29 +287,42 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
         sensorOrientation = orientation - getScreenOrientation();
         Log.i(TAG, String.format("Camera orientation relative to screen canvas: %d", sensorOrientation));
 
-        // rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Config.ARGB_8888);
+        classifier = YoloDetector.create(this);
     }
 
     @Override
     protected void processImage()
     {
-        Log.d(TAG, "Processing");
         runInBackground(new Runnable()
         {
             @Override
             public void run()
             {
-                // Simulate 30fps delay
-                final long startTime = SystemClock.uptimeMillis();
-                float[] objectResults = JNIBridge.classifyNew(getProcessingBytes(), previewWidth, previewHeight);
-                long lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
-                for(float result : objectResults)
+                if(classifier == null)
                 {
-                    Log.d(TAG, String.format("Object Result %f", result));
+                    Log.d(TAG, "Classifier not initialised");
+                    readyForNextImage();
+
+                    return;
+                }
+
+                final long startTime = SystemClock.uptimeMillis();
+                Log.d(TAG, "Processing");
+                Recognition[] objectResults = JNIBridge.classifyNew(getProcessingBytes(), previewWidth, previewHeight);
+                long lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+                if(objectResults.length > 0)
+                {
+                    // Log.d(TAG, String.format("Object Result %s", objectResults[0].toString()));
                 }
                 Log.d(TAG, String.format("time %d", lastProcessingTimeMs));
                 readyForNextImage();
             }
         });
+    }
+
+    @Override
+    protected void renderFrame(Image image)
+    {
+        frameHandler.onPreviewFrame(getPreviewBytes(), image.getWidth(), image.getHeight());
     }
 }

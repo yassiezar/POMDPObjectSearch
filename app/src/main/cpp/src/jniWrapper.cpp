@@ -1,4 +1,5 @@
 #include <jniWrapper.hpp>
+#include <GLRenderer/GLUtils.hpp>
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,7 +52,7 @@ JULAYOM(jfloatArray, classify)(JNIEnv * env, jobject obj, jlong inputFrame)
 
     int64 e1 = cv::getTickCount();
 
-    std::vector<float> foundObjects = objectDetector->classify(inputFrame_);
+    std::vector<float> foundObjects;// = objectDetector->classify(inputFrame_);
 
     int64 e2 = cv::getTickCount();
     jdouble time = (e2 - e1)/cv::getTickFrequency();
@@ -66,31 +67,52 @@ JULAYOM(jfloatArray, classify)(JNIEnv * env, jobject obj, jlong inputFrame)
     return results;
 }
 
-JULAYOM(jfloatArray, classifyNew)(JNIEnv * env, jobject obj, jbyteArray inputFrameBuffer, jint width, jint height)
+JULAYOM(jobjectArray, classifyNew)(JNIEnv * env, jobject obj, jbyteArray inputFrameBuffer, jint width, jint height)
 {
     jbyte* framePtr = env->GetByteArrayElements(inputFrameBuffer, 0);
-    jsize arrayLen = env->GetArrayLength(inputFrameBuffer);
+    // jsize arrayLen = env->GetArrayLength(inputFrameBuffer);
 
     cv::Mat inputFrame(height+height/2, width, CV_8UC1, (uint8_t*)framePtr);
+    env->ReleaseByteArrayElements(inputFrameBuffer, framePtr, 0);
     cv::cvtColor(inputFrame, inputFrame, CV_YUV2RGBA_NV21);
 
     // cv::Mat& inputFrame_ = *(cv::Mat*) inputFrame;
 
     int64 e1 = cv::getTickCount();
 
-    std::vector<float> foundObjects = objectDetector->classify(inputFrame);
+    std::vector<ObjectDetector::Recognition> foundObjects = objectDetector->classify(inputFrame);
 
     int64 e2 = cv::getTickCount();
     jdouble time = (e2 - e1)/cv::getTickFrequency();
 
-    float* objectArray = &foundObjects[0];
+    // ObjectDetector::Recognition* objectArray = &foundObjects[0];
 
     //method to transform a c++ array in a Java array
-    int arraySize = (int) foundObjects.size();
-    jfloatArray results = env->NewFloatArray(arraySize);
-    env->SetFloatArrayRegion(results, 0, arraySize, objectArray);
+    jsize arraySize = foundObjects.size();
+    LOGI("Found %d objects", arraySize);
+    jclass cls = env->FindClass("com/example/jaycee/pomdpobjectsearch/Recognition");
+    if(cls == NULL)
+    {
+        LOGE("Could not find Recognition class");
+        return NULL;
+    }
 
-    env->ReleaseByteArrayElements(inputFrameBuffer, framePtr, 0);
+    jmethodID constructor = env->GetMethodID(cls, "<init>", "(ILjava/lang/String;Ljava/lang/Float;IIII)V");
+    if(constructor == NULL)
+    {
+        LOGE("Could not find class constructor");
+        return NULL;
+    }
+
+    jobjectArray results = env->NewObjectArray(arraySize, cls, NULL);
+
+    for(jsize i = 0; i < arraySize; i ++)
+    {
+        jobject object = env->NewObject(cls, constructor, obj, foundObjects[i].id, foundObjects[i].title.c_str(),
+                foundObjects[i].conf, foundObjects[i].x, foundObjects[i].y, foundObjects[i].w, foundObjects[i].h);
+        env->SetObjectArrayElement(results, i, object);
+    }
+
 
     return results;
 }
