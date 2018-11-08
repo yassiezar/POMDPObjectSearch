@@ -10,6 +10,11 @@ import android.util.Log;
 import android.util.Size;
 import android.view.MenuItem;
 
+import com.example.jaycee.pomdpobjectsearch.views.BoundingBoxView;
+import com.example.jaycee.pomdpobjectsearch.views.ResultsView;
+
+import java.util.Arrays;
+
 public class ActivityCamera extends ActivityCameraBase implements ImageReader.OnImageAvailableListener, FrameHandler
 {
     private static final String TAG = ActivityCamera.class.getSimpleName();
@@ -35,6 +40,9 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
     private Bitmap rgbFrameBitmap;
 
     private Classifier classifier;
+
+    private ResultsView resultsView;
+    private BoundingBoxView boundingBoxView;
 
     // private BoundingBoxView boundingBoxView; //to write bounding box of the found object
 
@@ -310,10 +318,19 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
                 Log.d(TAG, "Processing");
                 Recognition[] objectResults = JNIBridge.classifyNew(getProcessingBytes(), previewWidth, previewHeight);
                 long lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
-                if(objectResults.length > 0)
+
+                if(resultsView == null)
                 {
-                    // Log.d(TAG, String.format("Object Result %s", objectResults[0].toString()));
+                    resultsView = findViewById(R.id.results);
                 }
+                resultsView.setResults(Arrays.asList(objectResults));
+
+                if(boundingBoxView == null)
+                {
+                    boundingBoxView = findViewById(R.id.boundingbox);
+                }
+                boundingBoxView.setResults(Arrays.asList(objectResults));
+
                 Log.d(TAG, String.format("time %d", lastProcessingTimeMs));
                 readyForNextImage();
             }

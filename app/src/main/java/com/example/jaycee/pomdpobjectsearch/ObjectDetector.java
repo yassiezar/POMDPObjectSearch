@@ -15,6 +15,7 @@ import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 
 import com.example.jaycee.pomdpobjectsearch.rendering.SurfaceRenderer;
+import com.example.jaycee.pomdpobjectsearch.views.BoundingBoxView;
 
 
 /**
@@ -111,7 +112,7 @@ public class ObjectDetector implements Runnable
         if (resultLength > 5 && resultLength % 6 == 0)
         {
             //give the results to the bounding box view
-            boundingBoxView.setResults(objectResults);
+            // boundingBoxView.setResults(objectResults);
             //update bounding box view
             boundingBoxView.invalidate();
 

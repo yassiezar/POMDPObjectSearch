@@ -70,13 +70,10 @@ JULAYOM(jfloatArray, classify)(JNIEnv * env, jobject obj, jlong inputFrame)
 JULAYOM(jobjectArray, classifyNew)(JNIEnv * env, jobject obj, jbyteArray inputFrameBuffer, jint width, jint height)
 {
     jbyte* framePtr = env->GetByteArrayElements(inputFrameBuffer, 0);
-    // jsize arrayLen = env->GetArrayLength(inputFrameBuffer);
 
     cv::Mat inputFrame(height+height/2, width, CV_8UC1, (uint8_t*)framePtr);
     env->ReleaseByteArrayElements(inputFrameBuffer, framePtr, 0);
     cv::cvtColor(inputFrame, inputFrame, CV_YUV2RGBA_NV21);
-
-    // cv::Mat& inputFrame_ = *(cv::Mat*) inputFrame;
 
     int64 e1 = cv::getTickCount();
 
@@ -85,11 +82,8 @@ JULAYOM(jobjectArray, classifyNew)(JNIEnv * env, jobject obj, jbyteArray inputFr
     int64 e2 = cv::getTickCount();
     jdouble time = (e2 - e1)/cv::getTickFrequency();
 
-    // ObjectDetector::Recognition* objectArray = &foundObjects[0];
-
     //method to transform a c++ array in a Java array
     jsize arraySize = foundObjects.size();
-    LOGI("Found %d objects", arraySize);
     jclass cls = env->FindClass("com/example/jaycee/pomdpobjectsearch/Recognition");
     if(cls == NULL)
     {
@@ -112,7 +106,6 @@ JULAYOM(jobjectArray, classifyNew)(JNIEnv * env, jobject obj, jbyteArray inputFr
                 foundObjects[i].conf, foundObjects[i].x, foundObjects[i].y, foundObjects[i].w, foundObjects[i].h);
         env->SetObjectArrayElement(results, i, object);
     }
-
 
     return results;
 }

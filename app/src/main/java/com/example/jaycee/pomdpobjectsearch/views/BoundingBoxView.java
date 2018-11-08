@@ -1,4 +1,4 @@
-package com.example.jaycee.pomdpobjectsearch;
+package com.example.jaycee.pomdpobjectsearch.views;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -9,9 +9,13 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
+import com.example.jaycee.pomdpobjectsearch.ObjectDetector;
+import com.example.jaycee.pomdpobjectsearch.Recognition;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 
@@ -23,13 +27,13 @@ import java.util.Scanner;
  * @version 1.0
  * @since   2018-10-29
  */
-public class BoundingBoxView extends View
+public class BoundingBoxView extends View implements ResultsView
 {
     private static final String TAG = BoundingBoxView.class.getSimpleName();
 
     //the coordinates of the bounding box + the label index of the bounding box + the confidence
     // threshold of the found object
-    private float[] coordinates;
+    private List<Recognition> results;
     private final Paint fgPaint, textPaint, trPaint;
     private RectF bbox;
 
@@ -68,17 +72,6 @@ public class BoundingBoxView extends View
     }
 
     /**
-     * The setResults method set the coordinates of the bounding box we want to draw.
-     *
-     * @param results The coordinates of the bounding box.
-     */
-    public void setResults(float[] results)
-    {
-        this.coordinates = results;
-        postInvalidate();
-    }
-
-    /**
      * The onDraw method draw the bounding boxes of the found object.
      *
      * @param canvas The Canvas object needed to draw bounding boxes.
@@ -87,42 +80,31 @@ public class BoundingBoxView extends View
     public void onDraw(final Canvas canvas)
     {
         // Get view size.
-        float viewHeightTmp = (float) this.getHeight();
+/*        float viewHeightTmp = (float) this.getHeight();
         float viewWidthTmp = (float) this.getWidth();
         float viewHeight = Math.max(viewHeightTmp, viewWidthTmp);
         float viewWidth = Math.min(viewHeightTmp, viewWidthTmp);
 
-        Log.v(TAG, String.format("BoundingBox width %f height %f", viewWidth, viewHeight));
+        Log.v(TAG, String.format("BoundingBox width %f height %f", viewWidth, viewHeight));*/
 
         //if some object were found
-        if (coordinates != null)
+        if (results != null && results.size() > 0)
         {
             //for every object found
-            for(int i = 0; i < coordinates.length/6; i ++)
+            for(Recognition result : results)
             {
-                float x = coordinates[(i*6)];
-                float y = coordinates[(i*6)+1];
-                float width = coordinates[(i*6)+2];
-                float height = coordinates[(i*6)+3];
-
-                //compute the point of the bounding box
-                float p1X = x - width / 2;
-                float p1Y = y - height / 2;
-                float p2X = x + width / 2;
-                float p2Y = y + height / 2;
-
                 // Create new bounding box and draw it.
-                bbox.set(p1X, p1Y, p2X, p2Y);
+                bbox.set(result.getLocation());
                 canvas.drawRect(bbox, fgPaint);
 
                 ArrayList<String> labelNames = readLabelsName(labelsFilePath);
-                String label = labelNames.get((int)coordinates[(i*6)+4]);
+                String label = labelNames.get(result.getId());
 
                 // Create the label name on the bounding box.
                 float textWidth = textPaint.measureText(label)/2;
                 float textSize = textPaint.getTextSize();
-                float textCentreX = p1X - 2;
-                float textCentreY = p1Y - textSize;
+                float textCentreX = bbox.centerX() - 2;
+                float textCentreY = bbox.centerY() - textSize;
                 textPaint.setTextAlign(Paint.Align.CENTER);
                 canvas.drawRect(textCentreX, textCentreY, textCentreX + 2 * textWidth, textCentreY + textSize, trPaint);
                 canvas.drawText(label, textCentreX + textWidth, textCentreY + textSize, textPaint);
@@ -158,5 +140,17 @@ public class BoundingBoxView extends View
 
         return labelNames;
 
+    }
+
+    /**
+     * The setResults method set the coordinates of the bounding box we want to draw.
+     *
+     * @param results The coordinates of the bounding box.
+     */
+    @Override
+    public void setResults(List<Recognition> results)
+    {
+        this.results = results;
+        postInvalidate();
     }
 }
