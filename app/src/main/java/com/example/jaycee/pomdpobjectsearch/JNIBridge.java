@@ -15,8 +15,4 @@ public class JNIBridge
     public static native void playSound(float[] src, float[] list, float gain, float pitch);
     public static native boolean stopSound();
 
-    // Object detectors
-    public static native void createObjectDetector(String cfg_file, String weights_file, float conf_thr);
-    public static native float[] classify(long input_frame);
-    public static native Recognition[] classifyNew(byte[] inputFrame, int width, int height);
 }

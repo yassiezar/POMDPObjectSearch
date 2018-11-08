@@ -1,19 +1,32 @@
 package com.example.jaycee.pomdpobjectsearch;
 
 import android.graphics.Bitmap;
-import android.graphics.ImageFormat;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.util.Size;
+import android.util.TypedValue;
 import android.view.MenuItem;
+import android.widget.Toast;
 
-import com.example.jaycee.pomdpobjectsearch.views.BoundingBoxView;
-import com.example.jaycee.pomdpobjectsearch.views.ResultsView;
+import com.example.jaycee.pomdpobjectsearch.helpers.ImageUtils;
+import com.example.jaycee.pomdpobjectsearch.helpers.BorderedText;
+import com.example.jaycee.pomdpobjectsearch.helpers.Logger;
+import com.example.jaycee.pomdpobjectsearch.tracking.MultiBoxTracker;
+import com.example.jaycee.pomdpobjectsearch.views.OverlayView;
 
-import java.util.Arrays;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Vector;
 
 public class ActivityCamera extends ActivityCameraBase implements ImageReader.OnImageAvailableListener, FrameHandler
 {
@@ -21,196 +34,79 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
 
     private Size DESIRED_PREVIEW_SIZE = new Size(1440, 2560);
 
-/*    private static final int O_NOTHING = 0;
-
-    private static final int T_COMPUTER_MONITOR = 1;
-    private static final int T_COMPUTER_MOUSE = 3;
-    private static final int T_COMPUTER_KEYBOARD = 2;
-    private static final int T_DESK = 4;
-    private static final int T_MUG = 6;
-    private static final int T_OFFICE_SUPPLIES = 7;
-    private static final int T_WINDOW = 8;
-
-    private Session session;*/
-
     private CameraSurface surfaceView;
 
     private Integer sensorOrientation;
 
     private Bitmap rgbFrameBitmap;
 
-    private Classifier classifier;
+    /* ------------------------ Detector variable ------------------------ */
 
-    private ResultsView resultsView;
-    private BoundingBoxView boundingBoxView;
+    private static final Logger LOGGER = new Logger();
+    // Configuration values for the prepackaged SSD model.
+    private static final int TF_OD_API_INPUT_SIZE = 300;
+    private static final boolean TF_OD_API_IS_QUANTIZED = true;
+    private static final String TF_OD_API_MODEL_FILE = "mobilenet/detect.tflite";
+    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/mobilenet/coco_labels_list.txt";
 
-    // private BoundingBoxView boundingBoxView; //to write bounding box of the found object
+    // Which detection model to use: by default uses Tensorflow Object Detection API frozen
+    // checkpoints.
+    private enum DetectorMode {
+        TF_OD_API;
+    }
 
-    // private DrawerLayout drawerLayout;
-    // private CentreView centreView;
+    private static final DetectorMode MODE = DetectorMode.TF_OD_API;
 
-    // private SoundGenerator soundGenerator;
-    // private ObjectDetector objectDetector;
+    // Minimum detection confidence to track a detection.
+    private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
 
-    // private boolean requestARCoreInstall = true;
+    private static final boolean MAINTAIN_ASPECT = false;
+
+    private static final boolean SAVE_PREVIEW_BITMAP = false;
+    private static final float TEXT_SIZE_DIP = 10;
+
+
+    private Classifier detector;
+
+    private long lastProcessingTimeMs;
+    private Bitmap croppedBitmap = null;
+    private Bitmap cropCopyBitmap = null;
+
+    private boolean computingDetection = false;
+
+    private long timestamp = 0;
+
+    private Matrix frameToCropTransform;
+    private Matrix cropToFrameTransform;
+
+    private MultiBoxTracker tracker;
+
+    private byte[] luminanceCopy;
+
+    private BorderedText borderedText;
+
+    OverlayView trackingOverlay;
+
+    /* ------------------------ Detector variable ------------------------ */
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-
         surfaceView = findViewById(R.id.surfaceview);
-
-        // boundingBoxView = findViewById(R.id.bounding);
-
-        // centreView = findViewById(R.id.centre_view);
-
-        // drawerLayout = findViewById(R.id.layout_drawer_objects);
-
-/*        NavigationView navigationView = findViewById(R.id.navigation_view_objects);
-
-        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener()
-        {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item)
-            {
-                int target = 0;
-                switch (item.getItemId())
-                {
-                    case R.id.item_object_mug:
-                        target = T_MUG;
-                        break;
-                    case R.id.item_object_desk:
-                        target = T_DESK;
-                        break;
-                    case R.id.item_object_office_supplies:
-                        target = T_OFFICE_SUPPLIES;
-                        break;
-                    case R.id.item_object_keyboard:
-                        target = T_COMPUTER_KEYBOARD;
-                        break;
-                    case R.id.item_object_monitor:
-                        target = T_COMPUTER_MONITOR;
-                        break;
-                    case R.id.item_object_mouse:
-                        target = T_COMPUTER_MOUSE;
-                        break;
-                    case R.id.item_object_window:
-                        target = T_WINDOW;
-                        break;
-                }
-
-                soundGenerator.setTarget(target);
-                soundGenerator.markOffsetPose();
-                item.setCheckable(true);
-
-                drawerLayout.closeDrawers();
-
-                return true;
-            }
-        }); */
     }
 
     @Override
     public void onResume()
     {
         super.onResume();
-
-/*        if(session == null)
-        {
-            try
-            {
-                switch(ArCoreApk.getInstance().requestInstall(this, requestARCoreInstall))
-                {
-                    case INSTALLED:
-                        break;
-                    case INSTALL_REQUESTED:
-                        requestARCoreInstall = false;
-                        return;
-                }
-
-                session = new Session(this);
-
-                // Set config settings
-                Config conf = new Config(session);
-                conf.setFocusMode(Config.FocusMode.AUTO);
-                session.configure(conf);
-            }
-            catch(UnavailableUserDeclinedInstallationException | UnavailableArcoreNotInstalledException  e)
-            {
-                Log.e(TAG, "Please install ARCore.");
-                return;
-            }
-            catch(UnavailableDeviceNotCompatibleException e)
-            {
-                Log.e(TAG, "This device does not support ARCore.");
-                return;
-            }
-            catch(UnavailableApkTooOldException e)
-            {
-                Log.e(TAG, "Please update the app.");
-                return;
-            }
-            catch(UnavailableSdkTooOldException e)
-            {
-                Log.e(TAG, "Please update ARCore. ");
-                return;
-            }
-            catch(Exception e)
-            {
-                Log.e(TAG, "Failed to create AR session.");
-            }
-        }
-
-        try
-        {
-            session.resume();
-        }
-        catch(CameraNotAvailableException e)
-        {
-            session = null;
-            Log.e(TAG, "Camera not available. Please restart app.");
-            return;
-        }*/
-
-        // surfaceView.setSession(session);
         surfaceView.onResume();
-
-/*        if(!JNIBridge.initSound())
-        {
-            Log.e(TAG, "OpenAL init error");
-        }*/
-
-        // soundGenerator = new SoundGenerator(this, surfaceView.getRenderer());
-        // soundGenerator.run();
     }
 
     @Override
     public void onPause()
     {
-/*        if(objectDetector != null)
-        {
-            objectDetector.stop();
-            objectDetector = null;
-        }
-
-        if(soundGenerator != null)
-        {
-            soundGenerator.stop();
-            soundGenerator = null;
-        }
-
-        if(session != null)
-        {
-            surfaceView.onPause();
-            session.pause();
-        }
-
-        if(!JNIBridge.killSound())
-        {
-            Log.e(TAG, "OpenAL kill error");
-        }*/
-
         Log.i(TAG, "Activity onPause");
         surfaceView.onPause();
         super.onPause();
@@ -219,58 +115,8 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
-/*        switch (item.getItemId())
-        {
-            case android.R.id.home:
-                drawerLayout.openDrawer(GravityCompat.START);
-                return true;
-        }*/
         return super.onOptionsItemSelected(item);
     }
-
-/*    @Override
-    public void onConfigurationChanged(Configuration newConfig)
-    {
-        super.onConfigurationChanged(newConfig);
-        // This overrides default action
-        Log.d(TAG, "Screen orientation change");
-        sensorOrientation = newConfig.orientation;
-    }*/
-
-/*    public void stopObjectDetector()
-    {
-        if(objectDetector != null)
-        {
-            objectDetector.stop();
-            objectDetector = null;
-        }
-    }
-
-    public void startObjectDetector()
-    {
-        objectDetector = new ObjectDetector(this, surfaceView.getWidth(), surfaceView.getHeight(), surfaceView.getRenderer(), boundingBoxView);
-        objectDetector.run();
-    }
-
-    public int currentObjectDetector()
-    {
-        if(objectDetector != null)
-        {
-            return objectDetector.getCode();
-        }
-
-        return O_NOTHING;
-    }
-
-    public Anchor getWaypointAnchor()
-    {
-        return soundGenerator.getWaypointAnchor();
-    }
-
-    public CentreView getCentreView()
-    {
-        return centreView;
-    }*/
 
     // CHECK THAT THIS IS CALLED
     @Override
@@ -285,56 +131,194 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
     public Size getDesiredPreviewSize() { return DESIRED_PREVIEW_SIZE; }
 
     @Override
-    public void onPreviewSizeChosen(final Size size, final int orientation)
+    public void onPreviewSizeChosen(final Size size, final int rotation)
     {
+        final float textSizePx =
+                TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_DIP, TEXT_SIZE_DIP, getResources().getDisplayMetrics());
+        borderedText = new BorderedText(textSizePx);
+        borderedText.setTypeface(Typeface.MONOSPACE);
+
+        tracker = new MultiBoxTracker(this);
+
+        int cropSize = TF_OD_API_INPUT_SIZE;
+
+        try {
+            detector =
+                    TFLiteObjectDetectionAPIModel.create(
+                            getAssets(),
+                            TF_OD_API_MODEL_FILE,
+                            TF_OD_API_LABELS_FILE,
+                            TF_OD_API_INPUT_SIZE,
+                            TF_OD_API_IS_QUANTIZED);
+            cropSize = TF_OD_API_INPUT_SIZE;
+        } catch (final IOException e) {
+            LOGGER.e("Exception initializing classifier!", e);
+            Toast toast =
+                    Toast.makeText(
+                            getApplicationContext(), "Classifier could not be initialized", Toast.LENGTH_SHORT);
+            toast.show();
+            finish();
+        }
+
+
         previewWidth = size.getWidth();
         previewHeight = size.getHeight();
 
-        Log.i(TAG, String.format("Initializing at size %dx%d", previewWidth, previewHeight));
+        sensorOrientation = rotation - getScreenOrientation();
+        LOGGER.i("Camera orientation relative to screen canvas: %d", sensorOrientation);
 
-        sensorOrientation = orientation - getScreenOrientation();
-        Log.i(TAG, String.format("Camera orientation relative to screen canvas: %d", sensorOrientation));
+        LOGGER.i("Initializing at size %dx%d", previewWidth, previewHeight);
+        rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
+        croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Bitmap.Config.ARGB_8888);
 
-        classifier = YoloDetector.create(this);
+        frameToCropTransform =
+                ImageUtils.getTransformationMatrix(
+                        previewWidth, previewHeight,
+                        cropSize, cropSize,
+                        sensorOrientation, MAINTAIN_ASPECT);
+
+        cropToFrameTransform = new Matrix();
+        frameToCropTransform.invert(cropToFrameTransform);
+
+        trackingOverlay = (OverlayView) findViewById(R.id.tracking_overlay);
+        trackingOverlay.addCallback(
+                new OverlayView.DrawCallback() {
+                    @Override
+                    public void drawCallback(final Canvas canvas) {
+                        tracker.draw(canvas);
+                        if (isDebug()) {
+                            tracker.drawDebug(canvas);
+                        }
+                    }
+                });
+
+        addCallback(
+                new OverlayView.DrawCallback() {
+                    @Override
+                    public void drawCallback(final Canvas canvas) {
+                        if (!isDebug()) {
+                            return;
+                        }
+                        final Bitmap copy = cropCopyBitmap;
+                        if (copy == null) {
+                            return;
+                        }
+
+                        final int backgroundColor = Color.argb(100, 0, 0, 0);
+                        canvas.drawColor(backgroundColor);
+
+                        final Matrix matrix = new Matrix();
+                        final float scaleFactor = 2;
+                        matrix.postScale(scaleFactor, scaleFactor);
+                        matrix.postTranslate(
+                                canvas.getWidth() - copy.getWidth() * scaleFactor,
+                                canvas.getHeight() - copy.getHeight() * scaleFactor);
+                        canvas.drawBitmap(copy, matrix, new Paint());
+
+                        final Vector<String> lines = new Vector<String>();
+                        if (detector != null) {
+                            final String statString = detector.getStatString();
+                            final String[] statLines = statString.split("\n");
+                            for (final String line : statLines) {
+                                lines.add(line);
+                            }
+                        }
+                        lines.add("");
+
+                        lines.add("Frame: " + previewWidth + "x" + previewHeight);
+                        lines.add("Crop: " + copy.getWidth() + "x" + copy.getHeight());
+                        lines.add("View: " + canvas.getWidth() + "x" + canvas.getHeight());
+                        lines.add("Rotation: " + sensorOrientation);
+                        lines.add("Inference time: " + lastProcessingTimeMs + "ms");
+
+                        borderedText.drawLines(canvas, 10, canvas.getHeight() - 10, lines);
+                    }
+                });
     }
 
     @Override
     protected void processImage()
     {
-        runInBackground(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                if(classifier == null)
-                {
-                    Log.d(TAG, "Classifier not initialised");
-                    readyForNextImage();
+        ++timestamp;
+        final long currTimestamp = timestamp;
+        byte[] originalLuminance = getLuminance();
+        tracker.onFrame(
+                previewWidth,
+                previewHeight,
+                getLuminanceStride(),
+                sensorOrientation,
+                originalLuminance,
+                timestamp);
+        trackingOverlay.postInvalidate();
 
-                    return;
-                }
+        // No mutex needed as this method is not reentrant.
+        if (computingDetection) {
+            readyForNextImage();
+            return;
+        }
+        computingDetection = true;
+        LOGGER.i("Preparing image " + currTimestamp + " for detection in bg thread.");
 
-                final long startTime = SystemClock.uptimeMillis();
-                Log.d(TAG, "Processing");
-                Recognition[] objectResults = JNIBridge.classifyNew(getProcessingBytes(), previewWidth, previewHeight);
-                long lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+        rgbFrameBitmap.setPixels(getRgbBytes(), 0, previewWidth, 0, 0, previewWidth, previewHeight);
 
-                if(resultsView == null)
-                {
-                    resultsView = findViewById(R.id.results);
-                }
-                resultsView.setResults(Arrays.asList(objectResults));
+        if (luminanceCopy == null) {
+            luminanceCopy = new byte[originalLuminance.length];
+        }
+        System.arraycopy(originalLuminance, 0, luminanceCopy, 0, originalLuminance.length);
+        readyForNextImage();
 
-                if(boundingBoxView == null)
-                {
-                    boundingBoxView = findViewById(R.id.boundingbox);
-                }
-                boundingBoxView.setResults(Arrays.asList(objectResults));
+        final Canvas canvas = new Canvas(croppedBitmap);
+        canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
+        // For examining the actual TF input.
+        if (SAVE_PREVIEW_BITMAP) {
+            ImageUtils.saveBitmap(croppedBitmap);
+        }
 
-                Log.d(TAG, String.format("time %d", lastProcessingTimeMs));
-                readyForNextImage();
-            }
-        });
+        runInBackground(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        LOGGER.i("Running detection on image " + currTimestamp);
+                        final long startTime = SystemClock.uptimeMillis();
+                        final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
+                        lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+
+                        cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
+                        final Canvas canvas = new Canvas(cropCopyBitmap);
+                        final Paint paint = new Paint();
+                        paint.setColor(Color.RED);
+                        paint.setStyle(Paint.Style.STROKE);
+                        paint.setStrokeWidth(2.0f);
+
+                        float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+                        switch (MODE) {
+                            case TF_OD_API:
+                                minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+                                break;
+                        }
+
+                        final List<Classifier.Recognition> mappedRecognitions =
+                                new LinkedList<Classifier.Recognition>();
+
+                        for (final Classifier.Recognition result : results) {
+                            final RectF location = result.getLocation();
+                            if (location != null && result.getConfidence() >= minimumConfidence) {
+                                canvas.drawRect(location, paint);
+
+                                cropToFrameTransform.mapRect(location);
+                                result.setLocation(location);
+                                mappedRecognitions.add(result);
+                            }
+                        }
+
+                        tracker.trackResults(mappedRecognitions, luminanceCopy, currTimestamp);
+                        trackingOverlay.postInvalidate();
+
+                        requestRender();
+                        computingDetection = false;
+                    }
+                });
     }
 
     @Override

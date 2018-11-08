@@ -1,6 +1,6 @@
 package com.example.jaycee.pomdpobjectsearch.views;
 
-import com.example.jaycee.pomdpobjectsearch.Recognition;
+import com.example.jaycee.pomdpobjectsearch.Classifier.Recognition;
 
 import java.util.List;
 

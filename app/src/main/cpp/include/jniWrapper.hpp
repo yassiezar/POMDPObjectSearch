@@ -6,9 +6,6 @@
 
 #include <SoundGenerator/SoundGenerator.hpp>
 
-#include <ObjectDetector/ObjectDetector.hpp>
-#include <ObjectDetector/Helper.hpp>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -22,16 +19,6 @@ JULAYOM(bool, initSound)(JNIEnv*, jobject);
 JULAYOM(bool, killSound)(JNIEnv*, jobject);
 JULAYOM(void, playSound)(JNIEnv*, jobject, jfloatArray, jfloatArray, jfloat, jfloat);
 JULAYOM(bool, stopSound)(JNIEnv*, jobject);
-
-ObjectDetector::Yolo* objectDetector;
-
-JULAYOM(void, createObjectDetector)(JNIEnv*, jobject,
-                      jstring,
-                      jstring,
-                      jfloat);
-
-JULAYOM(jfloatArray, classify)(JNIEnv*, jobject, jlong);
-JULAYOM(jobjectArray, classifyNew)(JNIEnv*, jobject, jbyteArray, jint, jint);
 
 #ifdef __cplusplus
 }

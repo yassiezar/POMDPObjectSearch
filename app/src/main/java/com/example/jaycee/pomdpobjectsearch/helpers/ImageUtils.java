@@ -25,8 +25,7 @@ import java.io.FileOutputStream;
 /**
  * Utility class for manipulating images.
  **/
-public class ImageUtils
-{
+public class ImageUtils {
   @SuppressWarnings("unused")
   private static final Logger LOGGER = new Logger();
 

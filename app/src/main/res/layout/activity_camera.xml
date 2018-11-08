@@ -30,19 +30,20 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:id="@+id/centre_view">
-        </com.example.jaycee.pomdpobjectsearch.views.CentreView>-->
-        <com.example.jaycee.pomdpobjectsearch.views.BoundingBoxView
-            android:id="@+id/boundingbox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/toolbar"
-            android:contentDescription="Drawing bounding box on detected object" >
-        </com.example.jaycee.pomdpobjectsearch.views.BoundingBoxView>
-        <com.example.jaycee.pomdpobjectsearch.views.RecognitionScoreView
+        </com.example.jaycee.pomdpobjectsearch.views.CentreView> -->
+        <com.example.jaycee.pomdpobjectsearch.views.OverlayView
+            android:id="@+id/tracking_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+        <com.example.jaycee.pomdpobjectsearch.views.OverlayView
+            android:id="@+id/debug_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+<!--        <com.example.jaycee.pomdpobjectsearch.views.RecognitionScoreView
             android:id="@+id/results"
             android:layout_width="match_parent"
             android:layout_height="112dp"
-            android:layout_alignParentBottom="true" />
+            android:layout_alignParentBottom="true" /> -->
     </RelativeLayout>
     <android.support.design.widget.NavigationView
         android:id="@+id/navigation_view_objects"

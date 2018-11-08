@@ -19,12 +19,16 @@ import android.view.WindowManager;
 import android.widget.Toast;
 import android.widget.Toolbar;
 
-import com.example.jaycee.pomdpobjectsearch.helpers.ImageUtils;
+import com.example.jaycee.pomdpobjectsearch.views.OverlayView;
+import com.example.jaycee.pomdpobjectsearch.helpers.Logger;
 
 import java.nio.ByteBuffer;
 
 public abstract class ActivityCameraBase extends Activity implements ImageReader.OnImageAvailableListener
 {
+
+    private static final Logger LOGGER = new Logger();
+
     private static final String TAG = ActivityCameraBase.class.getSimpleName();
 
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
@@ -32,16 +36,23 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
 
     private static final int PERMISSIONS_REQUEST = 0;
 
+    private Handler handler;
+    private HandlerThread handlerThread;
+    private boolean useCamera2API;
+    private boolean isProcessingFrame = false;
+    private byte[][] yuvBytes = new byte[3][];
+    private int[] rgbBytes = null;
+    private int yRowStride;
+
+    private boolean debug = false;
+
+
     protected int previewWidth = 0;
     protected int previewHeight = 0;
 
     private byte[] previewBytes;
     private byte[] processingBytes;
 
-    private boolean isProcessingFrame = false;
-
-    private Handler handler;
-    private HandlerThread handlerThread;
 
     private Runnable postInferenceCallback;
     private Runnable previewImageConverter, imageProcessingConverter;
@@ -65,6 +76,19 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
 
         frameHandler = (FrameHandler)this;
+    }
+
+    protected int[] getRgbBytes() {
+        previewImageConverter.run();
+        return rgbBytes;
+    }
+
+    protected int getLuminanceStride() {
+        return yRowStride;
+    }
+
+    protected byte[] getLuminance() {
+        return yuvBytes[0];
     }
 
     @Override
@@ -161,17 +185,19 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         }
     }
 
-    // Camera2 API callback
+    /**
+     * Callback for Camera2 API
+     */
     @Override
     public void onImageAvailable(final ImageReader reader)
     {
         // Need to have preview sizes set
         if(previewHeight == 0 || previewWidth == 0) return;
 
-/*        if(rgbBytes == null)
+       if(rgbBytes == null)
         {
             rgbBytes = new int[previewWidth*previewHeight];
-        }*/
+        }
 
         if(previewBytes == null)
         {
@@ -237,28 +263,6 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         }
         return previewBytes;
     }
-
-    protected byte[] getProcessingBytes()
-    {
-        processingBytes = previewBytes;
-        return processingBytes;
-    }
-
-/*    protected void fillBytes(final Image.Plane[] planes, final byte[][] yuvBytes)
-    {
-        // Because of the variable row stride it's not possible to know in
-        // advance the actual necessary dimensions of the yuv planes.
-        for (int i = 0; i < planes.length; i++)
-        {
-            final ByteBuffer buffer = planes[i].getBuffer();
-            if (yuvBytes[i] == null)
-            {
-                Log.d(TAG, String.format("Initializing buffer %d at size %d", i, buffer.capacity()));
-                yuvBytes[i] = new byte[buffer.capacity()];
-            }
-            buffer.get(yuvBytes[i]);
-        }
-    }*/
 
     protected void readyForNextImage()
     {
@@ -331,6 +335,24 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         }
 
         return data;
+    }
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void requestRender() {
+        final OverlayView overlay = (OverlayView) findViewById(R.id.debug_overlay);
+        if (overlay != null) {
+            overlay.postInvalidate();
+        }
+    }
+
+    public void addCallback(final OverlayView.DrawCallback callback) {
+        final OverlayView overlay = (OverlayView) findViewById(R.id.debug_overlay);
+        if (overlay != null) {
+            overlay.addCallback(callback);
+        }
     }
 
     protected abstract void processImage();

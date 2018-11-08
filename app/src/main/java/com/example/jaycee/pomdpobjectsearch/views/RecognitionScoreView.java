@@ -7,7 +7,7 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
 
-import com.example.jaycee.pomdpobjectsearch.Recognition;
+import com.example.jaycee.pomdpobjectsearch.Classifier.Recognition;
 
 import java.util.List;
 
