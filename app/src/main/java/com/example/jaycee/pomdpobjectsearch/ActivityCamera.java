@@ -76,19 +76,12 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
 
     // private boolean requestARCoreInstall = true;
 
-    String cfgFilePath;
-    String weightFilepat;
-    float confidence_threshold = 0;
-
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
 
         surfaceView = findViewById(R.id.surfaceview);
-
-        cfgFilePath = getPath(".cfg", this);
-        weightFilepat = getPath(".weights", this);
 
         // boundingBoxView = findViewById(R.id.bounding);
 
@@ -204,7 +197,6 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
 
         // surfaceView.setSession(session);
         surfaceView.onResume();
-        JNIBridge.create(cfgFilePath, weightFilepat, confidence_threshold);
 
 /*        if(!JNIBridge.initSound())
         {
@@ -349,42 +341,5 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
                 readyForNextImage();
             }
         });
-    }
-
-    public static String getPath(String fileType, Context context)
-    {
-        AssetManager assetManager = context.getAssets();
-        String[] pathNames = {};
-        String fileName = "";
-        try {
-            pathNames = assetManager.list("yolo");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        for ( String filePath : pathNames ) {
-            if ( filePath.endsWith(fileType)) {
-                fileName = filePath;
-                break;
-            }
-        }
-        BufferedInputStream inputStream;
-        try {
-            // Read data from assets.
-            inputStream = new BufferedInputStream(assetManager.open("yolo/" + fileName));
-            byte[] data = new byte[inputStream.available()];
-            inputStream.read(data);
-            inputStream.close();
-
-            // Create copy file in storage.
-            File outFile = new File(context.getFilesDir(), fileName);
-            FileOutputStream os = new FileOutputStream(outFile);
-            os.write(data);
-            os.close();
-            // Return a path to file which may be read in common way.
-            return outFile.getAbsolutePath();
-        } catch (IOException ex) {
-            //Log.i(TAG, "Failed to upload a file");
-        }
-        return "";
     }
 }
