@@ -25,7 +25,7 @@ JULAYOM(bool, stopSound)(JNIEnv*, jobject);
 
 ObjectDetector::Yolo* objectDetector;
 
-JULAYOM(void, create)(JNIEnv*, jobject,
+JULAYOM(void, createObjectDetector)(JNIEnv*, jobject,
                       jstring,
                       jstring,
                       jfloat);

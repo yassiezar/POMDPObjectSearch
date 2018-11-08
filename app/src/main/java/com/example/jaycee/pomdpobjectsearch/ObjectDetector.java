@@ -69,7 +69,7 @@ public class ObjectDetector implements Runnable
         float confidence_threshold = 0;
 
         //this method call the native code for the DNN creation
-        JNIBridge.create(cfgFilePath, weightFilepat, confidence_threshold);
+        JNIBridge.createObjectDetector(cfgFilePath, weightFilepat, confidence_threshold);
     }
 
 

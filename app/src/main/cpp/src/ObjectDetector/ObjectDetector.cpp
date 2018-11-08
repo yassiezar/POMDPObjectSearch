@@ -52,9 +52,6 @@ namespace ObjectDetector
     */
     std::vector<float> Yolo::classify(const cv::Mat &inputFrame)
     {
-        // Notify that an image is being processed
-        imageProcessed = 0;
-
         //the vector where we will save the found objects
         std::vector<float> objectResults;
         cv::Mat frame(inputFrame.clone());
@@ -105,9 +102,6 @@ namespace ObjectDetector
                 objectResults.push_back((float) maxVal); //confidence value
             }
         }
-
-        // Finished processing image
-        imageProcessed = 1;
 
         return objectResults;
     }

@@ -24,6 +24,11 @@ extern "C" {
 
 namespace ObjectDetector
 {
+    typedef struct Recognition
+    {
+
+    };
+
     class Yolo
     {
     private:
@@ -32,13 +37,9 @@ namespace ObjectDetector
 
         cv::String getOutputsLayerNames();
 
-        jboolean imageProcessed;
-
     public:
         Yolo(const cv::String&, const cv::String&, const float);
         std::vector<float> classify(const cv::Mat&);
-
-        jboolean isImageProcessed() { return imageProcessed; }
     };
 }
 

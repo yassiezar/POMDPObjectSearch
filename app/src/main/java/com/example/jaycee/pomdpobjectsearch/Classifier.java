@@ -8,9 +8,9 @@ public interface Classifier
 {
     public class Recognition
     {
-        private final String id;
-        private final String title;
-        private final Float confidence;
+        private String id;
+        private String title;
+        private Float confidence;
         private RectF location;
 
         public Recognition(final String id, final String title, final Float confidence, final RectF location)
@@ -26,6 +26,9 @@ public interface Classifier
         public Float getConfidence() { return confidence; }
         public RectF getLocation() { return location; }
 
+        public void setId(String id) { this.id = id;}
+        public void setTitle(String title) { this.title = title; }
+        public void setConfidence(Float confidence) { this.confidence = confidence; }
         public void setLocation(RectF location) { this.location = location; }
 
         @Override

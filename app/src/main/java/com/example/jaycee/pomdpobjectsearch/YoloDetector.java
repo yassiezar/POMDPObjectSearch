@@ -1,23 +1,30 @@
 package com.example.jaycee.pomdpobjectsearch;
 
+import android.content.Context;
+import android.content.res.AssetManager;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 public class YoloDetector implements Classifier
 {
     private YoloDetector() {}
 
-    public static Classifier create()
+    public static Classifier create(final AssetManager am)
     {
         YoloDetector detector =  new YoloDetector();
 
         String cfgFilePath;
         String weightFilepat;
-        float confidence_threshold = 0;
+        float confidenceThreshold = 0;
 
-        cfgFilePath = getPath(".cfg", this);
-        weightFilepat = getPath(".weights", this);
+        cfgFilePath = getPath(am, ".cfg");
+        weightFilepat = getPath(am, ".weights" );
 
-        JNIBridge.create(cfgFilePath, weightFilepat, confidence_threshold);
+        JNIBridge.createObjectDetector(cfgFilePath, weightFilepat, confidenceThreshold);
 
         return detector;
     }
@@ -28,40 +35,26 @@ public class YoloDetector implements Classifier
         return null;
     }
 
-    public static String getPath(String fileType, Context context)
+    private static String getPath(AssetManager am, String fileType)
     {
-        AssetManager assetManager = context.getAssets();
         String[] pathNames = {};
         String fileName = "";
-        try {
-            pathNames = assetManager.list("yolo");
-        } catch (IOException e) {
+        try
+        {
+            pathNames = am.list("yolo");
+        }
+        catch (IOException e)
+        {
             e.printStackTrace();
         }
-        for ( String filePath : pathNames ) {
-            if ( filePath.endsWith(fileType)) {
+        for ( String filePath : pathNames )
+        {
+            if ( filePath.endsWith(fileType))
+            {
                 fileName = filePath;
                 break;
             }
         }
-        BufferedInputStream inputStream;
-        try {
-            // Read data from assets.
-            inputStream = new BufferedInputStream(assetManager.open("yolo/" + fileName));
-            byte[] data = new byte[inputStream.available()];
-            inputStream.read(data);
-            inputStream.close();
-
-            // Create copy file in storage.
-            File outFile = new File(context.getFilesDir(), fileName);
-            FileOutputStream os = new FileOutputStream(outFile);
-            os.write(data);
-            os.close();
-            // Return a path to file which may be read in common way.
-            return outFile.getAbsolutePath();
-        } catch (IOException ex) {
-            //Log.i(TAG, "Failed to upload a file");
-        }
-        return "";
+        return fileName;
     }
 }

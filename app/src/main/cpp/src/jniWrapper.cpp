@@ -31,7 +31,7 @@ JULAYOM(bool, stopSound)(JNIEnv*, jobject)
     return soundGenerator->endSound();
 }
 
-JULAYOM(void, create)(JNIEnv * env, jobject obj,
+JULAYOM(void, createObjectDetector)(JNIEnv * env, jobject obj,
                       jstring cfg,
                       jstring weights,
                       jfloat confThreshold)
