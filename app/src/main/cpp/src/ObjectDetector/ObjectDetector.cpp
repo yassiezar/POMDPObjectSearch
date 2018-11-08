@@ -64,7 +64,6 @@ namespace ObjectDetector
         // the image
         cv::Mat blob = cv::dnn::blobFromImage(frame, 1/255.F, cv::Size(416,416), cv::Scalar(), true,
                 false);
-        LOGI("Here");
         net.setInput(blob);
 
         //compute the object detection
