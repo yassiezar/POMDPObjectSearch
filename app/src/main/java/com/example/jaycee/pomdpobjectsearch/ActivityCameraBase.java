@@ -27,8 +27,6 @@ import java.nio.ByteBuffer;
 public abstract class ActivityCameraBase extends Activity implements ImageReader.OnImageAvailableListener
 {
 
-    private static final Logger LOGGER = new Logger();
-
     private static final String TAG = ActivityCameraBase.class.getSimpleName();
 
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
@@ -38,7 +36,6 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
 
     private Handler handler;
     private HandlerThread handlerThread;
-    private boolean useCamera2API;
     private boolean isProcessingFrame = false;
     private byte[][] yuvBytes = new byte[3][];
     private int[] rgbBytes = null;
@@ -46,16 +43,14 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
 
     private boolean debug = false;
 
-
     protected int previewWidth = 0;
     protected int previewHeight = 0;
 
     private byte[] previewBytes;
     private byte[] processingBytes;
 
-
     private Runnable postInferenceCallback;
-    private Runnable previewImageConverter, imageProcessingConverter;
+    private Runnable previewImageConverter;
 
     protected FrameHandler frameHandler;
 

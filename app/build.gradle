@@ -38,15 +38,23 @@ android {
     aaptOptions {
         noCompress "tflite"
     }
-    repositories {
-        maven {
-            url 'https://google.bintray.com/tensorflow'
-        }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
-    dependencies {
-        implementation 'org.tensorflow:tensorflow-lite:0.0.0-nightly'
+
+}
+
+repositories {
+    maven {
+        url 'https://google.bintray.com/tensorflow'
     }
 }
+
+// import DownloadModels task
+project.ext.ASSET_DIR = projectDir.toString() + '/src/main/assets'
+project.ext.TMP_DIR   = project.buildDir.toString() + '/downloads'
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
@@ -56,4 +64,5 @@ dependencies {
     implementation 'com.google.android.gms:play-services-vision:17.0.2'
     implementation 'com.android.support:design:28.0.0'
     implementation 'de.javagl:obj:0.2.1'
+    implementation 'org.tensorflow:tensorflow-lite:0.0.0-nightly'
 }

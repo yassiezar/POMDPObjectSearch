@@ -34,11 +34,13 @@
         <com.example.jaycee.pomdpobjectsearch.views.OverlayView
             android:id="@+id/tracking_overlay"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent"
+            android:layout_alignTop="@+id/surfaceview"/>
         <com.example.jaycee.pomdpobjectsearch.views.OverlayView
             android:id="@+id/debug_overlay"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent"
+            android:layout_alignTop="@+id/surfaceview" />
 <!--        <com.example.jaycee.pomdpobjectsearch.views.RecognitionScoreView
             android:id="@+id/results"
             android:layout_width="match_parent"

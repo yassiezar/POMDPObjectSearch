@@ -40,6 +40,10 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
 
     private Bitmap rgbFrameBitmap;
 
+//    private static final int O_NOTHING = 0;
+//    //index of the found object. code=0 if no objects were found.
+//    private int objectCode = O_NOTHING;
+
     /* ------------------------ Detector variable ------------------------ */
 
     private static final Logger LOGGER = new Logger();
@@ -145,7 +149,7 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
 
         try {
             detector =
-                    TFLiteObjectDetectionAPIModel.create(
+                    ObjectDetector.create(
                             getAssets(),
                             TF_OD_API_MODEL_FILE,
                             TF_OD_API_LABELS_FILE,
@@ -283,6 +287,8 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
                         final long startTime = SystemClock.uptimeMillis();
                         final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
                         lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+
+//                        objectCode = Integer.parseInt(results.get(0).getId());
 
                         cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
                         final Canvas canvas = new Canvas(cropCopyBitmap);
