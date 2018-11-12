@@ -19,6 +19,7 @@ import android.view.WindowManager;
 import android.widget.Toast;
 import android.widget.Toolbar;
 
+import com.example.jaycee.pomdpobjectsearch.helpers.ImageUtils;
 import com.example.jaycee.pomdpobjectsearch.views.OverlayView;
 import com.example.jaycee.pomdpobjectsearch.helpers.Logger;
 
@@ -209,6 +210,12 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
             final Image image = reader.acquireLatestImage();
             if(image == null) return;
 
+            final Image.Plane[] planes = image.getPlanes();
+//            fillBytes(planes, yuvBytes);
+            yRowStride = planes[0].getRowStride();
+            final int uvRowStride = planes[1].getRowStride();
+            final int uvPixelStride = planes[1].getPixelStride();
+
             previewImageConverter = new Runnable()
             {
                 @Override
@@ -216,9 +223,21 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
                 {
                     previewBytes = YUV_420_888_data(image);
                     Log.d(TAG, "Converting image");
+//
+//                    ImageUtils.convertYUV420ToARGB8888(
+//                            yuvBytes[0],
+//                            yuvBytes[1],
+//                            yuvBytes[2],
+//                            previewWidth,
+//                            previewHeight,
+//                            yRowStride,
+//                            uvRowStride,
+//                            uvPixelStride,
+//                            rgbBytes);
 
                 }
             };
+
             renderFrame(image);
 
             if(isProcessingFrame)
@@ -226,8 +245,8 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
                 image.close();
                 return;
             }
-
             isProcessingFrame = true;
+
             Trace.beginSection("ImageAvailable");
             postInferenceCallback = new Runnable()
             {
@@ -245,9 +264,23 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         {
             Log.e(TAG, "Exception on ImageReader: " + e);
             Trace.endSection();
+            //isProcessingFrame = false;
             return;
         }
         Trace.endSection();
+    }
+
+    protected void fillBytes(final Image.Plane[] planes, final byte[][] yuvBytes) {
+        // Because of the variable row stride it's not possible to know in
+        // advance the actual necessary dimensions of the yuv planes.
+        for (int i = 0; i < planes.length; ++i) {
+            final ByteBuffer buffer = planes[i].getBuffer();
+            if (yuvBytes[i] == null) {
+//                LOGGER.d("Initializing buffer %d at size %d", i, buffer.capacity());
+                yuvBytes[i] = new byte[buffer.capacity()];
+            }
+            buffer.get(yuvBytes[i]);
+        }
     }
 
     protected byte[] getPreviewBytes()
@@ -303,7 +336,8 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
             if (pixelStride == 1 && rowStride == planeWidth)
             {
                 // Copy whole plane from buffer into |data| at once.
-                buffer.get(data, offset, planeWidth * planeHeight);
+//                while (buffer.remaining() >= 36)
+                    buffer.get(data, offset, planeWidth * planeHeight);
                 offset += planeWidth * planeHeight;
             }
             else
