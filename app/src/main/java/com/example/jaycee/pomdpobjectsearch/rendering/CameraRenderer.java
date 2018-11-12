@@ -23,14 +23,6 @@ public class CameraRenderer implements GLSurfaceView.Renderer
         nativeCreateRenderer();
     }
 
-/*    public void requestRender()
-    {
-        if(surfaceView != null && surfaceView.getRenderMode() == GLSurfaceView.RENDERMODE_WHEN_DIRTY)
-        {
-            surfaceView.requestRender();
-        }
-    }*/
-
     public void destroyRenderer() { nativeDestroyRenderer(); }
 
     public void drawFrame(byte[] frame, int width, int height, int rotation)

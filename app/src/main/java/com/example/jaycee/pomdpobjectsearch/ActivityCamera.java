@@ -32,7 +32,9 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
 {
     private static final String TAG = ActivityCamera.class.getSimpleName();
 
-    private Size DESIRED_PREVIEW_SIZE = new Size(1440, 2560);
+    //choose this size, because are the same of the image size given by the listener
+    //change all the size in the code, so that they take this size
+    private Size DESIRED_PREVIEW_SIZE  = new Size(1600, 1200);
 
     private CameraSurface surfaceView;
 
@@ -254,7 +256,7 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
                 sensorOrientation,
                 originalLuminance,
                 timestamp);
-        trackingOverlay.postInvalidate();
+         trackingOverlay.postInvalidate();
 
         // No mutex needed as this method is not reentrant.
         if (computingDetection) {

@@ -24,6 +24,7 @@ import com.example.jaycee.pomdpobjectsearch.views.OverlayView;
 import com.example.jaycee.pomdpobjectsearch.helpers.Logger;
 
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 
 public abstract class ActivityCameraBase extends Activity implements ImageReader.OnImageAvailableListener
 {
@@ -51,7 +52,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
     private byte[] processingBytes;
 
     private Runnable postInferenceCallback;
-    private Runnable previewImageConverter;
+    private Runnable previewImageConverter, objImageConverter;
 
     protected FrameHandler frameHandler;
 
@@ -75,7 +76,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
     }
 
     protected int[] getRgbBytes() {
-        previewImageConverter.run();
+        objImageConverter.run();
         return rgbBytes;
     }
 
@@ -187,8 +188,9 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
     @Override
     public void onImageAvailable(final ImageReader reader)
     {
-        // Need to have preview sizes set
-        if(previewHeight == 0 || previewWidth == 0) return;
+
+       // Need to have preview sizes set
+       if(previewHeight == 0 || previewWidth == 0) return;
 
        if(rgbBytes == null)
         {
@@ -208,32 +210,17 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         try
         {
             final Image image = reader.acquireLatestImage();
-            if(image == null) return;
+            if(image == null)
+                return;
 
             final Image.Plane[] planes = image.getPlanes();
-//            fillBytes(planes, yuvBytes);
-            yRowStride = planes[0].getRowStride();
-            final int uvRowStride = planes[1].getRowStride();
-            final int uvPixelStride = planes[1].getPixelStride();
 
-            previewImageConverter = new Runnable()
-            {
+            previewImageConverter = new Runnable() {
                 @Override
                 public void run()
                 {
                     previewBytes = YUV_420_888_data(image);
                     Log.d(TAG, "Converting image");
-//
-//                    ImageUtils.convertYUV420ToARGB8888(
-//                            yuvBytes[0],
-//                            yuvBytes[1],
-//                            yuvBytes[2],
-//                            previewWidth,
-//                            previewHeight,
-//                            yRowStride,
-//                            uvRowStride,
-//                            uvPixelStride,
-//                            rgbBytes);
 
                 }
             };
@@ -247,7 +234,6 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
             }
             isProcessingFrame = true;
 
-            Trace.beginSection("ImageAvailable");
             postInferenceCallback = new Runnable()
             {
                 @Override
@@ -258,13 +244,42 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
                 }
             };
 
+            Trace.beginSection("ImageAvailable");
+
+            fillBytes(planes, yuvBytes);
+            yRowStride = planes[0].getRowStride();
+            final int uvRowStride = planes[1].getRowStride();
+            final int uvPixelStride = planes[1].getPixelStride();
+
+            //needed, because I need a int[] array (rgbBytes) for the bitmap
+            //TODO: merge with the other converter, to make all at one time
+            objImageConverter = new Runnable()
+            {
+                @Override
+                public void run()
+                {
+
+                    ImageUtils.convertYUV420ToARGB8888(
+                            yuvBytes[0],
+                            yuvBytes[1],
+                            yuvBytes[2],
+                            image.getWidth(), //the image size is 1600x1200
+                            image.getHeight(),
+                            yRowStride,
+                            uvRowStride,
+                            uvPixelStride,
+                            rgbBytes);
+
+                }
+            };
+
             processImage();
         }
         catch(final Exception e)
         {
             Log.e(TAG, "Exception on ImageReader: " + e);
             Trace.endSection();
-            //isProcessingFrame = false;
+            postInferenceCallback.run();
             return;
         }
         Trace.endSection();
@@ -275,6 +290,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         // advance the actual necessary dimensions of the yuv planes.
         for (int i = 0; i < planes.length; ++i) {
             final ByteBuffer buffer = planes[i].getBuffer();
+            buffer.position(0);
             if (yuvBytes[i] == null) {
 //                LOGGER.d("Initializing buffer %d at size %d", i, buffer.capacity());
                 yuvBytes[i] = new byte[buffer.capacity()];

@@ -58,8 +58,8 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         this.context = context;
         this.surfaceView = surfaceView;
 
-        this.scannerWidth = 1440;
-        this.scannerHeight = 2280;
+        this.scannerWidth = surfaceView.getWidth();
+        this.scannerHeight = surfaceView.getHeight();
         this.scannerX = 0;
         this.scannerY = 0;
 

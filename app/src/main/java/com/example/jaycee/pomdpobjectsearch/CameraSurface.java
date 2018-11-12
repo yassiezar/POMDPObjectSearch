@@ -105,7 +105,6 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
             imageReader.setOnImageAvailableListener((ActivityCamera)context, backgroundHandler);
             openCamera();
         }
-        // ((ActivityCamera)context).startObjectDetector();
     }
 
     @Override
@@ -115,34 +114,6 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
         renderer.destroyRenderer();
         // ((ActivityCamera)context).stopObjectDetector();
     }
-
-/*    @Override
-    public boolean onTouchEvent(MotionEvent event)
-    {
-        Log.i(TAG, "Pressed");
-        final int action = event.getAction();
-
-        switch(action)
-        {
-            case (MotionEvent.ACTION_DOWN):
-            {
-                performClick();
-            }
-        }
-        return super.onTouchEvent(event);
-    }*/
-
-/*
-    @Override
-    public boolean performClick()
-    {
-        super.performClick();
-
-        renderer.toggleDrawObjects();
-
-        return true;
-    }
-*/
 
     public void openCamera()
     {
@@ -168,9 +139,9 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
                     continue;
                 }
                 sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
-                previewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
+                previewSize = inputSize; /* chooseOptimalSize(map.getOutputSizes(SurfaceTexture.class),
                                 inputSize.getWidth(),
-                                inputSize.getHeight());
+                                inputSize.getHeight());*/
                 this.cameraId = cameraId;
             }
             manager.openCamera(cameraId, stateCallback, backgroundHandler);

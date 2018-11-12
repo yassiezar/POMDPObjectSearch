@@ -169,17 +169,18 @@ public class ImageUtils {
       int uvRowStride,
       int uvPixelStride,
       int[] out) {
-    if (useNativeConversion) {
-      try {
-        convertYUV420ToARGB8888(
-            yData, uData, vData, out, width, height, yRowStride, uvRowStride, uvPixelStride, false);
-        return;
-      } catch (UnsatisfiedLinkError e) {
-        LOGGER.w(
-            "Native YUV420 -> RGB implementation not found, falling back to Java implementation");
-        useNativeConversion = false;
-      }
-    }
+
+//    if (useNativeConversion) {
+//      try {
+//        convertYUV420ToARGB8888(
+//            yData, uData, vData, out, width, height, yRowStride, uvRowStride, uvPixelStride, false);
+//        return;
+//      } catch (UnsatisfiedLinkError e) {
+//        LOGGER.w(
+//            "Native YUV420 -> RGB implementation not found, falling back to Java implementation");
+//        useNativeConversion = false;
+//      }
+//    }
 
     int yp = 0;
     for (int j = 0; j < height; j++) {
