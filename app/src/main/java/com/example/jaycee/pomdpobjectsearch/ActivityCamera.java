@@ -23,6 +23,8 @@ import com.example.jaycee.pomdpobjectsearch.helpers.Logger;
 import com.example.jaycee.pomdpobjectsearch.tracking.MultiBoxTracker;
 import com.example.jaycee.pomdpobjectsearch.views.OverlayView;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -187,6 +189,8 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
         cropToFrameTransform = new Matrix();
         frameToCropTransform.invert(cropToFrameTransform);
 
+
+        /*NOT NEEDED IN T@HE FINAL PROJECT*/
         trackingOverlay = (OverlayView) findViewById(R.id.tracking_overlay);
         trackingOverlay.addCallback(
                 new OverlayView.DrawCallback() {
@@ -287,6 +291,8 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
                     public void run() {
                         LOGGER.i("Running detection on image " + currTimestamp);
                         final long startTime = SystemClock.uptimeMillis();
+//                        //the image we want to give to NN
+//                        byte[] byteImg = getPreviewBytes();
                         final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
                         lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
@@ -334,4 +340,6 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
     {
         frameHandler.onPreviewFrame(getPreviewBytes(), image.getWidth(), image.getHeight());
     }
+
+
 }

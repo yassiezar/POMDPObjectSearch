@@ -125,11 +125,13 @@ public class ObjectDetector implements Classifier {
         d.imgData.order(ByteOrder.nativeOrder());
         d.intValues = new int[d.inputSize * d.inputSize];
 
+        //check if changing the threads number the performance change
         d.tfLite.setNumThreads(NUM_THREADS);
         d.outputLocations = new float[1][NUM_DETECTIONS][4];
         d.outputClasses = new float[1][NUM_DETECTIONS];
         d.outputScores = new float[1][NUM_DETECTIONS];
         d.numDetections = new float[1];
+
         return d;
 
     }
@@ -137,7 +139,7 @@ public class ObjectDetector implements Classifier {
     private ObjectDetector() {}
 
     @Override
-    public List<Recognition> recognizeImage(final Bitmap bitmap) {
+    public List<Recognition> recognizeImage(Bitmap bitmap) { //TODO: change bitmap with byteArray[] and change the code of tensorflow lite to take all the image size
         // Log this method so that it can be analyzed with systrace.
         Trace.beginSection("recognizeImage");
 
@@ -155,13 +157,18 @@ public class ObjectDetector implements Classifier {
                     imgData.put((byte) ((pixelValue >> 16) & 0xFF));
                     imgData.put((byte) ((pixelValue >> 8) & 0xFF));
                     imgData.put((byte) (pixelValue & 0xFF));
-                } else { // Float model
+                }
+                else { // Float model
                     imgData.putFloat((((pixelValue >> 16) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
                     imgData.putFloat((((pixelValue >> 8) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
                     imgData.putFloat(((pixelValue & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
                 }
             }
         }
+
+        //the image arrive directly in correct format and in the correct size (300x300)
+        //imgData = ByteBuffer.wrap(byteImg);
+
         Trace.endSection(); // preprocessBitmap
 
         // Copy the input data into TensorFlow.

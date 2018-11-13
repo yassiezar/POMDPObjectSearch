@@ -353,7 +353,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
             {
                 // Copy whole plane from buffer into |data| at once.
 //                while (buffer.remaining() >= 36)
-                    buffer.get(data, offset, planeWidth * planeHeight);
+                buffer.get(data, offset, planeWidth * planeHeight);
                 offset += planeWidth * planeHeight;
             }
             else
