@@ -23,8 +23,6 @@ import com.example.jaycee.pomdpobjectsearch.helpers.Logger;
 import com.example.jaycee.pomdpobjectsearch.tracking.MultiBoxTracker;
 import com.example.jaycee.pomdpobjectsearch.views.OverlayView;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,71 +30,50 @@ import java.util.Vector;
 
 public class ActivityCamera extends ActivityCameraBase implements ImageReader.OnImageAvailableListener, FrameHandler
 {
+    private enum DetectorMode {
+        TF_OD_API
+    }
     private static final String TAG = ActivityCamera.class.getSimpleName();
+    private static final Logger LOGGER = new Logger(TAG);
+    // Configuration values for the prepackaged SSD model.
+    // Which detection model to use: by default uses Tensorflow Object Detection API frozen
+    // checkpoints.
+    private static final DetectorMode MODE = DetectorMode.TF_OD_API;
+    private static final int TF_OD_API_INPUT_SIZE = 300;
+    private static final boolean TF_OD_API_IS_QUANTIZED = true;
+    private static final boolean MAINTAIN_ASPECT = false;
+    private static final boolean SAVE_PREVIEW_BITMAP = false;private static final String TF_OD_API_MODEL_FILE = "mobilenet/detect.tflite";
+    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/mobilenet/coco_labels_list.txt";
+    // Minimum detection confidence to track a detection.
+    private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
+    private static final float TEXT_SIZE_DIP = 10;
 
     //choose this size, because are the same of the image size given by the listener
     //change all the size in the code, so that they take this size
     private Size DESIRED_PREVIEW_SIZE  = new Size(1600, 1200);
 
     private CameraSurface surfaceView;
-
-    private Integer sensorOrientation;
-
-    private Bitmap rgbFrameBitmap;
-
-//    private static final int O_NOTHING = 0;
-//    //index of the found object. code=0 if no objects were found.
-//    private int objectCode = O_NOTHING;
-
-    /* ------------------------ Detector variable ------------------------ */
-
-    private static final Logger LOGGER = new Logger();
-    // Configuration values for the prepackaged SSD model.
-    private static final int TF_OD_API_INPUT_SIZE = 300;
-    private static final boolean TF_OD_API_IS_QUANTIZED = true;
-    private static final String TF_OD_API_MODEL_FILE = "mobilenet/detect.tflite";
-    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/mobilenet/coco_labels_list.txt";
-
-    // Which detection model to use: by default uses Tensorflow Object Detection API frozen
-    // checkpoints.
-    private enum DetectorMode {
-        TF_OD_API;
-    }
-
-    private static final DetectorMode MODE = DetectorMode.TF_OD_API;
-
-    // Minimum detection confidence to track a detection.
-    private static final float MINIMUM_CONFIDENCE_TF_OD_API = 0.6f;
-
-    private static final boolean MAINTAIN_ASPECT = false;
-
-    private static final boolean SAVE_PREVIEW_BITMAP = false;
-    private static final float TEXT_SIZE_DIP = 10;
-
+    private OverlayView trackingOverlay;
+    private BorderedText borderedText;
+    private MultiBoxTracker tracker;
 
     private Classifier detector;
 
-    private long lastProcessingTimeMs;
+    private Bitmap rgbFrameBitmap;
     private Bitmap croppedBitmap = null;
     private Bitmap cropCopyBitmap = null;
-
-    private boolean computingDetection = false;
-
-    private long timestamp = 0;
 
     private Matrix frameToCropTransform;
     private Matrix cropToFrameTransform;
 
-    private MultiBoxTracker tracker;
+    private Integer sensorOrientation;
+
+    private long lastProcessingTimeMs;
+    private long timestamp = 0;
+
+    private boolean computingDetection = false;
 
     private byte[] luminanceCopy;
-
-    private BorderedText borderedText;
-
-    OverlayView trackingOverlay;
-
-    /* ------------------------ Detector variable ------------------------ */
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -115,7 +92,7 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
     @Override
     public void onPause()
     {
-        Log.i(TAG, "Activity onPause");
+        LOGGER.i("Activity onPause");
         surfaceView.onPause();
         super.onPause();
     }
@@ -126,11 +103,9 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
         return super.onOptionsItemSelected(item);
     }
 
-    // CHECK THAT THIS IS CALLED
     @Override
     public void onPreviewFrame(byte[] data, int width, int height)
     {
-        // Integer rotation = surfaceView.getSensorOrientation();
         surfaceView.getRenderer().drawFrame(data, width, height, sensorOrientation);
         surfaceView.requestRender();
     }
@@ -160,7 +135,9 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
                             TF_OD_API_INPUT_SIZE,
                             TF_OD_API_IS_QUANTIZED);
             cropSize = TF_OD_API_INPUT_SIZE;
-        } catch (final IOException e) {
+        }
+        catch (final IOException e)
+        {
             LOGGER.e("Exception initializing classifier!", e);
             Toast toast =
                     Toast.makeText(
@@ -250,7 +227,7 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
     @Override
     protected void processImage()
     {
-        ++timestamp;
+        timestamp++;
         final long currTimestamp = timestamp;
         byte[] originalLuminance = getLuminance();
         tracker.onFrame(
@@ -263,7 +240,8 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
          trackingOverlay.postInvalidate();
 
         // No mutex needed as this method is not reentrant.
-        if (computingDetection) {
+        if (computingDetection)
+        {
             readyForNextImage();
             return;
         }
@@ -281,58 +259,64 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
         final Canvas canvas = new Canvas(croppedBitmap);
         canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
         // For examining the actual TF input.
-        if (SAVE_PREVIEW_BITMAP) {
+        if (SAVE_PREVIEW_BITMAP)
+        {
             ImageUtils.saveBitmap(croppedBitmap);
         }
 
-        runInBackground(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        LOGGER.i("Running detection on image " + currTimestamp);
-                        final long startTime = SystemClock.uptimeMillis();
-//                        //the image we want to give to NN
-//                        byte[] byteImg = getPreviewBytes();
-                        final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
-                        lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
+        if(detector != null)
+        {
+            LOGGER.w("Detector not initialised. ");
+            runInBackground(
+                    new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            LOGGER.i("Running detection on image " + currTimestamp);
+                            final long startTime = SystemClock.uptimeMillis();
+                            final List<Classifier.Recognition> results = detector.recognizeImage(croppedBitmap);
+                            lastProcessingTimeMs = SystemClock.uptimeMillis() - startTime;
 
-//                        objectCode = Integer.parseInt(results.get(0).getId());
+                            cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
+                            final Canvas canvas = new Canvas(cropCopyBitmap);
+                            final Paint paint = new Paint();
+                            paint.setColor(Color.RED);
+                            paint.setStyle(Paint.Style.STROKE);
+                            paint.setStrokeWidth(2.0f);
 
-                        cropCopyBitmap = Bitmap.createBitmap(croppedBitmap);
-                        final Canvas canvas = new Canvas(cropCopyBitmap);
-                        final Paint paint = new Paint();
-                        paint.setColor(Color.RED);
-                        paint.setStyle(Paint.Style.STROKE);
-                        paint.setStrokeWidth(2.0f);
-
-                        float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-                        switch (MODE) {
-                            case TF_OD_API:
-                                minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
-                                break;
-                        }
-
-                        final List<Classifier.Recognition> mappedRecognitions =
-                                new LinkedList<Classifier.Recognition>();
-
-                        for (final Classifier.Recognition result : results) {
-                            final RectF location = result.getLocation();
-                            if (location != null && result.getConfidence() >= minimumConfidence) {
-                                canvas.drawRect(location, paint);
-
-                                cropToFrameTransform.mapRect(location);
-                                result.setLocation(location);
-                                mappedRecognitions.add(result);
+                            float minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+                            switch (MODE)
+                            {
+                                case TF_OD_API:
+                                    minimumConfidence = MINIMUM_CONFIDENCE_TF_OD_API;
+                                    break;
                             }
+
+                            final List<Classifier.Recognition> mappedRecognitions =
+                                    new LinkedList<Classifier.Recognition>();
+
+                            for (final Classifier.Recognition result : results)
+                            {
+                                final RectF location = result.getLocation();
+                                if (location != null && result.getConfidence() >= minimumConfidence)
+                                {
+                                    canvas.drawRect(location, paint);
+
+                                    cropToFrameTransform.mapRect(location);
+                                    result.setLocation(location);
+                                    mappedRecognitions.add(result);
+                                }
+                            }
+
+                            tracker.trackResults(mappedRecognitions, luminanceCopy, currTimestamp);
+                            trackingOverlay.postInvalidate();
+
+                            requestRender();
+                            computingDetection = false;
                         }
-
-                        tracker.trackResults(mappedRecognitions, luminanceCopy, currTimestamp);
-                        trackingOverlay.postInvalidate();
-
-                        requestRender();
-                        computingDetection = false;
-                    }
-                });
+                    });
+        }
     }
 
     @Override
@@ -340,6 +324,4 @@ public class ActivityCamera extends ActivityCameraBase implements ImageReader.On
     {
         frameHandler.onPreviewFrame(getPreviewBytes(), image.getWidth(), image.getHeight());
     }
-
-
 }

@@ -6,13 +6,18 @@ import android.graphics.Bitmap;
 import android.graphics.RectF;
 import android.os.Trace;
 
+import com.example.jaycee.pomdpobjectsearch.helpers.Logger;
+
 import org.tensorflow.lite.Interpreter;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
@@ -23,14 +28,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-//import org.tensorflow.Logger;
-
 /**
  * Wrapper for frozen detection models trained using the Tensorflow Object Detection API:
  * github.com/tensorflow/models/tree/master/research/object_detection
  */
-public class ObjectDetector implements Classifier {
-//      private static final Logger LOGGER = new Logger();
+public class ObjectDetector implements Classifier
+{
+    private static final String TAG = ObjectDetector.class.getSimpleName();
+    private static final Logger LOGGER = new Logger(TAG);
 
     // Only return this many results.
     private static final int NUM_DETECTIONS = 10;
@@ -62,7 +67,6 @@ public class ObjectDetector implements Classifier {
 
     private Interpreter tfLite;
 
-
     /** Memory-map the model file in Assets. */
     private static MappedByteBuffer loadModelFile(AssetManager assets, String modelFilename)
             throws IOException {
@@ -93,32 +97,51 @@ public class ObjectDetector implements Classifier {
 
         final ObjectDetector d = new ObjectDetector();
 
-        InputStream labelsInput = null;
         String actualFilename = labelFilename.split("file:///android_asset/")[1];
-        labelsInput = assetManager.open(actualFilename);
-        BufferedReader br = null;
-        br = new BufferedReader(new InputStreamReader(labelsInput));
+        InputStream labelsInput = assetManager.open(actualFilename);
+/*
+        File labelFile = new File(actualFilename);
+        if(!labelFile.exists())
+        {
+            byte[] data = new byte[8388608];
+            labelsInput.read(data);
+            labelsInput.close();
+
+            FileOutputStream fos = new FileOutputStream(labelFile);
+            fos.write(data);
+            fos.close();
+
+        }*/
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(labelsInput));
         String line;
-        while ((line = br.readLine()) != null) {
-//          LOGGER.w(line);
+        while ((line = br.readLine()) != null)
+        {
             d.labels.add(line);
         }
         br.close();
 
         d.inputSize = inputSize;
 
-        try {
+        try
+        {
             d.tfLite = new Interpreter(loadModelFile(assetManager, modelFilename));
-        } catch (Exception e) {
+            // d.tfLite = new Interpreter(labelFile);
+        }
+        catch (Exception e)
+        {
             throw new RuntimeException(e);
         }
 
         d.isModelQuantized = isQuantized;
         // Pre-allocate buffers.
         int numBytesPerChannel;
-        if (isQuantized) {
+        if (isQuantized)
+        {
             numBytesPerChannel = 1; // Quantized
-        } else {
+        }
+        else
+            {
             numBytesPerChannel = 4; // Floating point
         }
         d.imgData = ByteBuffer.allocateDirect(1 * d.inputSize * d.inputSize * 3 * numBytesPerChannel);
@@ -133,7 +156,6 @@ public class ObjectDetector implements Classifier {
         d.numDetections = new float[1];
 
         return d;
-
     }
 
     private ObjectDetector() {}
@@ -149,25 +171,26 @@ public class ObjectDetector implements Classifier {
         bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
 
         imgData.rewind();
-        for (int i = 0; i < inputSize; ++i) {
-            for (int j = 0; j < inputSize; ++j) {
+        for (int i = 0; i < inputSize; ++i)
+        {
+            for (int j = 0; j < inputSize; ++j)
+            {
                 int pixelValue = intValues[i * inputSize + j];
-                if (isModelQuantized) {
+                if (isModelQuantized)
+                {
                     // Quantized model
                     imgData.put((byte) ((pixelValue >> 16) & 0xFF));
                     imgData.put((byte) ((pixelValue >> 8) & 0xFF));
                     imgData.put((byte) (pixelValue & 0xFF));
                 }
-                else { // Float model
+                else
+                { // Float model
                     imgData.putFloat((((pixelValue >> 16) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
                     imgData.putFloat((((pixelValue >> 8) & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
                     imgData.putFloat(((pixelValue & 0xFF) - IMAGE_MEAN) / IMAGE_STD);
                 }
             }
         }
-
-        //the image arrive directly in correct format and in the correct size (300x300)
-        //imgData = ByteBuffer.wrap(byteImg);
 
         Trace.endSection(); // preprocessBitmap
 

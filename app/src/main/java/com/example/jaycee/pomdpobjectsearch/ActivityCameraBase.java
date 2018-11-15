@@ -28,8 +28,8 @@ import java.nio.IntBuffer;
 
 public abstract class ActivityCameraBase extends Activity implements ImageReader.OnImageAvailableListener
 {
-
     private static final String TAG = ActivityCameraBase.class.getSimpleName();
+    private static final Logger LOGGER = new Logger(TAG);
 
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
     private static final String STORAGE_PERMISSION = Manifest.permission.WRITE_EXTERNAL_STORAGE;
@@ -91,7 +91,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
     @Override
     public synchronized void onStart()
     {
-        Log.d(TAG, "onStart " + this);
+        LOGGER.d("onStart " + this);
         super.onStart();
     }
 
@@ -127,7 +127,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         }
         catch(final InterruptedException e)
         {
-            Log.e(TAG, "Exception onPause: " + e);
+            LOGGER.e("Exception onPause: " + e);
         }
 
         super.onPause();
@@ -136,14 +136,14 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
     @Override
     public synchronized void onStop()
     {
-        Log.d(TAG, "onStop " + this);
+        LOGGER.d("onStop " + this);
         super.onStop();
     }
 
     @Override
     public synchronized void onDestroy()
     {
-        Log.d(TAG, "onDestroy" + this);
+        LOGGER.d("onDestroy" + this);
         super.onDestroy();
     }
 
@@ -220,7 +220,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
                 public void run()
                 {
                     previewBytes = YUV_420_888_data(image);
-                    Log.d(TAG, "Converting image");
+                    LOGGER.d("Converting image");
 
                 }
             };
@@ -277,7 +277,7 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         }
         catch(final Exception e)
         {
-            Log.e(TAG, "Exception on ImageReader: " + e);
+            LOGGER.e("Exception on ImageReader: " + e);
             Trace.endSection();
             postInferenceCallback.run();
             return;
@@ -285,14 +285,15 @@ public abstract class ActivityCameraBase extends Activity implements ImageReader
         Trace.endSection();
     }
 
-    protected void fillBytes(final Image.Plane[] planes, final byte[][] yuvBytes) {
+    protected void fillBytes(final Image.Plane[] planes, final byte[][] yuvBytes)
+    {
         // Because of the variable row stride it's not possible to know in
         // advance the actual necessary dimensions of the yuv planes.
         for (int i = 0; i < planes.length; ++i) {
             final ByteBuffer buffer = planes[i].getBuffer();
             buffer.position(0);
             if (yuvBytes[i] == null) {
-//                LOGGER.d("Initializing buffer %d at size %d", i, buffer.capacity());
+                LOGGER.d("Initializing buffer %d at size %d", i, buffer.capacity());
                 yuvBytes[i] = new byte[buffer.capacity()];
             }
             buffer.get(yuvBytes[i]);
