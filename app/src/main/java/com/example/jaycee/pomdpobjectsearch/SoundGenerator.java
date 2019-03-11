@@ -3,6 +3,7 @@ package com.example.jaycee.pomdpobjectsearch;
 import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
 import com.example.jaycee.pomdpobjectsearch.rendering.SurfaceRenderer;
 import com.google.ar.core.Anchor;
+import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 
@@ -33,22 +34,24 @@ public class SoundGenerator implements Runnable
     private static final int GRID_SIZE = 6;
 
     private Context context;
-    private SurfaceRenderer renderer;
 
+    private Frame frame;
     private Pose phonePose;
     private Waypoint waypoint;
-    private Pose offsetPose;
     private Anchor waypointAnchor;
     private Session session;
 
     private long observation = O_NOTHING;
     private long prevCameraObservation = O_NOTHING;
     private long target = -1;
+    private long timestamp;
 
     private Policy policy;
 
     private Metrics metrics = new Metrics();
     private State state;
+
+    private NewWaypointHandler waypointHandler;
 
     private Vibrator vibrator;
     private Toast toast;
@@ -59,10 +62,10 @@ public class SoundGenerator implements Runnable
     private boolean targetFound = false;
 
 
-    SoundGenerator(Context context, SurfaceRenderer renderer)
+    SoundGenerator(Context context)
     {
         this.context = context;
-        this.renderer = renderer;
+        this.waypointHandler = (NewWaypointHandler)context;
 
         this.vibrator= (Vibrator)context.getSystemService(Context.VIBRATOR_SERVICE);
     }
@@ -77,138 +80,143 @@ public class SoundGenerator implements Runnable
     @Override
     public void run()
     {
-        phonePose = renderer.getDevicePose();
-        this.session = renderer.getSession();
-
-        if(!isTargetSet() || isTargetFound())
+        try
         {
-            if(!stop) handler.postDelayed(this, 40);
-            return;
-        }
+            phonePose = frame.getAndroidSensorPose();
 
-        if(!renderer.isRendererReady())
-        {
-            if(!stop) handler.postDelayed(this, 40);
-            return;
-        }
+            if (!isTargetSet() || isTargetFound())
+            {
+                if (!stop) handler.postDelayed(this, 40);
+                return;
+            }
 
-        setObservation(((ActivityCamera)context).currentBarcodeScan());
+/*            if (!renderer.isRendererReady())
+            {
+                if (!stop) handler.postDelayed(this, 40);
+                return;
+            }*/
 
-        float gain = 1.f;
-        if(observation == target)
-        {
-            Log.i(TAG, "Target found");
-            targetFound = true;
-            targetSet = false;
-            observation = O_NOTHING;
-            vibrator.vibrate(350);
-            gain = 0.f;
+            float gain = 1.f;
+            if (observation == target)
+            {
+                Log.i(TAG, "Target found");
+                targetFound = true;
+                targetSet = false;
+                observation = O_NOTHING;
+                vibrator.vibrate(350);
+                gain = 0.f;
 
-            ((ActivityCamera)context).getCentreView().resetArrows();
-            renderer.setDrawWaypoint(false);
-            waypointAnchor.detach();
-            waypoint = null;
-            state = null;
-        }
+                ((ActivityCamera) context).getCentreView().resetArrows();
+                waypointHandler.onTargetFound();
+                waypointAnchor.detach();
+                waypoint = null;
+                state = null;
+            }
 
-        if(waypoint != null)
-        {
-            // Get Euler angles from vector wrt axis system
-            // pitch = tilt, yaw = pan
-            ClassHelpers.mVector cameraVector = getCameraVector(phonePose);
-            float[] phoneRotationAngles = cameraVector.getEuler();
-            float cameraPan = phoneRotationAngles[2];
-            float cameraTilt = phoneRotationAngles[1];
-            long newCameraObservation = this.observation;
+            if (waypoint != null)
+            {
+                // Get Euler angles from vector wrt axis system
+                // pitch = tilt, yaw = pan
+                ClassHelpers.mVector cameraVector = getCameraVector(phonePose);
+                float[] phoneRotationAngles = cameraVector.getEuler();
+                float cameraPan = phoneRotationAngles[2];
+                float cameraTilt = phoneRotationAngles[1];
+                long newCameraObservation = this.observation;
 
-            // Get current state and generate new waypoint if agent is in new state or sees new object
+                // Get current state and generate new waypoint if agent is in new state or sees new object
 /*            Log.d(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
             Log.d(TAG, String.format("Object: %d Step: %d Visited: %d", state.getEncodedState()[0], state.getEncodedState()[1], state.getEncodedState()[2]));
             Log.d(TAG, String.format("x: %f y %f", Math.toDegrees(cameraPan), Math.toDegrees(cameraTilt)));*/
-            if(waypoint.waypointReached(cameraPan, cameraTilt) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
-            {
-                if(waypointAnchor != null)
+                if (waypoint.waypointReached(cameraPan, cameraTilt) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
                 {
-                    waypointAnchor.detach();
+                    if (waypointAnchor != null)
+                    {
+                        waypointAnchor.detach();
+                    }
+
+                    long action = policy.getAction(state);
+                    //Log.d(TAG, String.format("Object found or found waypoint, action: %d", action));
+                    long[] testState = state.getEncodedState();
+                    // Log.i(TAG, String.format("State %d obs %d steps %d prev %d", state.getDecodedState(), testState[0], testState[1], testState[2]));
+                    waypoint.updateWaypoint(-cameraPan, cameraTilt, action);
+                    waypointAnchor = session.createAnchor(waypoint.getPose());
+                    prevCameraObservation = newCameraObservation;
+                    state.addObservation(newCameraObservation, cameraPan, cameraTilt);
+                    // Log.i(TAG, "Setting new waypoint");
+                }
+                ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(waypoint.pose.getTranslation());
+                float[] waypointRotationAngles = waypointVector.getEuler();
+                float waypointTilt = waypointRotationAngles[1];
+
+                if (waypointTilt > Math.PI / 2)
+                {
+                    waypointTilt -= (float) Math.PI;
+                }
+                else if (waypointTilt < Math.PI / 2)
+                {
+                    waypointTilt += (float) Math.PI;
                 }
 
-                long action = policy.getAction(state);
-                //Log.d(TAG, String.format("Object found or found waypoint, action: %d", action));
-                long[] testState = state.getEncodedState();
-                // Log.i(TAG, String.format("State %d obs %d steps %d prev %d", state.getDecodedState(), testState[0], testState[1], testState[2]));
-                waypoint.updateWaypoint(-cameraPan, cameraTilt, action);
-                waypointAnchor = session.createAnchor(waypoint.getPose());
-                prevCameraObservation = newCameraObservation;
-                state.addObservation(newCameraObservation, cameraPan, cameraTilt);
-                // Log.i(TAG, "Setting new waypoint");
-            }
-            ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(waypoint.pose.getTranslation());
-            float[] waypointRotationAngles = waypointVector.getEuler();
-            float waypointTilt = waypointRotationAngles[1];
-
-            if(waypointTilt > Math.PI/2)
-            {
-                waypointTilt -= (float)Math.PI;
-            }
-            else if(waypointTilt < Math.PI/2)
-            {
-                waypointTilt += (float)Math.PI;
-            }
-
-            // Set direction arrow
-            ClassHelpers.mVector vectorToWaypoint = waypointVector.translate(cameraVector);
+                // Set direction arrow
+                ClassHelpers.mVector vectorToWaypoint = waypointVector.translate(cameraVector);
 /*            Log.d(TAG, String.format("x %f y %f z %f", vectorToWaypoint.x, vectorToWaypoint.y, vectorToWaypoint.z));
             Log.d(TAG, String.format("x %f y %f z %f", cameraVector.x, cameraVector.y, cameraVector.z));
             Log.d(TAG, String.format("x %f y %f z %f", waypointVector.x, waypointVector.y, waypointVector.z));*/
-            ((ActivityCamera)context).getCentreView().resetArrows();
-            if(vectorToWaypoint.x > 0.1)
-            {
-                ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.RIGHT, 255);
-            }
-            else if (vectorToWaypoint.x < -0.1)
-            {
-                ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.LEFT, 255);
-            }
-            if(vectorToWaypoint.y > 0.1)
-            {
-                ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.UP, 255);
-            }
-            else if(vectorToWaypoint.y < -0.1)
-            {
-                ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.DOWN, 255);
-            }
+                ((ActivityCamera) context).getCentreView().resetArrows();
+                if (vectorToWaypoint.x > 0.1)
+                {
+                    ((ActivityCamera) context).getCentreView().setArrowAlpha(Arrow.Direction.RIGHT, 255);
+                }
+                else if (vectorToWaypoint.x < -0.1)
+                {
+                    ((ActivityCamera) context).getCentreView().setArrowAlpha(Arrow.Direction.LEFT, 255);
+                }
+                if (vectorToWaypoint.y > 0.1)
+                {
+                    ((ActivityCamera) context).getCentreView().setArrowAlpha(Arrow.Direction.UP, 255);
+                }
+                else if (vectorToWaypoint.y < -0.1)
+                {
+                    ((ActivityCamera) context).getCentreView().setArrowAlpha(Arrow.Direction.DOWN, 255);
+                }
 
-            float elevationAngle = cameraTilt + waypointTilt;
-            float pitch = getPitch(elevationAngle);
+                float elevationAngle = cameraTilt + waypointTilt;
+                float pitch = getPitch(elevationAngle);
 
-            // Log.d(TAG, String.format("waypoint x %f old %f", vectorToWaypoint.x, waypoint.getPose().getTranslation()[0]));
-            //Log.d(TAG, String.format("waypoint tilt %f phone tilt %f", waypointTilt, cameraTilt));
-            //Log.d(TAG, String.format("Gain %f elevation %f pitch %f", gain, elevationAngle, pitch));
-            JNIBridge.playSoundFFFF(vectorToWaypoint.x, phonePose.getTranslation(), gain, pitch);
+                // Log.d(TAG, String.format("waypoint x %f old %f", vectorToWaypoint.x, waypoint.getPose().getTranslation()[0]));
+                //Log.d(TAG, String.format("waypoint tilt %f phone tilt %f", waypointTilt, cameraTilt));
+                //Log.d(TAG, String.format("Gain %f elevation %f pitch %f", gain, elevationAngle, pitch));
+                JNIBridge.playSoundFFFF(vectorToWaypoint.x, phonePose.getTranslation(), gain, pitch);
 
-            // Interlace second tone to notify user that target is close
-            float targetSize = 0.1f;
-            float volumeGrad = -1/targetSize;
-            float volumeMax = 1f;
-            gain = 0.f;
-            if(elevationAngle < targetSize && elevationAngle > 0)
-            {
-                gain = volumeGrad*(elevationAngle) + volumeMax;
+                // Interlace second tone to notify user that target is close
+                float targetSize = 0.1f;
+                float volumeGrad = -1 / targetSize;
+                float volumeMax = 1f;
+                gain = 0.f;
+                if (elevationAngle < targetSize && elevationAngle > 0)
+                {
+                    gain = volumeGrad * (elevationAngle) + volumeMax;
+                }
+                else if (elevationAngle > -targetSize && elevationAngle < 0)
+                {
+                    gain = -volumeGrad * (elevationAngle) + volumeMax;
+                }
+                Log.d(TAG, String.format("Gain %f elevation %f pitch %f", gain, elevationAngle, pitch));
+                JNIBridge.playSoundFF(gain, pitch * 2);
+
+                metrics.updateTargetPosition(waypoint.getPose());
+                metrics.updatePhoneOrientation(phonePose);
+                metrics.updatePhonePosition(phonePose);
+                metrics.updateTimestamp(timestamp);
+                metrics.writeWifi();
             }
-            else if(elevationAngle > -targetSize && elevationAngle < 0)
-            {
-                gain = -volumeGrad*(elevationAngle) + volumeMax;
-            }
-            Log.d(TAG, String.format("Gain %f elevation %f pitch %f", gain, elevationAngle, pitch));
-            JNIBridge.playSoundFF(gain, pitch*2);
-
-            metrics.updateTargetPosition(waypoint.getPose());
-            metrics.updatePhoneOrientation(phonePose);
-            metrics.updatePhonePosition(phonePose);
-            metrics.updateTimestamp(renderer.getTimestamp());
-            metrics.writeWifi();
         }
-        if(!stop) handler.postDelayed(this, 40);
+        catch(NullPointerException e)
+        {
+            Log.d(TAG, "Frame not initialised");
+        }
+
+        if (!stop) handler.postDelayed(this, 40);
     }
 
     private ClassHelpers.mVector getCameraVector(Pose pose)
@@ -246,7 +254,7 @@ public class SoundGenerator implements Runnable
 
         metrics.updateTarget(target);
 
-        renderer.setDrawWaypoint(true);
+        waypointHandler.onNewWaypoint();
     }
 
     private float getPitch(double tilt)
@@ -344,7 +352,10 @@ public class SoundGenerator implements Runnable
         }
     }
 
-    public void markOffsetPose() { this.offsetPose = phonePose; }
+    public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
+    public void setFrame(Frame frame) { this.frame = frame; }
+    public void setSession(Session session) { this.session = session; }
+
     public boolean isTargetSet() { return this.targetSet; }
     public boolean isTargetFound() { return this.targetFound; }
     public Anchor getWaypointAnchor() { return this.waypointAnchor; }

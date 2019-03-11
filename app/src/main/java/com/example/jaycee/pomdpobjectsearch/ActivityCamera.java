@@ -19,6 +19,7 @@ import android.widget.Toast;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
+import com.google.ar.core.Frame;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.NotTrackingException;
@@ -28,7 +29,7 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
-public class ActivityCamera extends AppCompatActivity
+public class ActivityCamera extends AppCompatActivity implements NewFrameHandler, NewWaypointHandler
 {
     private static final String TAG = ActivityCamera.class.getSimpleName();
 
@@ -52,7 +53,6 @@ public class ActivityCamera extends AppCompatActivity
     private CentreView centreView;
 
     private SoundGenerator soundGenerator;
-    private BarcodeScanner barcodeScanner;
 
     private boolean requestARCoreInstall = true;
 
@@ -110,7 +110,6 @@ public class ActivityCamera extends AppCompatActivity
                 try
                 {
                     soundGenerator.setTarget(target);
-                    soundGenerator.markOffsetPose();
                     item.setCheckable(true);
                 }
                 catch(NotTrackingException e)
@@ -201,19 +200,13 @@ public class ActivityCamera extends AppCompatActivity
             Log.e(TAG, "OpenAL init error");
         }
 
-        soundGenerator = new SoundGenerator(this, surfaceView.getRenderer());
+        soundGenerator = new SoundGenerator(this);
         soundGenerator.run();
     }
 
     @Override
     protected void onPause()
     {
-        if(barcodeScanner != null)
-        {
-            barcodeScanner.stop();
-            barcodeScanner = null;
-        }
-
         if(soundGenerator != null)
         {
             soundGenerator.stop();
@@ -256,35 +249,40 @@ public class ActivityCamera extends AppCompatActivity
         ActivityCompat.requestPermissions(this, new String[] {CAMERA_PERMISSION}, CAMERA_PERMISSION_CODE);
     }
 
-    public void stopBarcodeScanner()
-    {
-        if(barcodeScanner != null)
-        {
-            barcodeScanner.stop();
-            barcodeScanner = null;
-        }
-    }
-
-    public void startBarcodeScanner()
-    {
-        barcodeScanner = new BarcodeScanner(this, 525, 525, surfaceView.getRenderer());
-        barcodeScanner.run();
-    }
-
-    public int currentBarcodeScan()
-    {
-        if(barcodeScanner != null)
-        {
-            return barcodeScanner.getCode();
-        }
-
-        return O_NOTHING;
-    }
-
     public Anchor getWaypointAnchor()
     {
         /* TODO: Handle nullpointer crash here */
         return soundGenerator.getWaypointAnchor();
+    }
+
+    @Override
+    public void onNewFrame(Frame frame)
+    {
+        soundGenerator.setFrame(frame);
+    }
+
+    @Override
+    public void setSession(Session session)
+    {
+        soundGenerator.setSession(session);
+    }
+
+    @Override
+    public void onNewTimestamp(long timestamp)
+    {
+        soundGenerator.setTimestamp(timestamp);
+    }
+
+    @Override
+    public void onTargetFound()
+    {
+        surfaceView.getRenderer().setDrawWaypoint(false);
+    }
+
+    @Override
+    public void onNewWaypoint()
+    {
+        surfaceView.getRenderer().setDrawWaypoint(true);
     }
 
     public CentreView getCentreView()
