@@ -4,9 +4,9 @@
 #include <jni.h>
 #include <android/log.h>
 
-#include <math.h>
+#include <cmath>
 #include <malloc.h>
-#include <string.h>
+#include <cstring>
 
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -26,23 +26,26 @@ namespace SoundGenerator
     public:
         SoundGenerator();
 
-        bool init();
-        bool kill();
+        bool alInit();
+        bool alKill();
 
         bool startSound();
         bool endSound();
-        bool killSound();
 
-        void startPlay(jfloat pitch);
         void play(JNIEnv *env, jfloatArray src, jfloatArray list, jfloat gain, jfloat pitch);
+        void play(JNIEnv *env, jfloat gain, jfloat pitch);
+        void initBuffer(ALuint src, ALuint* buf, jfloat pitch);
         float convertToneToSemitone(float pitch);
         short* generateSoundWave(size_t bufferSize, jfloat pitch, short lastVal, bool onUpSwing);
-        bool sourcePlaying();
+        bool isSoundPlaying(ALuint src);
 
     private:
-        ALuint soundSrc;
-        ALuint soundBuf[NUM_BUFFERS];
-        bool playing = false;
+        ALuint targetSrcSound;
+        ALuint targetSrcBuf[NUM_BUFFERS];
+
+        ALuint onTargetSound;
+        ALuint onTargetBuf[NUM_BUFFERS];
+
         float notes[NUM_SEMITONES];
     };
 }

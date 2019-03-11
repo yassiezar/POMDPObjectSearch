@@ -70,8 +70,8 @@ public class SoundGenerator implements Runnable
     public void stop()
     {
         this.stop = true;
-        handler = null;
-        waypointAnchor = null;
+        this.handler = null;
+        this.waypointAnchor = null;
     }
 
     @Override
@@ -164,12 +164,29 @@ public class SoundGenerator implements Runnable
             {
                 ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.UP, 255);
             }
-            if(vectorToWaypoint.y < -0.1)
+            else if(vectorToWaypoint.y < -0.1)
             {
                 ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.DOWN, 255);
             }
 
-            JNIBridge.playSound(waypoint.getPose().getTranslation(), cameraVector.asFloat(), gain, getPitch(waypointTilt - cameraTilt));
+            float elevationAngle = waypointTilt - cameraTilt;
+            float pitch = getPitch(elevationAngle);
+            JNIBridge.playSound_FFFF(waypoint.getPose().getTranslation(), cameraVector.asFloat(), gain, pitch);
+
+            // Interlace second tone to notify user that target is close
+            float targetSize = 0.1f;
+            float volumeGrad = -1/targetSize;
+            float volumeMax = 1f;
+            gain = 0.f;
+            if(elevationAngle - Math.PI/2 < targetSize && elevationAngle > Math.PI/2)
+            {
+                gain = volumeGrad*(float)(elevationAngle - Math.PI/2) + volumeMax;
+            }
+            else if(elevationAngle - Math.PI/2 > -targetSize && elevationAngle < Math.PI/2)
+            {
+                gain = -volumeGrad*(float)(elevationAngle - Math.PI/2) + volumeMax;
+            }
+            JNIBridge.playSound_FF(gain, pitch*2);
 
             metrics.updateTargetPosition(waypoint.getPose());
             metrics.updatePhoneOrientation(phonePose);
@@ -211,7 +228,7 @@ public class SoundGenerator implements Runnable
         this.targetSet = true;
         this.targetFound = false;
 
-        prevCameraObservation = O_NOTHING;//observation;
+        prevCameraObservation = O_NOTHING;
 
         metrics.updateTarget(target);
 
@@ -313,8 +330,8 @@ public class SoundGenerator implements Runnable
     public void markOffsetPose() { this.offsetPose = phonePose; }
     public boolean isTargetSet() { return this.targetSet; }
     public boolean isTargetFound() { return this.targetFound; }
-    public long getTarget() { return this.target; }
     public Anchor getWaypointAnchor() { return this.waypointAnchor; }
+    public long getTarget() { return this.target; }
 
     class Waypoint
     {
