@@ -14,12 +14,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
+import com.google.ar.core.exceptions.NotTrackingException;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
@@ -105,9 +107,17 @@ public class ActivityCamera extends AppCompatActivity
                         break;
                 }
 
-                soundGenerator.setTarget(target);
-                soundGenerator.markOffsetPose();
-                item.setCheckable(true);
+                try
+                {
+                    soundGenerator.setTarget(target);
+                    soundGenerator.markOffsetPose();
+                    item.setCheckable(true);
+                }
+                catch(NotTrackingException e)
+                {
+                    Log.e(TAG, "Not tracking: " + e);
+                    Toast.makeText(ActivityCamera.this, "Camera not tracking", Toast.LENGTH_LONG).show();
+                }
 
                 drawerLayout.closeDrawers();
 

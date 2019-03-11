@@ -23,13 +23,13 @@ Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_killSound(JNIEnv* env, jobje
 }
 
 JNIEXPORT void JNICALL
-Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_playSound_FFFF(JNIEnv* env, jobject obj, jfloatArray src, jfloatArray list, jfloat gain, jfloat pitch)
+Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_playSoundFFFF(JNIEnv* env, jobject obj, jfloat srcX, jfloatArray list, jfloat gain, jfloat pitch)
 {
-    soundGenerator.play(env, src, list, gain, pitch);
+    soundGenerator.play(env, srcX, list, gain, pitch);
 }
 
 JNIEXPORT void JNICALL
-Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_playSound_FF(JNIEnv* env, jobject obj, jfloat gain, jfloat pitch)
+Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_playSoundFF(JNIEnv* env, jobject obj, jfloat gain, jfloat pitch)
 {
     soundGenerator.play(env, gain, pitch);
 }

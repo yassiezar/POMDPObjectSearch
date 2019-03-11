@@ -32,7 +32,7 @@ namespace SoundGenerator
         bool startSound();
         bool endSound();
 
-        void play(JNIEnv *env, jfloatArray src, jfloatArray list, jfloat gain, jfloat pitch);
+        void play(JNIEnv *env, jfloat srcX, jfloatArray list, jfloat gain, jfloat pitch);
         void play(JNIEnv *env, jfloat gain, jfloat pitch);
         void initBuffer(ALuint src, ALuint* buf, jfloat pitch);
         float convertToneToSemitone(float pitch);

@@ -122,9 +122,9 @@ public class SoundGenerator implements Runnable
             long newCameraObservation = this.observation;
 
             // Get current state and generate new waypoint if agent is in new state or sees new object
-            Log.d(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
+/*            Log.d(TAG, String.format("current pan %f tilt %f ", cameraPan, cameraTilt));
             Log.d(TAG, String.format("Object: %d Step: %d Visited: %d", state.getEncodedState()[0], state.getEncodedState()[1], state.getEncodedState()[2]));
-            Log.d(TAG, String.format("x: %f y %f", Math.toDegrees(cameraPan), Math.toDegrees(cameraTilt)));
+            Log.d(TAG, String.format("x: %f y %f", Math.toDegrees(cameraPan), Math.toDegrees(cameraTilt)));*/
             if(waypoint.waypointReached(cameraPan, cameraTilt) || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
             {
                 if(waypointAnchor != null)
@@ -133,24 +133,33 @@ public class SoundGenerator implements Runnable
                 }
 
                 long action = policy.getAction(state);
-                Log.d(TAG, String.format("Object found or found waypoint, action: %d", action));
+                //Log.d(TAG, String.format("Object found or found waypoint, action: %d", action));
                 long[] testState = state.getEncodedState();
-                Log.i(TAG, String.format("State %d obs %d steps %d prev %d", state.getDecodedState(), testState[0], testState[1], testState[2]));
-                waypoint.updateWaypoint(cameraPan, cameraTilt, action);
+                // Log.i(TAG, String.format("State %d obs %d steps %d prev %d", state.getDecodedState(), testState[0], testState[1], testState[2]));
+                waypoint.updateWaypoint(-cameraPan, cameraTilt, action);
                 waypointAnchor = session.createAnchor(waypoint.getPose());
                 prevCameraObservation = newCameraObservation;
                 state.addObservation(newCameraObservation, cameraPan, cameraTilt);
-                Log.i(TAG, "Setting new waypoint");
+                // Log.i(TAG, "Setting new waypoint");
             }
             ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(waypoint.pose.getTranslation());
             float[] waypointRotationAngles = waypointVector.getEuler();
             float waypointTilt = waypointRotationAngles[1];
 
+            if(waypointTilt > Math.PI/2)
+            {
+                waypointTilt -= (float)Math.PI;
+            }
+            else if(waypointTilt < Math.PI/2)
+            {
+                waypointTilt += (float)Math.PI;
+            }
+
             // Set direction arrow
             ClassHelpers.mVector vectorToWaypoint = waypointVector.translate(cameraVector);
-            Log.d(TAG, String.format("x %f y %f z %f", vectorToWaypoint.x, vectorToWaypoint.y, vectorToWaypoint.z));
+/*            Log.d(TAG, String.format("x %f y %f z %f", vectorToWaypoint.x, vectorToWaypoint.y, vectorToWaypoint.z));
             Log.d(TAG, String.format("x %f y %f z %f", cameraVector.x, cameraVector.y, cameraVector.z));
-            Log.d(TAG, String.format("x %f y %f z %f", waypointVector.x, waypointVector.y, waypointVector.z));
+            Log.d(TAG, String.format("x %f y %f z %f", waypointVector.x, waypointVector.y, waypointVector.z));*/
             ((ActivityCamera)context).getCentreView().resetArrows();
             if(vectorToWaypoint.x > 0.1)
             {
@@ -169,24 +178,29 @@ public class SoundGenerator implements Runnable
                 ((ActivityCamera)context).getCentreView().setArrowAlpha(Arrow.Direction.DOWN, 255);
             }
 
-            float elevationAngle = waypointTilt - cameraTilt;
+            float elevationAngle = cameraTilt + waypointTilt;
             float pitch = getPitch(elevationAngle);
-            JNIBridge.playSound_FFFF(waypoint.getPose().getTranslation(), cameraVector.asFloat(), gain, pitch);
+
+            // Log.d(TAG, String.format("waypoint x %f old %f", vectorToWaypoint.x, waypoint.getPose().getTranslation()[0]));
+            //Log.d(TAG, String.format("waypoint tilt %f phone tilt %f", waypointTilt, cameraTilt));
+            //Log.d(TAG, String.format("Gain %f elevation %f pitch %f", gain, elevationAngle, pitch));
+            JNIBridge.playSoundFFFF(vectorToWaypoint.x, phonePose.getTranslation(), gain, pitch);
 
             // Interlace second tone to notify user that target is close
             float targetSize = 0.1f;
             float volumeGrad = -1/targetSize;
             float volumeMax = 1f;
             gain = 0.f;
-            if(elevationAngle - Math.PI/2 < targetSize && elevationAngle > Math.PI/2)
+            if(elevationAngle < targetSize && elevationAngle > 0)
             {
-                gain = volumeGrad*(float)(elevationAngle - Math.PI/2) + volumeMax;
+                gain = volumeGrad*(elevationAngle) + volumeMax;
             }
-            else if(elevationAngle - Math.PI/2 > -targetSize && elevationAngle < Math.PI/2)
+            else if(elevationAngle > -targetSize && elevationAngle < 0)
             {
-                gain = -volumeGrad*(float)(elevationAngle - Math.PI/2) + volumeMax;
+                gain = -volumeGrad*(elevationAngle) + volumeMax;
             }
-            JNIBridge.playSound_FF(gain, pitch*2);
+            Log.d(TAG, String.format("Gain %f elevation %f pitch %f", gain, elevationAngle, pitch));
+            JNIBridge.playSoundFF(gain, pitch*2);
 
             metrics.updateTargetPosition(waypoint.getPose());
             metrics.updatePhoneOrientation(phonePose);
@@ -245,7 +259,7 @@ public class SoundGenerator implements Runnable
         // Compensate for the Tango's default position being 90deg upright
         if(tilt >= Math.PI / 2)
         {
-            pitch = (float)(Math.pow(2, 64));
+            pitch = (float)(Math.pow(2, 6));
         }
 
         else if(tilt <= -Math.PI / 2)
@@ -262,9 +276,12 @@ public class SoundGenerator implements Runnable
 
             pitch = (float)(Math.pow(2, grad * -tilt + intercept));
         }
-        Log.d(TAG, String.format("pitch: %f", pitch));
+        // Log.d(TAG, String.format("pitch: %f", pitch));
 
         return pitch;
+
+        // Compensate for the Tango's default position being 90deg upright
+/*        elevation -= Math.PI / 2;*/
     }
 
     public void setObservation(long observation)
@@ -388,11 +405,11 @@ public class SoundGenerator implements Runnable
             if(tilt > GRID_SIZE-1) tilt = 0;
 
             float z =  phonePose.getTranslation()[2] - 1.f;
-            wayPointTranslation[0] = (float)Math.sin(Math.toRadians(ANGLE_INTERVAL*(pan - GRID_SIZE/2 + 1)));
-            wayPointTranslation[1] = (float)Math.sin(Math.toRadians(ANGLE_INTERVAL*(tilt - GRID_SIZE/2 + 1)));
+            wayPointTranslation[0] = (float)Math.sin(Math.toRadians(ANGLE_INTERVAL*(pan - GRID_SIZE/2.0 + 1)));
+            wayPointTranslation[1] = (float)Math.sin(Math.toRadians(ANGLE_INTERVAL*(tilt - GRID_SIZE/2.0 + 1)));
             wayPointTranslation[2] = z;
 
-            Log.i(TAG, String.format("new pan: %d new tilt: %d", pan, tilt));
+            // Log.i(TAG, String.format("new pan: %d new tilt: %d", pan, tilt));
             //Log.i(TAG, String.format("translation x %f translation y: %f", wayPointTranslation[0], wayPointTranslation[1]));
 
             pose = new Pose(wayPointTranslation, new float[]{0.f, 0.f, 0.f, 1.f});
@@ -403,7 +420,7 @@ public class SoundGenerator implements Runnable
             float x = pose.getTranslation()[0];
             float y = pose.getTranslation()[1];
 
-            Log.d(TAG, String.format("x: %f y %f", Math.sin(pan) - x, Math.sin(tilt) - y));
+            // Log.d(TAG, String.format("x: %f y %f", Math.sin(pan) - x, Math.sin(tilt) - y));
             // Compensate for Z-axis going in negative direction, rotating pan around y-axis
             return Math.abs(Math.sin(tilt) - y) < 0.1 && Math.abs(Math.cos(-pan+Math.PI/2) - x) < 0.1;
         }

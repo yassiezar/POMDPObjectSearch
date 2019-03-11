@@ -101,16 +101,13 @@ namespace SoundGenerator
         return 0;
     }*/
 
-    void SoundGenerator::play(JNIEnv *env, jfloatArray src, jfloatArray list, jfloat gain, jfloat pitch)
+    void SoundGenerator::play(JNIEnv *env, jfloat srcX, jfloatArray list, jfloat gain, jfloat pitch)
     {
         // Get source and listener coords and write to JArray
-        jsize srcLen = env->GetArrayLength(src);
         jsize listLen = env->GetArrayLength(list);
 
-        jfloat* lSrc = new float[srcLen];
         jfloat* lList = new float[listLen];
 
-        env->GetFloatArrayRegion(src, 0, srcLen, lSrc);
         env->GetFloatArrayRegion(list, 0, listLen, lList);
 
         // Set source properties
@@ -120,7 +117,8 @@ namespace SoundGenerator
         alListenerfv(AL_ORIENTATION, orient);
 
         // Check to see if target is centre of screen: fix for OpenAL not handling centre sounds properly
-        if(sqrt((lList[0] - lSrc[0]) * (lList[0] - lSrc[0])) < 0.1)
+        if(sqrt((lList[0] - srcX) * (lList[0] - srcX)) < 0.1)
+        // if(abs(acos((lSrc[2]*lSrc[2] + lSrc[2]*lSrc[2] - (lSrc[0] - lList[0])*(lSrc[0] - lList[0]))/(2*lSrc[2]*lSrc[2]))) < 0.1)
         {
             // Set listener position and orientation
             alListener3f(AL_POSITION, 0.f, lList[1], lList[2]);
@@ -134,7 +132,7 @@ namespace SoundGenerator
             alListener3f(AL_POSITION, lList[0], lList[1], lList[2]);
 
             // Set source position and orientation
-            alSource3f(targetSrcSound, AL_POSITION, lSrc[0], lList[1], lList[2]);
+            alSource3f(targetSrcSound, AL_POSITION, srcX, lList[1], lList[2]);
         }
         alListener3f(AL_VELOCITY, 0.f, 0.f, 0.f);
         alSource3f(targetSrcSound, AL_VELOCITY, 0.f, 0.f, 0.f);
@@ -142,7 +140,7 @@ namespace SoundGenerator
         alSourcei(targetSrcSound, AL_LOOPING, AL_TRUE);
 
         pitch = convertToneToSemitone(pitch);
-        __android_log_print(ANDROID_LOG_DEBUG, SOUNDLOG, "pitch: %f", pitch);
+        // __android_log_print(ANDROID_LOG_DEBUG, SOUNDLOG, "pitch: %f", pitch);
 
         if(!isSoundPlaying(targetSrcSound))
         {
@@ -162,7 +160,7 @@ namespace SoundGenerator
         alSourcei(onTargetSound, AL_LOOPING, AL_TRUE);
 
         pitch = convertToneToSemitone(pitch);
-        __android_log_print(ANDROID_LOG_DEBUG, SOUNDLOG, "pitch: %f", pitch);
+        // __android_log_print(ANDROID_LOG_DEBUG, SOUNDLOG, "pitch: %f", pitch);
 
         if(!isSoundPlaying(onTargetSound))
         {
@@ -170,7 +168,7 @@ namespace SoundGenerator
         }
         else
         {
-            alSourcef(targetSrcSound, AL_PITCH, pitch / 512.f);
+            alSourcef(onTargetSound, AL_PITCH, pitch / 512.f);
         }
     }
 
@@ -250,7 +248,7 @@ namespace SoundGenerator
             if(pitch - notes[i] < 0)
             {
                 nPitch = notes[i] + 0.5f;
-                __android_log_print(ANDROID_LOG_DEBUG, SOUNDLOG, "Old pitch: %d New pitch: %d", (int)pitch, (int)nPitch);
+                // __android_log_print(ANDROID_LOG_DEBUG, SOUNDLOG, "Old pitch: %d New pitch: %d", (int)pitch, (int)nPitch);
                 break;
             }
         }
