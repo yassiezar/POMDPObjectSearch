@@ -38,8 +38,8 @@ public class ActivityCamera extends AppCompatActivity
     private static final int O_NOTHING = 0;
 
     private static final int T_COMPUTER_MONITOR = 1;
-    private static final int T_COMPUTER_MOUSE = 3;
     private static final int T_COMPUTER_KEYBOARD = 2;
+    private static final int T_COMPUTER_MOUSE = 3;
     private static final int T_DESK = 4;
     private static final int T_MUG = 6;
     private static final int T_OFFICE_SUPPLIES = 7;
