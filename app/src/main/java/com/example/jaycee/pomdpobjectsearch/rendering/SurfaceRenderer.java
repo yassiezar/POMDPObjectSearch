@@ -29,8 +29,6 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     private Context context;
     private CameraSurface surfaceView;
 
-    // private Pose devicePose;
-
     private BackgroundRenderer backgroundRenderer;
     private ObjectRenderer waypointRenderer;
 
@@ -129,7 +127,6 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
             frameHandler.onNewFrame(frame);
 
             Camera camera = frame.getCamera();
-            // devicePose = frame.getAndroidSensorPose();
 
             backgroundRenderer.draw(frame);
 

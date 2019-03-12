@@ -201,6 +201,7 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
         }
 
         soundGenerator = new SoundGenerator(this);
+        soundGenerator.setSession(session);
         soundGenerator.run();
     }
 
@@ -259,12 +260,6 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
     public void onNewFrame(Frame frame)
     {
         soundGenerator.setFrame(frame);
-    }
-
-    @Override
-    public void setSession(Session session)
-    {
-        soundGenerator.setSession(session);
     }
 
     @Override
