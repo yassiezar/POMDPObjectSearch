@@ -211,6 +211,6 @@ public class ObjectDetector implements ObjectClassifier
     @Override
     public void close()
     {
-
+        tfLite.close();
     }
 }
