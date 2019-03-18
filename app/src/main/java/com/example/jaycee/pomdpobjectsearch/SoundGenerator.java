@@ -58,7 +58,7 @@ public class SoundGenerator implements Runnable
     private Handler handler = new Handler();
 
     private boolean stop = false;
-    private boolean targetSet = false;
+    private boolean isTargetSet = false;
     private boolean targetFound = false;
 
 
@@ -101,7 +101,7 @@ public class SoundGenerator implements Runnable
             {
                 Log.i(TAG, "Target found");
                 targetFound = true;
-                targetSet = false;
+                isTargetSet = false;
                 observation = O_NOTHING;
                 vibrator.vibrate(350);
                 gain = 0.f;
@@ -247,7 +247,7 @@ public class SoundGenerator implements Runnable
         }
 
         this.target = target;
-        this.targetSet = true;
+        this.isTargetSet = true;
         this.targetFound = false;
 
         prevCameraObservation = O_NOTHING;
@@ -356,7 +356,7 @@ public class SoundGenerator implements Runnable
     public void setFrame(Frame frame) { this.frame = frame; }
     public void setSession(Session session) { this.session = session; }
 
-    public boolean isTargetSet() { return this.targetSet; }
+    public boolean isTargetSet() { return this.isTargetSet; }
     public boolean isTargetFound() { return this.targetFound; }
     public Anchor getWaypointAnchor() { return this.waypointAnchor; }
     public long getTarget() { return this.target; }

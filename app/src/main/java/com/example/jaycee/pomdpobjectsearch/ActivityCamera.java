@@ -223,25 +223,10 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
             return;
         }
 
-        // TODO: Add compensation for other screen rotations
-        int cropSize = TF_INPUT_SIZE;
-        int sensorOrientation = 0;      // Assume 0deg rotation for now
         try
         {
             surfaceView.setSession(session);
             surfaceView.onResume();
-
-            rgbFrameBitmap = Bitmap.createBitmap(surfaceView.getRenderer().getWidth(), surfaceView.getRenderer().getHeight(), Bitmap.Config.ARGB_8888);
-            croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Bitmap.Config.ARGB_8888);
-
-            frameToCropTransform =
-                    ImageUtils.getTransformationMatrix(
-                            surfaceView.getRenderer().getWidth(), surfaceView.getRenderer().getHeight(),
-                            cropSize, cropSize,
-                            sensorOrientation, MAINTAIN_ASPECT_RATIO);
-
-            cropToFrameTransform = new Matrix();
-            frameToCropTransform.invert(cropToFrameTransform);
         }
         catch(Exception e)
         {
@@ -251,7 +236,6 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
         try
         {
             detector = ObjectDetector.create(getAssets(), TF_MODEL_FILE, TF_LABELS_FILE, TF_INPUT_SIZE, TF_IS_QUANTISED);
-            imageConverter = new ImageConverter(surfaceView.getRenderer().getWidth(), surfaceView.getRenderer().getHeight());
         }
         catch(IOException e)
         {
@@ -265,7 +249,7 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
 
         backgroundHandlerThread = new HandlerThread("InferenceThread");
         backgroundHandlerThread.start();
-        backgroundHandler = new Handler(backgroundHandler.getLooper());
+        backgroundHandler = new Handler(backgroundHandlerThread.getLooper());
 
         soundGenerator = new SoundGenerator(this);
         soundGenerator.setSession(session);
@@ -341,21 +325,53 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
     }
 
     @Override
-    public void onNewFrame(Frame frame)
+    public void onNewFrame(final Frame frame)
     {
+        Log.d(TAG, "New Frame");
         soundGenerator.setFrame(frame);
+
+        if(!soundGenerator.isTargetSet())
+        {
+            return;
+        }
 
         if(processingFrame)
         {
             return;
         }
 
+        if(imageConverter == null)
+        {
+            Log.w(TAG, "Image converter not initialised");
+            imageConverter = new ImageConverter(surfaceView.getRenderer().getWidth(), surfaceView.getRenderer().getHeight());
+        }
+
+        if(rgbFrameBitmap == null || croppedBitmap == null)
+        {
+            // TODO: Add compensation for other screen rotations
+            int cropSize = TF_INPUT_SIZE;
+            int sensorOrientation = 0;      // Assume 0deg rotation for now
+
+            rgbFrameBitmap = Bitmap.createBitmap(surfaceView.getRenderer().getWidth(), surfaceView.getRenderer().getHeight(), Bitmap.Config.ARGB_8888);
+            croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Bitmap.Config.ARGB_8888);
+
+            frameToCropTransform =
+                    ImageUtils.getTransformationMatrix(
+                            surfaceView.getRenderer().getWidth(), surfaceView.getRenderer().getHeight(),
+                            cropSize, cropSize,
+                            sensorOrientation, MAINTAIN_ASPECT_RATIO);
+
+            cropToFrameTransform = new Matrix();
+            frameToCropTransform.invert(cropToFrameTransform);
+        }
+
         processingFrame = true;
         try
         {
-            imageConverter.updateImage(frame.acquireCameraImage());
+            Log.d(TAG, "Processing new frame");
+
             // PERFORM DETECTION + INFERENCE
-            rgbFrameBitmap.setPixels(imageConverter.getRgbBytes(), 0, surfaceView.getRenderer().getWidth(), 0, 0, surfaceView.getRenderer().getWidth(), surfaceView.getRenderer().getHeight());
+            rgbFrameBitmap.setPixels(imageConverter.getRgbBytes(frame.acquireCameraImage()), 0, surfaceView.getRenderer().getWidth(), 0, 0, surfaceView.getRenderer().getWidth(), surfaceView.getRenderer().getHeight());
 
             final Canvas canvas = new Canvas(croppedBitmap);
             canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
@@ -372,6 +388,7 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
                 @Override
                 public void run()
                 {
+                    Log.d(TAG, "Detecting objects");
                     final List<ObjectClassifier.Recognition> results = detector.recogniseImage(croppedBitmap);
                     processingFrame = false;
                 }
