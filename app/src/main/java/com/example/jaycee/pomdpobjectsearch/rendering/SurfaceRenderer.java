@@ -60,7 +60,8 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
 
     public void init()
     {
-        backgroundRenderer = new BackgroundRenderer(scannerX, scannerY, scannerWidth, scannerHeight);
+//        backgroundRenderer = new BackgroundRenderer(scannerX, scannerY, scannerWidth, scannerHeight);
+        backgroundRenderer = new BackgroundRenderer();
         waypointRenderer = new ObjectRenderer();
     }
 
@@ -168,6 +169,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         }
     }
 
+    @Deprecated
     public IntBuffer getCurrentFrameBuffer()
     {
         try

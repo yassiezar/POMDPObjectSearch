@@ -286,8 +286,6 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
     @Override
     public void onNewFrame(final Frame frame)
     {
-        Log.d(TAG, "New Frame");
-
         if(processingFrame)
         {
             return;
@@ -299,8 +297,8 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
             imageConverter = new ImageConverter(surfaceView.getRenderer().getWidth(), surfaceView.getRenderer().getHeight());
         }
 
-        int previewWidth = 640;//surfaceView.getRenderer().getWidth();
-        int previewHeight = 480;//surfaceView.getRenderer().getWidth();
+        int previewWidth = 640;
+        int previewHeight = 480;
         if(rgbFrameBitmap == null || croppedBitmap == null)
         {
             // TODO: Add compensation for other screen rotations
@@ -318,7 +316,6 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
 
             Matrix cropToFrameTransform = new Matrix();
             frameToCropTransform.invert(cropToFrameTransform);
-            // frameToCropTransform.postRotate(90);
         }
 
         processingFrame = true;
@@ -351,7 +348,6 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
                     {
                         if(rec.getConfidence() > minConf)
                         {
-                            String res = rec.toString();        // Debug variable
                             Log.d(TAG, rec.toString());
                         }
                     }

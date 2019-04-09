@@ -38,6 +38,8 @@ public class BackgroundRenderer
     private int scannerWidth, scannerHeight;
     private int scannerX, scannerY;
 
+//    public BackgroundRenderer(int scannerX, int scannerY, int scannerWidth, int scannerHeight)
+    @Deprecated
     public BackgroundRenderer(int scannerX, int scannerY, int scannerWidth, int scannerHeight)
     {
         this.scannerWidth = scannerWidth;
@@ -45,6 +47,7 @@ public class BackgroundRenderer
         this.scannerX = scannerX;
         this.scannerY = scannerY;
     }
+    public BackgroundRenderer() {}
 
     public int getTextureId() { return this.textureId; }
 
@@ -104,7 +107,7 @@ public class BackgroundRenderer
 
         /* TODO: Make size automatic */
         // currentFrameBuffer = IntBuffer.allocate(480*480);
-        currentFrameBuffer = IntBuffer.allocate(scannerWidth*scannerHeight);
+//        currentFrameBuffer = IntBuffer.allocate(scannerWidth*scannerHeight);
     }
 
     public void draw(Frame frame)
@@ -140,7 +143,7 @@ public class BackgroundRenderer
         ShaderUtils.checkGLError(TAG, "Draw");
 
         /* TODO: Make size automatic */
-        GLES20.glReadPixels(scannerX, scannerY, scannerWidth, scannerHeight, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, currentFrameBuffer);
+//        GLES20.glReadPixels(scannerX, scannerY, scannerWidth, scannerHeight, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, currentFrameBuffer);
     }
 
     public IntBuffer getCurrentFrameBuffer()

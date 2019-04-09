@@ -21,5 +21,13 @@ public class ActivityEntry extends AppCompatActivity
                 startActivity(new Intent(ActivityEntry.this, ActivityGuided.class));
             }
         });
+        findViewById(R.id.button_unguided).setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View view)
+            {
+                startActivity(new Intent(ActivityEntry.this, ActivityUnguided.class));
+            }
+        });
     }
 }

@@ -23,6 +23,8 @@ public class ImageConverter implements Runnable
     public void run()
     {
         final Image currentImage = image;
+        int width = image.getWidth();
+        int height = image.getHeight();
         final Image.Plane[] planes = currentImage.getPlanes();
 
         fillBytes(planes, yuvBytes);
@@ -34,15 +36,15 @@ public class ImageConverter implements Runnable
                 yuvBytes[0],
                 yuvBytes[1],
                 yuvBytes[2],
-                image.getWidth(), //the image size is 1600x1200
-                image.getHeight(),
+                width,
+                height,
                 yRowStride,
                 uvRowStride,
                 uvPixelStride,
                 rgbBytes);
     }
 
-    protected void fillBytes(final Image.Plane[] planes, final byte[][] yuvBytes)
+    private void fillBytes(final Image.Plane[] planes, final byte[][] yuvBytes)
     {
         // Because of the variable row stride it's not possible to know in
         // advance the actual necessary dimensions of the yuv planes.

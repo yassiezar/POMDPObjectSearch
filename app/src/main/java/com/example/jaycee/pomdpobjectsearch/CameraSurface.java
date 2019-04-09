@@ -16,6 +16,8 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
 
     private Context context;
 
+    private ScreenReadRequest screenReadRequest;
+
     private Session session;
 
     private SurfaceRenderer renderer;
@@ -27,6 +29,8 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
         super(context, attrs);
 
         this.context = context;
+
+        screenReadRequest = (ScreenReadRequest)context;
 
         renderer = new SurfaceRenderer(context, this);
 
@@ -83,6 +87,7 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     {
         super.performClick();
         // Read out object in view
+        screenReadRequest.onScreenTap();
         return true;
     }
 
