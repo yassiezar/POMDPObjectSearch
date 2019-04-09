@@ -104,7 +104,7 @@ public class SoundGenerator implements Runnable
                 vibrator.vibrate(350);
                 gain = 0.f;
 
-                ((ActivityGuidance) context).getCentreView().resetArrows();
+                ((ActivityGuided) context).getCentreView().resetArrows();
                 waypointHandler.onTargetFound();
                 waypointAnchor.detach();
                 waypoint = null;
@@ -160,22 +160,22 @@ public class SoundGenerator implements Runnable
 /*            Log.d(TAG, String.format("x %f y %f z %f", vectorToWaypoint.x, vectorToWaypoint.y, vectorToWaypoint.z));
             Log.d(TAG, String.format("x %f y %f z %f", cameraVector.x, cameraVector.y, cameraVector.z));
             Log.d(TAG, String.format("x %f y %f z %f", waypointVector.x, waypointVector.y, waypointVector.z));*/
-                ((ActivityGuidance) context).getCentreView().resetArrows();
+                ((ActivityGuided) context).getCentreView().resetArrows();
                 if (vectorToWaypoint.x > 0.1)
                 {
-                    ((ActivityGuidance) context).getCentreView().setArrowAlpha(Arrow.Direction.RIGHT, 255);
+                    ((ActivityGuided) context).getCentreView().setArrowAlpha(Arrow.Direction.RIGHT, 255);
                 }
                 else if (vectorToWaypoint.x < -0.1)
                 {
-                    ((ActivityGuidance) context).getCentreView().setArrowAlpha(Arrow.Direction.LEFT, 255);
+                    ((ActivityGuided) context).getCentreView().setArrowAlpha(Arrow.Direction.LEFT, 255);
                 }
                 if (vectorToWaypoint.y > 0.1)
                 {
-                    ((ActivityGuidance) context).getCentreView().setArrowAlpha(Arrow.Direction.UP, 255);
+                    ((ActivityGuided) context).getCentreView().setArrowAlpha(Arrow.Direction.UP, 255);
                 }
                 else if (vectorToWaypoint.y < -0.1)
                 {
-                    ((ActivityGuidance) context).getCentreView().setArrowAlpha(Arrow.Direction.DOWN, 255);
+                    ((ActivityGuided) context).getCentreView().setArrowAlpha(Arrow.Direction.DOWN, 255);
                 }
 
                 float elevationAngle = cameraTilt + waypointTilt;
@@ -334,7 +334,7 @@ public class SoundGenerator implements Runnable
 
         if(observation != O_NOTHING && observation != -1)
         {
-            ((ActivityGuidance)context).runOnUiThread(new Runnable()
+            ((ActivityGuided)context).runOnUiThread(new Runnable()
             {
                 @Override
                 public void run()

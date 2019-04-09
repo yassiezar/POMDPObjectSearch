@@ -1,6 +1,5 @@
 package com.example.jaycee.pomdpobjectsearch;
 
-import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -8,9 +7,9 @@ import com.google.ar.core.Anchor;
 import com.google.ar.core.Frame;
 import com.google.ar.core.exceptions.NotTrackingException;
 
-public class ActivityGuidance extends ActivityBase implements NewWaypointHandler
+public class ActivityGuided extends ActivityBase implements NewWaypointHandler
 {
-    private static final String TAG = ActivityGuidance.class.getSimpleName();
+    private static final String TAG = ActivityGuided.class.getSimpleName();
 
     private SoundGenerator soundGenerator;
 
@@ -99,7 +98,7 @@ public class ActivityGuidance extends ActivityBase implements NewWaypointHandler
         catch(NotTrackingException e)
         {
             Log.e(TAG, "Not tracking: " + e);
-            Toast.makeText(ActivityGuidance.this, "Camera not tracking", Toast.LENGTH_LONG).show();
+            Toast.makeText(ActivityGuided.this, "Camera not tracking", Toast.LENGTH_LONG).show();
         }
     }
 }

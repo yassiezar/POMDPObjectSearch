@@ -47,7 +47,7 @@ public class Metrics
                 dataStreamer.getStatus() != AsyncTask.Status.RUNNING)
         {
             dataStreamer = new WifiDataSend();
-            dataStreamer.execute(wifiString);
+            // dataStreamer.execute(wifiString);
         }
     }
 

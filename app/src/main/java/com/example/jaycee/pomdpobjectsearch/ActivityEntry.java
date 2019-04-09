@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 
 public class ActivityEntry extends AppCompatActivity
 {
@@ -19,7 +18,7 @@ public class ActivityEntry extends AppCompatActivity
             @Override
             public void onClick(View view)
             {
-                startActivity(new Intent(ActivityEntry.this, ActivityGuidance.class));
+                startActivity(new Intent(ActivityEntry.this, ActivityGuided.class));
             }
         });
     }

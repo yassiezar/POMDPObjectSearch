@@ -19,7 +19,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.example.jaycee.pomdpobjectsearch.helpers.ImageConverter;
 import com.example.jaycee.pomdpobjectsearch.helpers.ImageUtils;
@@ -28,7 +27,6 @@ import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
-import com.google.ar.core.exceptions.NotTrackingException;
 import com.google.ar.core.exceptions.NotYetAvailableException;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
@@ -85,11 +83,13 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
     private boolean processingFrame = false;
     private boolean requestARCoreInstall = true;
 
+    private float minConf = 0.8f;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_camera);
+        setContentView(R.layout.activity_base);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -299,23 +299,26 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
             imageConverter = new ImageConverter(surfaceView.getRenderer().getWidth(), surfaceView.getRenderer().getHeight());
         }
 
+        int previewWidth = 640;//surfaceView.getRenderer().getWidth();
+        int previewHeight = 480;//surfaceView.getRenderer().getWidth();
         if(rgbFrameBitmap == null || croppedBitmap == null)
         {
             // TODO: Add compensation for other screen rotations
             int cropSize = TF_INPUT_SIZE;
-            int sensorOrientation = 0;      // Assume 0deg rotation for now
+            int sensorOrientation = 90;      // Assume 0deg rotation for now
 
-            rgbFrameBitmap = Bitmap.createBitmap(surfaceView.getRenderer().getWidth(), surfaceView.getRenderer().getHeight(), Bitmap.Config.ARGB_8888);
+            rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
             croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Bitmap.Config.ARGB_8888);
 
             frameToCropTransform =
                     ImageUtils.getTransformationMatrix(
-                            surfaceView.getRenderer().getWidth(), surfaceView.getRenderer().getHeight(),
+                            previewWidth, previewHeight,
                             cropSize, cropSize,
                             sensorOrientation, MAINTAIN_ASPECT_RATIO);
 
             Matrix cropToFrameTransform = new Matrix();
             frameToCropTransform.invert(cropToFrameTransform);
+            // frameToCropTransform.postRotate(90);
         }
 
         processingFrame = true;
@@ -323,18 +326,18 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
         {
             Log.d(TAG, "Processing new frame");
 
-            // PERFORM DETECTION + INFERENCE
-            rgbFrameBitmap.setPixels(imageConverter.getRgbBytes(frame.acquireCameraImage()), 0, surfaceView.getRenderer().getWidth(), 0, 0, surfaceView.getRenderer().getWidth(), surfaceView.getRenderer().getHeight());
-
-            final Canvas canvas = new Canvas(croppedBitmap);
-            canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
-
             if(detector == null)
             {
                 Log.w(TAG, "Detector not initialised.");
                 processingFrame = false;
                 return;
             }
+
+            // PERFORM DETECTION + INFERENCE
+            rgbFrameBitmap.setPixels(imageConverter.getRgbBytes(frame.acquireCameraImage()), 0, previewWidth, 0, 0, previewWidth, previewHeight);
+
+            final Canvas canvas = new Canvas(croppedBitmap);
+            canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
 
             runInBackground(new Runnable()
             {
@@ -346,7 +349,11 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
 
                     for(ObjectClassifier.Recognition rec : results)
                     {
-                        Log.d(TAG, rec.toString());
+                        if(rec.getConfidence() > minConf)
+                        {
+                            String res = rec.toString();        // Debug variable
+                            Log.d(TAG, rec.toString());
+                        }
                     }
                     processingFrame = false;
                 }
