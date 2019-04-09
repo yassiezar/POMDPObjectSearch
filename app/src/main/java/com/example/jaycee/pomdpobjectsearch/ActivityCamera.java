@@ -259,6 +259,24 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
     @Override
     protected void onPause()
     {
+        if(!isFinishing())
+        {
+            finish();
+        }
+
+        backgroundHandlerThread.quitSafely();
+        try
+        {
+            backgroundHandlerThread.join();
+            backgroundHandlerThread = null;
+            backgroundHandler = null;
+        }
+        catch(InterruptedException e)
+        {
+            Log.e(TAG, "Exception onPause: " + e);
+        }
+
+
         if(soundGenerator != null)
         {
             soundGenerator.stop();
@@ -274,18 +292,6 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
         if(detector != null)
         {
             detector.close();
-        }
-
-        backgroundHandlerThread.quitSafely();
-        try
-        {
-            backgroundHandlerThread.join();
-            backgroundHandlerThread = null;
-            backgroundHandler = null;
-        }
-        catch(InterruptedException e)
-        {
-            Log.e(TAG, "Exception onPause: " + e);
         }
 
         if(!JNIBridge.killSound())
@@ -378,7 +384,7 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
 
             if(detector == null)
             {
-                Log.w(TAG, "Detector not initialised. ");
+                Log.w(TAG, "Detector not initialised.");
                 processingFrame = false;
                 return;
             }
@@ -391,6 +397,11 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
                     Log.d(TAG, "Detecting objects");
                     final List<ObjectClassifier.Recognition> results = detector.recogniseImage(croppedBitmap);
                     processingFrame = false;
+
+                    for(ObjectClassifier.Recognition rec : results)
+                    {
+                        Log.d(TAG, rec.toString());
+                    }
                 }
             });
         }

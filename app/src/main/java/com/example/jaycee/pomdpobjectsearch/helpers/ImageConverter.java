@@ -3,8 +3,6 @@ package com.example.jaycee.pomdpobjectsearch.helpers;
 import android.media.Image;
 import android.util.Log;
 
-import com.google.ar.core.Frame;
-
 import java.nio.ByteBuffer;
 
 public class ImageConverter implements Runnable
