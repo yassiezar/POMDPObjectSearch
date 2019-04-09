@@ -1,8 +1,9 @@
-package com.example.jaycee.pomdpobjectsearch.rendering;
+package com.example.jaycee.pomdpobjectsearch.deprecated.rendering;
 
 import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
 import com.google.ar.core.Pose;
 
+@Deprecated
 public class ARObject
 {
     private static final float ANGLE_INTERVAL = 12f;

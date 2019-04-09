@@ -9,6 +9,8 @@ import android.graphics.Point;
 import android.util.AttributeSet;
 import android.view.View;
 
+import com.example.jaycee.pomdpobjectsearch.R;
+
 public class Arrow extends View
 {
     private static final Direction DEFAULT_DIRECTION = Direction.LEFT;

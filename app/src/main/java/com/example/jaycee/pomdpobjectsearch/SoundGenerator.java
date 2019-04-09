@@ -1,7 +1,6 @@
 package com.example.jaycee.pomdpobjectsearch;
 
 import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
-import com.example.jaycee.pomdpobjectsearch.rendering.SurfaceRenderer;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
@@ -10,7 +9,6 @@ import com.google.ar.core.Session;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Vibrator;
-import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.Toast;
 
