@@ -267,6 +267,7 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
         backgroundHandlerThread.quitSafely();
         try
         {
+            Log.i(TAG, "Closing detector thread");
             backgroundHandlerThread.join();
             backgroundHandlerThread = null;
             backgroundHandler = null;
@@ -275,7 +276,6 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
         {
             Log.e(TAG, "Exception onPause: " + e);
         }
-
 
         if(soundGenerator != null)
         {
@@ -334,10 +334,16 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
     public void onNewFrame(final Frame frame)
     {
         Log.d(TAG, "New Frame");
+        if(soundGenerator == null)
+        {
+            Log.w(TAG, "Sound Generator is dead. Likely that the thread has been killed");
+            return;
+        }
         soundGenerator.setFrame(frame);
 
         if(!soundGenerator.isTargetSet())
         {
+            Log.w(TAG, "Sound Generator target not set");
             return;
         }
 
@@ -396,12 +402,12 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
                 {
                     Log.d(TAG, "Detecting objects");
                     final List<ObjectClassifier.Recognition> results = detector.recogniseImage(croppedBitmap);
-                    processingFrame = false;
 
                     for(ObjectClassifier.Recognition rec : results)
                     {
                         Log.d(TAG, rec.toString());
                     }
+                    processingFrame = false;
                 }
             });
         }
@@ -409,7 +415,6 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
         {
             Log.e(TAG, "Camera not yet ready: " + e);
         }
-        processingFrame = false;
     }
 
     @Override

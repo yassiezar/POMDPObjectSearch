@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.net.ConnectException;
 import java.net.Socket;
 
 public class Metrics
@@ -116,6 +117,10 @@ public class Metrics
                 writer.close();
 
                 socket.close();
+            }
+            catch(ConnectException e)
+            {
+                Log.w(TAG, "WiFi connect error. Likely not connected to wifi network");
             }
             catch(IOException e)
             {
