@@ -48,14 +48,12 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height)
     {
         super.surfaceChanged(surfaceHolder, format, width, height);
-        ((ActivityCamera)context).startBarcodeScanner();
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder surfaceHolder)
     {
         super.surfaceDestroyed(surfaceHolder);
-        ((ActivityCamera)context).stopBarcodeScanner();
     }
 
     @Override
@@ -72,16 +70,6 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
             }
         }
         return super.onTouchEvent(event);
-    }
-
-    @Override
-    public boolean performClick()
-    {
-        super.performClick();
-
-        renderer.toggleDrawObjects();
-
-        return true;
     }
 
     public SurfaceRenderer getRenderer()
