@@ -23,7 +23,6 @@ import android.widget.Toast;
 
 import com.example.jaycee.pomdpobjectsearch.helpers.ImageConverter;
 import com.example.jaycee.pomdpobjectsearch.helpers.ImageUtils;
-import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
@@ -40,22 +39,14 @@ import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationExceptio
 import java.io.IOException;
 import java.util.List;
 
-public class ActivityCamera extends AppCompatActivity implements NewFrameHandler, NewWaypointHandler
+public abstract class ActivityBase extends AppCompatActivity implements NewFrameHandler
 {
-    private static final String TAG = ActivityCamera.class.getSimpleName();
+    private static final String TAG = ActivityBase.class.getSimpleName();
 
     private static final int CAMERA_PERMISSION_CODE = 0;
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
 
-    private static final String TF_MODEL_FILE = "mobilenet/detect.tflite";
-    private static final String TF_LABELS_FILE = "file:///android_asset/mobilenet/coco_labels_list.txt";
-    private static final int TF_INPUT_SIZE = 300;
-    private static final boolean TF_IS_QUANTISED = true;
-
-    private static final boolean MAINTAIN_ASPECT_RATIO = false;
-
     private static final int O_NOTHING = 0;
-
     private static final int T_COMPUTER_MONITOR = 1;
     private static final int T_COMPUTER_KEYBOARD = 2;
     private static final int T_COMPUTER_MOUSE = 3;
@@ -64,17 +55,25 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
     private static final int T_OFFICE_SUPPLIES = 7;
     private static final int T_WINDOW = 8;
 
-    private Session session;
+    private static final String TF_MODEL_FILE = "mobilenet/detect.tflite";
+    private static final String TF_LABELS_FILE = "file:///android_asset/mobilenet/coco_labels_list.txt";
+    private static final int TF_INPUT_SIZE = 300;
+    private static final boolean TF_IS_QUANTISED = true;
 
-    private CameraSurface surfaceView;
+    private static final boolean MAINTAIN_ASPECT_RATIO = false;
+
+    protected int target = O_NOTHING;
+
+    protected CameraSurface surfaceView;
     private DrawerLayout drawerLayout;
     private CentreView centreView;
 
-    private SoundGenerator soundGenerator;
-    private ObjectClassifier detector;
-
     private Handler backgroundHandler;
     private HandlerThread backgroundHandlerThread;
+
+    protected Session session;
+
+    private ObjectClassifier detector;
 
     private ImageConverter imageConverter;
 
@@ -82,10 +81,9 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
     private Bitmap croppedBitmap;
 
     private Matrix frameToCropTransform;
-    private Matrix cropToFrameTransform;
 
-    private boolean requestARCoreInstall = true;
     private boolean processingFrame = false;
+    private boolean requestARCoreInstall = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -112,7 +110,6 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item)
             {
-                int target = 0;
                 switch (item.getItemId())
                 {
                     case R.id.item_object_mug:
@@ -138,22 +135,26 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
                         break;
                 }
 
-                try
-                {
-                    soundGenerator.setTarget(target);
-                    item.setCheckable(true);
-                }
-                catch(NotTrackingException e)
-                {
-                    Log.e(TAG, "Not tracking: " + e);
-                    Toast.makeText(ActivityCamera.this, "Camera not tracking", Toast.LENGTH_LONG).show();
-                }
+                item.setCheckable(true);
+                setTarget(target);
 
                 drawerLayout.closeDrawers();
 
                 return true;
             }
         });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        switch (item.getItemId())
+        {
+            case android.R.id.home:
+                drawerLayout.openDrawer(GravityCompat.START);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -186,7 +187,7 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
                 conf.setFocusMode(Config.FocusMode.AUTO);
                 session.configure(conf);
             }
-            catch(UnavailableUserDeclinedInstallationException | UnavailableArcoreNotInstalledException  e)
+            catch(UnavailableUserDeclinedInstallationException | UnavailableArcoreNotInstalledException e)
             {
                 Log.e(TAG, "Please install ARCore.");
                 return;
@@ -242,22 +243,13 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
             Log.e(TAG, "Object detector init error: Cannot read file " + e);
         }
 
-        if(!JNIBridge.initSound())
-        {
-            Log.e(TAG, "OpenAL init error");
-        }
-
         backgroundHandlerThread = new HandlerThread("InferenceThread");
         backgroundHandlerThread.start();
         backgroundHandler = new Handler(backgroundHandlerThread.getLooper());
-
-        soundGenerator = new SoundGenerator(this);
-        soundGenerator.setSession(session);
-        soundGenerator.run();
     }
 
     @Override
-    protected void onPause()
+    protected synchronized void onPause()
     {
         if(!isFinishing())
         {
@@ -277,12 +269,6 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
             Log.e(TAG, "Exception onPause: " + e);
         }
 
-        if(soundGenerator != null)
-        {
-            soundGenerator.stop();
-            soundGenerator = null;
-        }
-
         if(session != null)
         {
             surfaceView.onPause();
@@ -294,58 +280,13 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
             detector.close();
         }
 
-        if(!JNIBridge.killSound())
-        {
-            Log.e(TAG, "OpenAL kill error");
-        }
-
         super.onPause();
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item)
-    {
-        switch (item.getItemId())
-        {
-            case android.R.id.home:
-                drawerLayout.openDrawer(GravityCompat.START);
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    public boolean hasCameraPermission()
-    {
-        return ContextCompat.checkSelfPermission(this, CAMERA_PERMISSION) == PackageManager.PERMISSION_GRANTED;
-    }
-
-    public void requestCameraPermission()
-    {
-        ActivityCompat.requestPermissions(this, new String[] {CAMERA_PERMISSION}, CAMERA_PERMISSION_CODE);
-    }
-
-    public Anchor getWaypointAnchor()
-    {
-        /* TODO: Handle nullpointer crash here */
-        return soundGenerator.getWaypointAnchor();
     }
 
     @Override
     public void onNewFrame(final Frame frame)
     {
         Log.d(TAG, "New Frame");
-        if(soundGenerator == null)
-        {
-            Log.w(TAG, "Sound Generator is dead. Likely that the thread has been killed");
-            return;
-        }
-        soundGenerator.setFrame(frame);
-
-        if(!soundGenerator.isTargetSet())
-        {
-            Log.w(TAG, "Sound Generator target not set");
-            return;
-        }
 
         if(processingFrame)
         {
@@ -373,7 +314,7 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
                             cropSize, cropSize,
                             sensorOrientation, MAINTAIN_ASPECT_RATIO);
 
-            cropToFrameTransform = new Matrix();
+            Matrix cropToFrameTransform = new Matrix();
             frameToCropTransform.invert(cropToFrameTransform);
         }
 
@@ -417,22 +358,22 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
         }
     }
 
-    @Override
-    public void onNewTimestamp(long timestamp)
+    public boolean hasCameraPermission()
     {
-        soundGenerator.setTimestamp(timestamp);
+        return ContextCompat.checkSelfPermission(this, CAMERA_PERMISSION) == PackageManager.PERMISSION_GRANTED;
     }
 
-    @Override
-    public void onTargetFound()
+    public void requestCameraPermission()
     {
-        surfaceView.getRenderer().setDrawWaypoint(false);
+        ActivityCompat.requestPermissions(this, new String[] {CAMERA_PERMISSION}, CAMERA_PERMISSION_CODE);
     }
 
-    @Override
-    public void onNewWaypoint()
+    protected synchronized void runInBackground(final Runnable r)
     {
-        surfaceView.getRenderer().setDrawWaypoint(true);
+        if(backgroundHandler != null)
+        {
+            backgroundHandler.post(r);
+        }
     }
 
     public CentreView getCentreView()
@@ -440,11 +381,5 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
         return centreView;
     }
 
-    public synchronized void runInBackground(final Runnable r)
-    {
-        if(backgroundHandler != null)
-        {
-            backgroundHandler.post(r);
-        }
-    }
+    public abstract void setTarget(int target);
 }

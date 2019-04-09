@@ -6,7 +6,7 @@ import android.opengl.GLSurfaceView;
 import android.util.Log;
 import android.view.WindowManager;
 
-import com.example.jaycee.pomdpobjectsearch.ActivityCamera;
+import com.example.jaycee.pomdpobjectsearch.ActivityGuidance;
 import com.example.jaycee.pomdpobjectsearch.CameraSurface;
 import com.example.jaycee.pomdpobjectsearch.NewFrameHandler;
 import com.google.ar.core.Camera;
@@ -146,7 +146,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
             // Update the debug object
             if(camera.getTrackingState() == TrackingState.TRACKING && drawWaypoint)
             {
-                Pose waypointPose = ((ActivityCamera)context).getWaypointAnchor().getPose();
+                Pose waypointPose = ((ActivityGuidance)context).getWaypointAnchor().getPose();
 
                 // Draw the waypoints as an Andyman
                 waypointPose.toMatrix(anchorMatrix, 0);
