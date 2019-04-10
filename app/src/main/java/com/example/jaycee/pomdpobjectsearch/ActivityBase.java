@@ -30,7 +30,7 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
-public abstract class ActivityBase extends AppCompatActivity implements NewFrameHandler
+public abstract class ActivityBase extends AppCompatActivity implements FrameHandler
 {
     private static final String TAG = ActivityBase.class.getSimpleName();
 
@@ -256,7 +256,6 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
 
     public void scanFrameForObjects()
     {
-        final Frame frame = this.frame;
         if(processingFrame)
         {
             return;
@@ -281,7 +280,10 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
             Log.d(TAG, "Processing new frame");
 
             // PERFORM DETECTION + INFERENCE
-            frameScanner.updateBitmap(imageConverter.getRgbBytes(frame.acquireCameraImage()));
+            synchronized (this)
+            {
+                frameScanner.updateBitmap(imageConverter.getRgbBytes(frame.acquireCameraImage()));
+            }
 
             runInBackground(new Runnable()
             {
@@ -302,7 +304,10 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
     @Override
     public void onNewFrame(final Frame frame)
     {
-        this.frame = frame;
+        synchronized (this)
+        {
+            this.frame = frame;
+        }
     }
 
     public boolean hasCameraPermission()
@@ -328,5 +333,8 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
         return centreView;
     }
 
-    public abstract void setTarget(int target);
+    public void setTarget(int target) { }
+
+    @Override
+    public void onNewTimestamp(long timestamp) { }
 }

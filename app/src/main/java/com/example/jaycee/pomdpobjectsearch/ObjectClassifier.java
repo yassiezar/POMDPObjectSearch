@@ -16,6 +16,7 @@ public interface ObjectClassifier
         private final String title;
         private final Float confidence;
         private RectF location;
+        private int code;
 
         public Recognition(final String id, final String title, final Float confidence, final RectF location)
         {
@@ -27,6 +28,19 @@ public interface ObjectClassifier
 
         public String getId() {
             return id;
+        }
+
+        public int getCode()
+        {
+            if(title.equals("monitor")) return 1;
+            if(title.equals("keyboard")) return 2;
+            if(title.equals("mouse")) return 3;
+            if(title.equals("desk")) return 4;
+            if(title.equals("mug")) return 6;
+            if(title.equals("supplies")) return 7;
+            if(title.equals("window")) return 8;
+
+            return 0;
         }
 
         public String getTitle() {

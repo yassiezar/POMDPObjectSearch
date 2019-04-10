@@ -20,16 +20,15 @@ public class FrameScanner
     private static final boolean TF_IS_QUANTISED = true;
     private static final boolean MAINTAIN_ASPECT_RATIO = false;
     private static final int TF_INPUT_SIZE = 300;
-    private static final float MIN_CONF = 0.2f;
 
     private ObjectClassifier detector;
+
+    private FrameHandler frameHandler;
 
     private Bitmap fullsizeBitmap;
     private Bitmap croppedBitmap;
 
     private Matrix frameToCropTransform;
-
-    private List<ObjectClassifier.Recognition> results;
 
     private int width, height;
 
@@ -37,6 +36,8 @@ public class FrameScanner
     {
         this.width = width;
         this.height = height;
+
+        frameHandler = (FrameHandler)context;
 
         try
         {
@@ -74,24 +75,12 @@ public class FrameScanner
     public void scanFrame()
     {
         Log.d(TAG, "Detecting objects");
-        results = detector.recogniseImage(croppedBitmap);
-
-        for(ObjectClassifier.Recognition rec : results)
-        {
-            if(rec.getConfidence() > MIN_CONF)
-            {
-                Log.d(TAG, rec.toString());
-            }
-        }
+        List<ObjectClassifier.Recognition> results = detector.recogniseImage(croppedBitmap);
+        frameHandler.onScanComplete(results);
     }
 
     public void close()
     {
         detector.close();
-    }
-
-    public List<ObjectClassifier.Recognition> getDetectedObjects()
-    {
-        return this.results;
     }
 }

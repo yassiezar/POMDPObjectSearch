@@ -8,7 +8,7 @@ import android.view.WindowManager;
 
 import com.example.jaycee.pomdpobjectsearch.ActivityGuided;
 import com.example.jaycee.pomdpobjectsearch.CameraSurface;
-import com.example.jaycee.pomdpobjectsearch.NewFrameHandler;
+import com.example.jaycee.pomdpobjectsearch.FrameHandler;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
@@ -32,7 +32,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     private BackgroundRenderer backgroundRenderer;
     private ObjectRenderer waypointRenderer;
 
-    private NewFrameHandler frameHandler;
+    private FrameHandler frameHandler;
 
     private int width, height;
 
@@ -48,7 +48,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     {
         this.context = context;
         this.surfaceView = surfaceView;
-        this.frameHandler = (NewFrameHandler)context;
+        this.frameHandler = (FrameHandler)context;
 
         this.scannerWidth = 525;
         this.scannerHeight = 525;

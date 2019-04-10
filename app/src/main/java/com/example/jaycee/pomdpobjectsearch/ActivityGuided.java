@@ -1,5 +1,6 @@
 package com.example.jaycee.pomdpobjectsearch;
 
+import android.graphics.RectF;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -7,9 +8,16 @@ import com.google.ar.core.Anchor;
 import com.google.ar.core.Frame;
 import com.google.ar.core.exceptions.NotTrackingException;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
 public class ActivityGuided extends ActivityBase implements NewWaypointHandler
 {
     private static final String TAG = ActivityGuided.class.getSimpleName();
+
+    private static final float MIN_CONF = 0.2f;
 
     private SoundGenerator soundGenerator;
 
@@ -91,6 +99,7 @@ public class ActivityGuided extends ActivityBase implements NewWaypointHandler
         scanFrameForObjects();
     }
 
+    @Override
     public void setTarget(int target)
     {
         try
@@ -101,6 +110,38 @@ public class ActivityGuided extends ActivityBase implements NewWaypointHandler
         {
             Log.e(TAG, "Not tracking: " + e);
             Toast.makeText(ActivityGuided.this, "Camera not tracking", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onScanComplete(List<ObjectClassifier.Recognition> results)
+    {
+        RectF centreOfScreen = new RectF(213, 160, 416, 320);
+        List<ObjectClassifier.Recognition> validObservations = new ArrayList<>();
+        for(ObjectClassifier.Recognition result : results)
+        {
+            if(result.getConfidence() > MIN_CONF && centreOfScreen.contains(result.getLocation()))
+            {
+                validObservations.add(result);
+                Log.d(TAG, result.toString());
+            }
+        }
+
+        if(!validObservations.isEmpty())
+        {
+            Collections.sort(validObservations, new Comparator<ObjectClassifier.Recognition>()
+            {
+                @Override
+                public int compare(ObjectClassifier.Recognition r1, ObjectClassifier.Recognition r2)
+                {
+                    return r1.getConfidence() > r2.getConfidence() ? 1 : r1.getConfidence() < r2.getConfidence() ? -1 : 0;
+                }
+            });
+            soundGenerator.setObservation(validObservations.get(0).getCode());
+        }
+        else
+        {
+            soundGenerator.setObservation(0);
         }
     }
 }

@@ -1,15 +1,18 @@
 package com.example.jaycee.pomdpobjectsearch;
 
-import android.graphics.Rect;
+import android.graphics.RectF;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 
+import java.util.List;
 import java.util.Locale;
 
 public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
 {
     private static final String TAG = ActivityUnguided.class.getSimpleName();
+
+    private static final float MIN_CONF = 0.2f;
 
     private TextToSpeech tts;
 
@@ -66,23 +69,24 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
     }
 
     @Override
-    public void setTarget(int target)
-    {
-
-    }
-
-    @Override
-    public void onNewTimestamp(long timestamp)
-    {
-
-    }
-
-    @Override
     public void onScreenTap()
     {
-        Rect centreOfScreen = new Rect(213, 160, 416, 320);
         Log.d(TAG, "Tapped screen");
         tts.speak("Screen tapped", TextToSpeech.QUEUE_FLUSH, null, "");
         scanFrameForObjects();
+    }
+
+    @Override
+    public void onScanComplete(List<ObjectClassifier.Recognition> results)
+    {
+        RectF centreOfScreen = new RectF(213, 160, 416, 320);
+        for(ObjectClassifier.Recognition result : results)
+        {
+            if(result.getConfidence() > MIN_CONF && centreOfScreen.contains(result.getLocation()))
+            {
+                tts.speak(result.getTitle(), TextToSpeech.QUEUE_FLUSH, null, "");
+                Log.d(TAG, result.toString());
+            }
+        }
     }
 }
