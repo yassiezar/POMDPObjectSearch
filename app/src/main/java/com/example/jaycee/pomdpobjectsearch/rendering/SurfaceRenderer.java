@@ -156,7 +156,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
             }
             else
             {
-                Log.d(TAG, "Camera not tracking or target not set. ");
+                Log.w(TAG, "Camera not tracking or target not set. ");
             }
         }
         catch(CameraNotAvailableException e)

@@ -2,9 +2,6 @@ package com.example.jaycee.pomdpobjectsearch;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -21,7 +18,6 @@ import android.util.Log;
 import android.view.MenuItem;
 
 import com.example.jaycee.pomdpobjectsearch.helpers.ImageConverter;
-import com.example.jaycee.pomdpobjectsearch.helpers.ImageUtils;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
@@ -33,9 +29,6 @@ import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
-
-import java.io.IOException;
-import java.util.List;
 
 public abstract class ActivityBase extends AppCompatActivity implements NewFrameHandler
 {
@@ -53,13 +46,6 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
     private static final int T_OFFICE_SUPPLIES = 7;
     private static final int T_WINDOW = 8;
 
-    private static final String TF_MODEL_FILE = "mobilenet/detect.tflite";
-    private static final String TF_LABELS_FILE = "file:///android_asset/mobilenet/coco_labels_list.txt";
-    private static final int TF_INPUT_SIZE = 300;
-    private static final boolean TF_IS_QUANTISED = true;
-
-    private static final boolean MAINTAIN_ASPECT_RATIO = false;
-
     protected int target = O_NOTHING;
 
     protected CameraSurface surfaceView;
@@ -70,20 +56,14 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
     private HandlerThread backgroundHandlerThread;
 
     protected Session session;
+    protected Frame frame;
 
-    private ObjectClassifier detector;
+    private FrameScanner frameScanner;
 
     private ImageConverter imageConverter;
 
-    private Bitmap rgbFrameBitmap;
-    private Bitmap croppedBitmap;
-
-    private Matrix frameToCropTransform;
-
     private boolean processingFrame = false;
     private boolean requestARCoreInstall = true;
-
-    private float minConf = 0.8f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -234,15 +214,6 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
             Log.e(TAG, "SurfaceView init error: " + e);
         }
 
-        try
-        {
-            detector = ObjectDetector.create(getAssets(), TF_MODEL_FILE, TF_LABELS_FILE, TF_INPUT_SIZE, TF_IS_QUANTISED);
-        }
-        catch(IOException e)
-        {
-            Log.e(TAG, "Object detector init error: Cannot read file " + e);
-        }
-
         backgroundHandlerThread = new HandlerThread("InferenceThread");
         backgroundHandlerThread.start();
         backgroundHandler = new Handler(backgroundHandlerThread.getLooper());
@@ -275,17 +246,17 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
             session.pause();
         }
 
-        if(detector != null)
+        if(frameScanner != null)
         {
-            detector.close();
+            frameScanner.close();
         }
 
         super.onPause();
     }
 
-    @Override
-    public void onNewFrame(final Frame frame)
+    public void scanFrameForObjects()
     {
+        final Frame frame = this.frame;
         if(processingFrame)
         {
             return;
@@ -297,25 +268,11 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
             imageConverter = new ImageConverter(surfaceView.getRenderer().getWidth(), surfaceView.getRenderer().getHeight());
         }
 
-        int previewWidth = 640;
-        int previewHeight = 480;
-        if(rgbFrameBitmap == null || croppedBitmap == null)
+        if(frameScanner == null)
         {
-            // TODO: Add compensation for other screen rotations
-            int cropSize = TF_INPUT_SIZE;
-            int sensorOrientation = 90;      // Assume 0deg rotation for now
-
-            rgbFrameBitmap = Bitmap.createBitmap(previewWidth, previewHeight, Bitmap.Config.ARGB_8888);
-            croppedBitmap = Bitmap.createBitmap(cropSize, cropSize, Bitmap.Config.ARGB_8888);
-
-            frameToCropTransform =
-                    ImageUtils.getTransformationMatrix(
-                            previewWidth, previewHeight,
-                            cropSize, cropSize,
-                            sensorOrientation, MAINTAIN_ASPECT_RATIO);
-
-            Matrix cropToFrameTransform = new Matrix();
-            frameToCropTransform.invert(cropToFrameTransform);
+            int previewWidth = 640;
+            int previewHeight = 480;
+            frameScanner = new FrameScanner(previewWidth, previewHeight, this);
         }
 
         processingFrame = true;
@@ -323,34 +280,15 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
         {
             Log.d(TAG, "Processing new frame");
 
-            if(detector == null)
-            {
-                Log.w(TAG, "Detector not initialised.");
-                processingFrame = false;
-                return;
-            }
-
             // PERFORM DETECTION + INFERENCE
-            rgbFrameBitmap.setPixels(imageConverter.getRgbBytes(frame.acquireCameraImage()), 0, previewWidth, 0, 0, previewWidth, previewHeight);
-
-            final Canvas canvas = new Canvas(croppedBitmap);
-            canvas.drawBitmap(rgbFrameBitmap, frameToCropTransform, null);
+            frameScanner.updateBitmap(imageConverter.getRgbBytes(frame.acquireCameraImage()));
 
             runInBackground(new Runnable()
             {
                 @Override
                 public void run()
                 {
-                    Log.d(TAG, "Detecting objects");
-                    final List<ObjectClassifier.Recognition> results = detector.recogniseImage(croppedBitmap);
-
-                    for(ObjectClassifier.Recognition rec : results)
-                    {
-                        if(rec.getConfidence() > minConf)
-                        {
-                            Log.d(TAG, rec.toString());
-                        }
-                    }
+                    frameScanner.scanFrame();
                     processingFrame = false;
                 }
             });
@@ -359,6 +297,12 @@ public abstract class ActivityBase extends AppCompatActivity implements NewFrame
         {
             Log.e(TAG, "Camera not yet ready: " + e);
         }
+    }
+
+    @Override
+    public void onNewFrame(final Frame frame)
+    {
+        this.frame = frame;
     }
 
     public boolean hasCameraPermission()

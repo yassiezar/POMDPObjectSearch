@@ -1,5 +1,7 @@
 package com.example.jaycee.pomdpobjectsearch;
 
+import android.graphics.Rect;
+import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 
@@ -17,11 +19,18 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
      */
 
     @Override
+    public void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        surfaceView.enableScreenTap();
+        surfaceView.setScreenReadRequest(this);
+    }
+
+    @Override
     public void onResume()
     {
         super.onResume();
 
-        surfaceView.enableScreenTap();
 
         tts = new TextToSpeech(ActivityUnguided.this, new TextToSpeech.OnInitListener()
         {
@@ -71,7 +80,9 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
     @Override
     public void onScreenTap()
     {
+        Rect centreOfScreen = new Rect(213, 160, 416, 320);
         Log.d(TAG, "Tapped screen");
         tts.speak("Screen tapped", TextToSpeech.QUEUE_FLUSH, null, "");
+        scanFrameForObjects();
     }
 }

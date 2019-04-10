@@ -87,6 +87,8 @@ public class ActivityGuided extends ActivityBase implements NewWaypointHandler
         }
 
         super.onNewFrame(frame);
+
+        scanFrameForObjects();
     }
 
     public void setTarget(int target)

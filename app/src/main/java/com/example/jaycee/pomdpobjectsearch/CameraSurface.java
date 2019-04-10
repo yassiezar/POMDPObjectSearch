@@ -30,8 +30,6 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
 
         this.context = context;
 
-        screenReadRequest = (ScreenReadRequest)context;
-
         renderer = new SurfaceRenderer(context, this);
 
         getHolder().addCallback(this);
@@ -42,6 +40,11 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
         setEGLConfigChooser(8, 8, 8, 8, 16, 0);
         setRenderer(renderer);
         setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+    }
+
+    public void setScreenReadRequest(Context context)
+    {
+        this.screenReadRequest = (ScreenReadRequest)context;
     }
 
     @Override
