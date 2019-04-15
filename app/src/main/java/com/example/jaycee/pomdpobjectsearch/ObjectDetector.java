@@ -15,7 +15,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,13 +46,14 @@ public class ObjectDetector implements ObjectClassifier
 
     private Interpreter tfLite;
 
-    private static MappedByteBuffer loadModelFile(AssetManager assets, String modelFilename) throws IOException
+    private static ByteBuffer loadModelFile(AssetManager assets, String modelFilename) throws IOException
     {
         AssetFileDescriptor fileDescriptor = assets.openFd(modelFilename);
         FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
         FileChannel fileChannel = inputStream.getChannel();
         long startOffset = fileDescriptor.getStartOffset();
         long declaredLength = fileDescriptor.getDeclaredLength();
+
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
     }
 
@@ -69,17 +69,6 @@ public class ObjectDetector implements ObjectClassifier
 
         String actualFilename = labelFilename.split("file:///android_asset/")[1];
         InputStream labelsInput = assetManager.open(actualFilename);
-/*
-        File labelFile = new File(actualFilename);
-        if(!labelFile.exists())
-        {
-            byte[] data = new byte[8388608];
-            labelsInput.read(data);
-            labelsInput.close();
-            FileOutputStream fos = new FileOutputStream(labelFile);
-            fos.write(data);
-            fos.close();
-        }*/
 
         BufferedReader br = new BufferedReader(new InputStreamReader(labelsInput));
         String line;
@@ -93,8 +82,9 @@ public class ObjectDetector implements ObjectClassifier
 
         try
         {
-            d.tfLite = new Interpreter(loadModelFile(assetManager, modelFilename));
-            // d.tfLite = new Interpreter(labelFile);
+            Interpreter.Options tfOptions = new Interpreter.Options();
+            tfOptions.setNumThreads(NUM_THREADS);
+            d.tfLite = new Interpreter(loadModelFile(assetManager, modelFilename), tfOptions);
         }
         catch (Exception e)
         {
@@ -117,7 +107,6 @@ public class ObjectDetector implements ObjectClassifier
         d.intValues = new int[d.inputSize * d.inputSize];
 
         //check if changing the threads number the performance change
-        d.tfLite.setNumThreads(NUM_THREADS);
         d.outputLocations = new float[1][NUM_DETECTIONS][4];
         d.outputClasses = new float[1][NUM_DETECTIONS];
         d.outputScores = new float[1][NUM_DETECTIONS];
