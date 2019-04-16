@@ -2,7 +2,9 @@ package com.example.jaycee.pomdpobjectsearch;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.media.Image;
 import android.os.Bundle;
+import android.os.DeadObjectException;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
@@ -20,9 +22,9 @@ import android.view.MenuItem;
 import com.example.jaycee.pomdpobjectsearch.helpers.ImageConverter;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
-import com.google.ar.core.Frame;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
+import com.google.ar.core.exceptions.DeadlineExceededException;
 import com.google.ar.core.exceptions.NotYetAvailableException;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
@@ -56,7 +58,7 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
     private HandlerThread backgroundHandlerThread;
 
     protected Session session;
-    protected Frame frame;
+    protected Frame frame = Frame.getFrame();
 
     private FrameScanner frameScanner;
 
@@ -275,38 +277,52 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
         }
 
         processingFrame = true;
+
+        Log.d(TAG, "Processing new frame");
+
+        // PERFORM DETECTION + INFERENCE
         try
         {
-            Log.d(TAG, "Processing new frame");
-
-            // PERFORM DETECTION + INFERENCE
-            synchronized (this)
-            {
-                frameScanner.updateBitmap(imageConverter.getRgbBytes(frame.acquireCameraImage()));
-            }
-
-            runInBackground(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    frameScanner.scanFrame();
-                    processingFrame = false;
-                }
-            });
+            this.frame.getLock().lock();
+            com.google.ar.core.Frame arFrame = frame.getArFrame();
+            int[] imageBytes = imageConverter.getRgbBytes(arFrame.acquireCameraImage());
+            frameScanner.updateBitmap(imageBytes);
+        }
+        catch(DeadlineExceededException e)
+        {
+            Log.e(TAG, "Deadline exceeded for image");
         }
         catch(NotYetAvailableException e)
         {
             Log.e(TAG, "Camera not yet ready: " + e);
         }
+        finally
+        {
+            this.frame.getLock().unlock();
+        }
+
+        runInBackground(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                frameScanner.scanFrame();
+                processingFrame = false;
+            }
+        });
     }
 
     @Override
-    public void onNewFrame(final Frame frame)
+    public void onNewFrame(final com.google.ar.core.Frame frame)
     {
-        synchronized (this)
+        try
         {
-            this.frame = frame;
+            this.frame.getLock().lock();
+            this.frame.setFrame(frame);
+        }
+        finally
+        {
+            this.frame.getLock().unlock();
         }
     }
 

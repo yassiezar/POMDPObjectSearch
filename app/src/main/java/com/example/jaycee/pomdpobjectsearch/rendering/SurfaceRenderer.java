@@ -9,6 +9,8 @@ import android.view.WindowManager;
 import com.example.jaycee.pomdpobjectsearch.ActivityGuided;
 import com.example.jaycee.pomdpobjectsearch.CameraSurface;
 import com.example.jaycee.pomdpobjectsearch.FrameHandler;
+import com.example.jaycee.pomdpobjectsearch.SoundGenerator;
+import com.google.ar.core.Anchor;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
@@ -147,9 +149,14 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
             // Update the debug object
             if(camera.getTrackingState() == TrackingState.TRACKING && drawWaypoint)
             {
-                Pose waypointPose = ((ActivityGuided)context).getWaypointAnchor().getPose();
+                Anchor waypointAnchor = ((ActivityGuided)context).getWaypointAnchor();
 
+                if(waypointAnchor == null)
+                {
+                    return;
+                }
                 // Draw the waypoints as an Andyman
+                Pose waypointPose = waypointAnchor.getPose();
                 waypointPose.toMatrix(anchorMatrix, 0);
                 waypointRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
                 waypointRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);

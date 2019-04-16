@@ -1,5 +1,7 @@
 package com.example.jaycee.pomdpobjectsearch;
 
+import android.media.Image;
+
 import com.google.ar.core.Frame;
 
 import java.util.List;

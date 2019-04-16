@@ -57,7 +57,12 @@ public class ActivityGuided extends ActivityBase implements NewWaypointHandler
     public Anchor getWaypointAnchor()
     {
         /* TODO: Handle nullpointer crash here */
-        return soundGenerator.getWaypointAnchor();
+        if(soundGenerator != null)
+        {
+            return soundGenerator.getWaypointAnchor();
+        }
+
+        return null;
     }
 
     @Override
@@ -127,21 +132,24 @@ public class ActivityGuided extends ActivityBase implements NewWaypointHandler
             }
         }
 
-        if(!validObservations.isEmpty())
+        if(soundGenerator != null)
         {
-            Collections.sort(validObservations, new Comparator<ObjectClassifier.Recognition>()
+            if(!validObservations.isEmpty())
             {
-                @Override
-                public int compare(ObjectClassifier.Recognition r1, ObjectClassifier.Recognition r2)
+                Collections.sort(validObservations, new Comparator<ObjectClassifier.Recognition>()
                 {
-                    return r1.getConfidence() > r2.getConfidence() ? 1 : r1.getConfidence() < r2.getConfidence() ? -1 : 0;
-                }
-            });
-            soundGenerator.setObservation(validObservations.get(0).getCode());
-        }
-        else
-        {
-            soundGenerator.setObservation(0);
+                    @Override
+                    public int compare(ObjectClassifier.Recognition r1, ObjectClassifier.Recognition r2)
+                    {
+                        return r1.getConfidence() > r2.getConfidence() ? 1 : r1.getConfidence() < r2.getConfidence() ? -1 : 0;
+                    }
+                });
+                soundGenerator.setObservation(validObservations.get(0).getCode());
+            }
+            else
+            {
+                soundGenerator.setObservation(0);
+            }
         }
     }
 }

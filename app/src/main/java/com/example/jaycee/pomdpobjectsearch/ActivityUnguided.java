@@ -34,7 +34,6 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
     {
         super.onResume();
 
-
         tts = new TextToSpeech(ActivityUnguided.this, new TextToSpeech.OnInitListener()
         {
             @Override

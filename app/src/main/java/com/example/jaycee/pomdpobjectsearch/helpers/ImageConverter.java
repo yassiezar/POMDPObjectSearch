@@ -23,8 +23,8 @@ public class ImageConverter implements Runnable
     public void run()
     {
         final Image currentImage = image;
-        int width = image.getWidth();
-        int height = image.getHeight();
+        int width = currentImage.getWidth();
+        int height = currentImage.getHeight();
         final Image.Plane[] planes = currentImage.getPlanes();
 
         fillBytes(planes, yuvBytes);
@@ -42,6 +42,7 @@ public class ImageConverter implements Runnable
                 uvRowStride,
                 uvPixelStride,
                 rgbBytes);
+        currentImage.close();
     }
 
     private void fillBytes(final Image.Plane[] planes, final byte[][] yuvBytes)
@@ -59,12 +60,11 @@ public class ImageConverter implements Runnable
         }
     }
 
-    public int[] getRgbBytes(final Image img)
+    public int[] getRgbBytes(Image img)
     {
+        Log.d(TAG, "Getting RGB bytes");
         this.image = img;
         run();
-        img.close();
-        this.image.close();
 
         return rgbBytes;
     }

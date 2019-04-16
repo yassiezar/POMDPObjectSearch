@@ -10,6 +10,8 @@ import com.example.jaycee.pomdpobjectsearch.helpers.ImageUtils;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class FrameScanner
 {
@@ -29,6 +31,8 @@ public class FrameScanner
     private Bitmap croppedBitmap;
 
     private Matrix frameToCropTransform;
+
+    private Lock lock = new ReentrantLock();
 
     private int width, height;
 
@@ -66,17 +70,33 @@ public class FrameScanner
 
     public void updateBitmap(int[] img)
     {
-        fullsizeBitmap.setPixels(img, 0, width, 0, 0, width, height);
+        try
+        {
+            lock.lock();
+            fullsizeBitmap.setPixels(img, 0, width, 0, 0, width, height);
 
-        final Canvas canvas = new Canvas(croppedBitmap);
-        canvas.drawBitmap(fullsizeBitmap, frameToCropTransform, null);
+            final Canvas canvas = new Canvas(croppedBitmap);
+            canvas.drawBitmap(fullsizeBitmap, frameToCropTransform, null);
+        }
+        finally
+        {
+            lock.unlock();
+        }
     }
 
     public void scanFrame()
     {
-        Log.d(TAG, "Detecting objects");
-        List<ObjectClassifier.Recognition> results = detector.recogniseImage(croppedBitmap);
-        frameHandler.onScanComplete(results);
+        try
+        {
+            lock.lock();
+            Log.d(TAG, "Detecting objects");
+            List<ObjectClassifier.Recognition> results = detector.recogniseImage(croppedBitmap);
+            frameHandler.onScanComplete(results);
+        }
+        finally
+        {
+            lock.unlock();
+        }
     }
 
     public void close()
