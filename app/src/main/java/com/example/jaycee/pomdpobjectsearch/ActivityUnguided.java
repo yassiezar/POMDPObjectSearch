@@ -71,19 +71,19 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
     public void onScreenTap()
     {
         Log.d(TAG, "Tapped screen");
-        tts.speak("Screen tapped", TextToSpeech.QUEUE_FLUSH, null, "");
         scanFrameForObjects();
     }
 
     @Override
     public void onScanComplete(List<ObjectClassifier.Recognition> results)
     {
-        RectF centreOfScreen = new RectF(213, 160, 416, 320);
+        RectF centreOfScreen = new RectF(100, 100, 200, 200);
         for(ObjectClassifier.Recognition result : results)
         {
+            Log.i(TAG, result.toString());
             if(result.getConfidence() > MIN_CONF && centreOfScreen.contains(result.getLocation()))
             {
-                tts.speak(result.getTitle(), TextToSpeech.QUEUE_FLUSH, null, "");
+                tts.speak(result.getTitle(), TextToSpeech.QUEUE_ADD, null, "");
                 Log.d(TAG, result.toString());
             }
         }
