@@ -17,6 +17,7 @@ public interface ObjectClassifier
         private final Float confidence;
         private RectF location;
         private int code;
+        private ActivityBase.Observation observation;
 
         public Recognition(final String id, final String title, final Float confidence, final RectF location)
         {
@@ -28,6 +29,21 @@ public interface ObjectClassifier
 
         public String getId() {
             return id;
+        }
+
+        public ActivityBase.Observation getObservation()
+        {
+            switch(getCode())
+            {
+                case 1: return ActivityBase.Observation.T_COMPUTER_MONITOR;
+                case 2: return ActivityBase.Observation.T_COMPUTER_KEYBOARD;
+                case 3: return ActivityBase.Observation.T_COMPUTER_MOUSE;
+                case 4: return ActivityBase.Observation.T_DESK;
+                case 6: return ActivityBase.Observation.T_MUG;
+                case 7: return ActivityBase.Observation.T_OFFICE_SUPPLIES;
+                case 8: return ActivityBase.Observation.T_WINDOW;
+                default: return ActivityBase.Observation.O_NOTHING;
+            }
         }
 
         public int getCode()

@@ -1,5 +1,7 @@
 package com.example.jaycee.pomdpobjectsearch.helpers;
 
+import java.util.Locale;
+
 public class ClassHelpers
 {
     private static final String TAG = ClassHelpers.class.getSimpleName();
@@ -205,6 +207,12 @@ public class ClassHelpers
         public float[] asFloat()
         {
             return new float[] {-this.x, this.y, this.z};
+        }
+
+        @Override
+        public String toString()
+        {
+            return String.format(Locale.UK, "x: %f y: %f z: %f", x, y, z);
         }
     }
 }

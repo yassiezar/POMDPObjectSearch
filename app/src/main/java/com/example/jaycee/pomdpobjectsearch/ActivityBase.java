@@ -39,16 +39,24 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
     private static final int CAMERA_PERMISSION_CODE = 0;
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
 
-    private static final int O_NOTHING = 0;
-    private static final int T_COMPUTER_MONITOR = 1;
-    private static final int T_COMPUTER_KEYBOARD = 2;
-    private static final int T_COMPUTER_MOUSE = 3;
-    private static final int T_DESK = 4;
-    private static final int T_MUG = 6;
-    private static final int T_OFFICE_SUPPLIES = 7;
-    private static final int T_WINDOW = 8;
+    protected enum Observation
+    {
+        O_NOTHING (0),
+        T_COMPUTER_MONITOR (1),
+        T_COMPUTER_KEYBOARD (2),
+        T_COMPUTER_MOUSE (3),
+        T_DESK (4),
+        T_MUG (6),
+        T_OFFICE_SUPPLIES (7),
+        T_WINDOW (8);
 
-    protected int target = O_NOTHING;
+        private final int obsCode;
+        Observation(int obsCode) { this.obsCode = obsCode; }
+
+        public int getCode() { return this.obsCode; }
+    }
+
+    private Observation target = Observation.O_NOTHING;
 
     protected CameraSurface surfaceView;
     private DrawerLayout drawerLayout;
@@ -57,8 +65,8 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
     private Handler backgroundHandler;
     private HandlerThread backgroundHandlerThread;
 
-    protected Session session;
-    protected Frame frame = Frame.getFrame();
+    private Session session;
+    private Frame frame = Frame.getFrame();
 
     private FrameScanner frameScanner;
 
@@ -89,31 +97,32 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
 
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener()
         {
+            Observation target;
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item)
             {
                 switch (item.getItemId())
                 {
                     case R.id.item_object_mug:
-                        target = T_MUG;
+                        target = Observation.T_MUG;
                         break;
                     case R.id.item_object_desk:
-                        target = T_DESK;
+                        target = Observation.T_DESK;
                         break;
                     case R.id.item_object_office_supplies:
-                        target = T_OFFICE_SUPPLIES;
+                        target = Observation.T_OFFICE_SUPPLIES;
                         break;
                     case R.id.item_object_keyboard:
-                        target = T_COMPUTER_KEYBOARD;
+                        target = Observation.T_COMPUTER_KEYBOARD;
                         break;
                     case R.id.item_object_monitor:
-                        target = T_COMPUTER_MONITOR;
+                        target = Observation.T_COMPUTER_MONITOR;
                         break;
                     case R.id.item_object_mouse:
-                        target = T_COMPUTER_MOUSE;
+                        target = Observation.T_COMPUTER_MOUSE;
                         break;
                     case R.id.item_object_window:
-                        target = T_WINDOW;
+                        target = Observation.T_WINDOW;
                         break;
                 }
 
@@ -348,8 +357,11 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
     {
         return centreView;
     }
+    public Session getSession() { return this.session; }
+    public Frame getFrame() { return this.frame; }
 
-    public void setTarget(int target) { }
+    public void setTarget(Observation target) { this.target = target; }
+    public Observation getTarget() { return this.target; }
 
     @Override
     public void onNewTimestamp(long timestamp) { }

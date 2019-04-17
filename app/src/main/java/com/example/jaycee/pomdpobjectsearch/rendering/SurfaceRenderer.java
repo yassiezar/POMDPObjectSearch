@@ -149,14 +149,9 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
             // Update the debug object
             if(camera.getTrackingState() == TrackingState.TRACKING && drawWaypoint)
             {
-                Anchor waypointAnchor = ((ActivityGuided)context).getWaypointAnchor();
+                Pose waypointPose = ((ActivityGuided)context).getWaypointPose();
 
-                if(waypointAnchor == null)
-                {
-                    return;
-                }
                 // Draw the waypoints as an Andyman
-                Pose waypointPose = waypointAnchor.getPose();
                 waypointPose.toMatrix(anchorMatrix, 0);
                 waypointRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
                 waypointRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);

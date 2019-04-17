@@ -51,7 +51,6 @@ public class SoundGenerator implements Runnable
 
     private NewWaypointHandler waypointHandler;
 
-    private Vibrator vibrator;
     private Toast toast;
     private Handler handler = new Handler();
 
@@ -64,8 +63,6 @@ public class SoundGenerator implements Runnable
     {
         this.context = context;
         this.waypointHandler = (NewWaypointHandler)context;
-
-        this.vibrator= (Vibrator)context.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     public void stop()
@@ -97,14 +94,11 @@ public class SoundGenerator implements Runnable
             float gain = 1.f;
             if (observation == target)
             {
-                Log.i(TAG, "Target found");
                 targetFound = true;
                 isTargetSet = false;
                 observation = O_NOTHING;
-                vibrator.vibrate(350);
                 gain = 0.f;
 
-                ((ActivityGuided) context).getCentreView().resetArrows();
                 waypointHandler.onTargetFound();
                 waypointAnchor.detach();
                 waypoint = null;
