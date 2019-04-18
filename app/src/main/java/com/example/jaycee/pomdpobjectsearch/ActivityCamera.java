@@ -313,7 +313,29 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
         }
         return super.onOptionsItemSelected(item);
     }
+    
+    @Override
+    public void onrequestPermissionsResult(int requestCode, String[] permissions, int[] results)
+    {
+        if(!hasCameraPermission())
+        {
+            Toast.makeText(this, "Camera permissions are required to run this app", Toast.LENGTH_LONG).show();
+            if(!shouldShowRequestPermissionRationale())
+            {
+                Intent intent = new Intent();
+                intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.setData(Uri.fromParts("package", this.getPackageName(), null));
+                activity.startActivity(intent);
+            }
+            finish();
+        }
+    }
 
+    public boolean shouldShowRequestPermissionRationale() 
+    {
+        return ActivityCompat.shouldShowRequestPermissionRationale(this, CAMERA_PERMISSION);
+    }
+    
     public boolean hasCameraPermission()
     {
         return ContextCompat.checkSelfPermission(this, CAMERA_PERMISSION) == PackageManager.PERMISSION_GRANTED;
