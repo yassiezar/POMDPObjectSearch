@@ -5,24 +5,9 @@ extern "C" {
 #endif
 
 JNIEXPORT bool JNICALL
-Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_initSearch(JNIEnv* env, jobject obj, jlong target, jlong horizon)
-{
-    mdp.setTarget(target);
-    mdp.solve(horizon);
-
-    return true;
-}
-
-JNIEXPORT jlong JNICALL
-Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_getAction(JNIEnv* env, jobject obj, jlong state)
-{
-    mdp.getAction(state);
-}
-
-JNIEXPORT bool JNICALL
 Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_initSound(JNIEnv* env, jobject obj)
 {
-    soundGenerator.init();
+    soundGenerator.alInit();
     soundGenerator.startSound();
 
     return true;
@@ -32,22 +17,28 @@ JNIEXPORT bool JNICALL
 Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_killSound(JNIEnv* env, jobject obj)
 {
     soundGenerator.endSound();
-    soundGenerator.kill();
+    soundGenerator.alKill();
 
     return true;
 }
 
 JNIEXPORT void JNICALL
-Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_playSound(JNIEnv* env, jobject obj, jfloatArray src, jfloatArray list, jfloat gain, jfloat pitch)
+Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_playSoundFFFF(JNIEnv* env, jobject obj, jfloat srcX, jfloatArray list, jfloat gain, jfloat pitch)
 {
-    soundGenerator.play(env, src, list, gain, pitch);
+    soundGenerator.play(env, srcX, list, gain, pitch);
 }
 
-JNIEXPORT bool JNICALL
+JNIEXPORT void JNICALL
+Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_playSoundFF(JNIEnv* env, jobject obj, jfloat gain, jfloat pitch)
+{
+    soundGenerator.play(env, gain, pitch);
+}
+
+/*JNIEXPORT bool JNICALL
 Java_com_example_jaycee_pomdpobjectsearch_JNIBridge_stopSound(JNIEnv*, jobject)
 {
     soundGenerator.endSound();
-}
+}*/
 
 #ifdef __cplusplus
 }

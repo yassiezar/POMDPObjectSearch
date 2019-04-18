@@ -13,7 +13,8 @@ public class ClassHelpers
             this.x = (float)(x * Math.sin(theta/2));
             this.y = (float)(y * Math.sin(theta/2));
             this.z = (float)(z * Math.sin(theta/2));
-            this.w = (float)(Math.cos(theta));
+            this.w = (float)(Math.cos(theta/2));
+            normalise();
         }
 
         public mQuaternion(float[] q)
@@ -22,6 +23,7 @@ public class ClassHelpers
             this.y = q[1];
             this.z = q[2];
             this.w = q[3];
+            normalise();
         }
 
         /*
@@ -78,7 +80,7 @@ public class ClassHelpers
             this.w = tmpw;
         }
 
-        public float[] getQuaternionAsFloat()
+        public float[] asFloat()
         {
             return new float[] {this.x, this.y, this.z, this.w};
         }
@@ -87,17 +89,20 @@ public class ClassHelpers
         {
             return new float[] {-this.x, -this.y, -this.z, this.w};
         }
+        public mQuaternion getAsConjugate() { return new mQuaternion(-this.x, -this.y, -this.z, this.w); }
     }
 
     public static class mVector
     {
         public float x, y, z;
+        public float length;
 
         public mVector(float x, float y, float z)
         {
             this.x = x;
             this.y = y;
             this.z = z;
+            this.length = (float)Math.sqrt(x*x + y*y + z*z);
         }
 
         public mVector(float[] centre)
@@ -105,6 +110,7 @@ public class ClassHelpers
             this.x = centre[0];
             this.y = centre[1];
             this.z = centre[2];
+            this.length = (float)Math.sqrt(x*x + y*y + z*z);
         }
 
         public void rotateByQuaternion(mQuaternion q)
@@ -118,7 +124,6 @@ public class ClassHelpers
             float z = 2 * (q.x * q.z + q.w * q.y) * this.x +
                     2 * (q.y * q.z - q.w * q.x) * this.y +
                     (1 - 2 * q.x * q.x - 2 * q.y * q.y) * this.z;
-
 
             this.x = x;
             this.y = y;
@@ -139,7 +144,6 @@ public class ClassHelpers
                     2 * (q.y * q.z - q.w * q.x) * this.y +
                     (1 - 2 * q.x * q.x - 2 * q.y * q.y) * this.z;
 
-
             this.x = x;
             this.y = y;
             this.z = z;
@@ -147,10 +151,16 @@ public class ClassHelpers
 
         public void normalise()
         {
-            float fact = (float)Math.sqrt(x*x + y*y + z*z);
-            this.x /= fact;
-            this.y /= fact;
-            this.z /= fact;
+            this.x /= this.length;
+            this.y /= this.length;
+            this.z /= this.length;
+        }
+
+        public void denormalise()
+        {
+            this.x *= this.length;
+            this.y *= this.length;
+            this.z *= this.length;
         }
 
         public float[] getEuler()
@@ -158,10 +168,38 @@ public class ClassHelpers
             double roll, pitch, yaw;
 
             roll = Math.atan2(this.y, this.x);
-            pitch = Math.atan2(this.y, -this.z);
-            yaw = Math.atan2(this.x, -this.z);
+            pitch = Math.atan2(this.y, this.z);
+            yaw = Math.atan2(this.x, this.z);
 
             return new float[] {(float)roll, (float)pitch, (float)yaw};
+        }
+
+        public mVector cross(mVector v)
+        {
+            float x = this.y*v.z - this.z*v.y;
+            float y = -this.x*v.z + this.z*v.x;
+            float z = this.x*v.y - this.y*v.z;
+
+            return new mVector(x, y, z);
+        }
+
+        public mVector translate(mVector v)
+        {
+            float x = this.x - v.x;
+            float y = this.y - v.y;
+            float z = this.z - v.z;
+
+            return new mVector(x, y, z);
+        }
+
+        public double dotProduct(mVector v)
+        {
+            return this.x * v.x + this.y * v.y + this.z * v.z;
+        }
+
+        public double invDotProduct(mVector v)
+        {
+            return Math.acos(dotProduct(v));
         }
 
         public float[] asFloat()

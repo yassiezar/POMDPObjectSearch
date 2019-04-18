@@ -27,7 +27,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".IntentServiceMDP"/>
+        <activity
+            android:name=".ActivityUnguided"
+            android:configChanges="orientation|screenSize">
+        </activity>
+        <activity
+            android:name=".ActivityGuided"
+            android:configChanges="orientation|screenSize">
+        </activity>
+        <meta-data
+            android:name="com.google.ar.core"
+            android:value="required" />
     </application>
 
 </manifest>

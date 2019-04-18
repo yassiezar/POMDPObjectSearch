@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="Arrow">
+        <attr name="arrow_direction" format="enum">
+            <enum name="left" value="0"/>
+            <enum name="up" value="1"/>
+            <enum name="right" value="2"/>
+            <enum name="down" value="3"/>
+        </attr>
+        <attr name="arrow_color" format="color"/>
+        <attr name="arrow_alpha" format="integer"/>
+    </declare-styleable>
+
+</resources>
