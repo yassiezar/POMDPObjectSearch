@@ -1,13 +1,16 @@
 package com.example.jaycee.pomdpobjectsearch;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -21,6 +24,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.example.jaycee.pomdpobjectsearch.helpers.CameraPermissionHelper;
 import com.example.jaycee.pomdpobjectsearch.helpers.ImageConverter;
 import com.example.jaycee.pomdpobjectsearch.helpers.ImageUtils;
 import com.google.ar.core.Anchor;
@@ -43,9 +47,6 @@ import java.util.List;
 public class ActivityCamera extends AppCompatActivity implements NewFrameHandler, NewWaypointHandler
 {
     private static final String TAG = ActivityCamera.class.getSimpleName();
-
-    private static final int CAMERA_PERMISSION_CODE = 0;
-    private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
 
     private static final String TF_MODEL_FILE = "mobilenet/detect.tflite";
     private static final String TF_LABELS_FILE = "file:///android_asset/mobilenet/coco_labels_list.txt";
@@ -174,9 +175,9 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
                         return;
                 }
 
-                if(!hasCameraPermission())
+                if(!CameraPermissionHelper.hasCameraPermission(this))
                 {
-                    requestCameraPermission();
+                    CameraPermissionHelper.requestCameraPermission(this);
                     return;
                 }
                 session = new Session(this);
@@ -259,23 +260,26 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
     @Override
     protected void onPause()
     {
+        super.onPause();
         if(!isFinishing())
         {
             finish();
         }
 
-        backgroundHandlerThread.quitSafely();
-        try
+        if(backgroundHandler != null)
         {
-            backgroundHandlerThread.join();
-            backgroundHandlerThread = null;
-            backgroundHandler = null;
+            backgroundHandlerThread.quitSafely();
+            try
+            {
+                backgroundHandlerThread.join();
+                backgroundHandlerThread = null;
+                backgroundHandler = null;
+            }
+            catch(InterruptedException e)
+            {
+                Log.e(TAG, "Exception onPause: " + e);
+            }
         }
-        catch(InterruptedException e)
-        {
-            Log.e(TAG, "Exception onPause: " + e);
-        }
-
 
         if(soundGenerator != null)
         {
@@ -298,8 +302,6 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
         {
             Log.e(TAG, "OpenAL kill error");
         }
-
-        super.onPause();
     }
 
     @Override
@@ -315,35 +317,17 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
     }
     
     @Override
-    public void onrequestPermissionsResult(int requestCode, String[] permissions, int[] results)
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results)
     {
-        if(!hasCameraPermission())
+        if(!CameraPermissionHelper.hasCameraPermission(this))
         {
             Toast.makeText(this, "Camera permissions are required to run this app", Toast.LENGTH_LONG).show();
-            if(!shouldShowRequestPermissionRationale())
+            if(!CameraPermissionHelper.shouldShowRequestPermissionRationale(this))
             {
-                Intent intent = new Intent();
-                intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                intent.setData(Uri.fromParts("package", this.getPackageName(), null));
-                activity.startActivity(intent);
+                CameraPermissionHelper.launchPermissionSettings(this);
             }
             finish();
         }
-    }
-
-    public boolean shouldShowRequestPermissionRationale() 
-    {
-        return ActivityCompat.shouldShowRequestPermissionRationale(this, CAMERA_PERMISSION);
-    }
-    
-    public boolean hasCameraPermission()
-    {
-        return ContextCompat.checkSelfPermission(this, CAMERA_PERMISSION) == PackageManager.PERMISSION_GRANTED;
-    }
-
-    public void requestCameraPermission()
-    {
-        ActivityCompat.requestPermissions(this, new String[] {CAMERA_PERMISSION}, CAMERA_PERMISSION_CODE);
     }
 
     public Anchor getWaypointAnchor()
