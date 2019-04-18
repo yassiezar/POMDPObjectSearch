@@ -47,10 +47,10 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
     private static final int CAMERA_PERMISSION_CODE = 0;
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
 
-    private static final String TF_MODEL_FILE = "mobilenet/detect.tflite";
-    private static final String TF_LABELS_FILE = "file:///android_asset/mobilenet/coco_labels_list.txt";
+    private static final String TF_MODEL_FILE = "mobilenet/office_detect.tflite";
+    private static final String TF_LABELS_FILE = "file:///android_asset/mobilenet/office_labels_list.txt";
     private static final int TF_INPUT_SIZE = 300;
-    private static final boolean TF_IS_QUANTISED = true;
+    private static final boolean TF_IS_QUANTISED = false;
 
     private static final boolean MAINTAIN_ASPECT_RATIO = false;
 
