@@ -167,14 +167,11 @@ public class WaypointProvider
                 case T_DESK:
                     this.fileName += "desk.txt";
                     break;
-/*                case T_LAPTOP:
-                this.fileName += "laptop.txt";
-                break;*/
+                case T_LAPTOP:
+                    this.fileName += "laptop.txt";
+                    break;
                 case T_MUG:
                     this.fileName += "mug.txt";
-                    break;
-                case T_OFFICE_SUPPLIES:
-                    this.fileName += "office_supplies.txt";
                     break;
                 case T_WINDOW:
                     this.fileName += "window.txt";
