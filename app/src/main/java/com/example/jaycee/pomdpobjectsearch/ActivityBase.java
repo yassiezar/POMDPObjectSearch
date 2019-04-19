@@ -1,16 +1,10 @@
 package com.example.jaycee.pomdpobjectsearch;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.media.Image;
 import android.os.Bundle;
-import android.os.DeadObjectException;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -35,9 +29,6 @@ import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationExceptio
 public abstract class ActivityBase extends AppCompatActivity implements FrameHandler
 {
     private static final String TAG = ActivityBase.class.getSimpleName();
-
-    private static final int CAMERA_PERMISSION_CODE = 0;
-    private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
 
     protected enum Observation
     {
@@ -166,11 +157,6 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
                         return;
                 }
 
-                if(!hasCameraPermission())
-                {
-                    requestCameraPermission();
-                    return;
-                }
                 session = new Session(this);
 
                 // Set config settings
@@ -238,17 +224,21 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
             finish();
         }
 
-        backgroundHandlerThread.quitSafely();
-        try
+        if(backgroundHandler != null)
         {
-            Log.i(TAG, "Closing detector thread");
-            backgroundHandlerThread.join();
-            backgroundHandlerThread = null;
-            backgroundHandler = null;
-        }
-        catch(InterruptedException e)
-        {
-            Log.e(TAG, "Exception onPause: " + e);
+            backgroundHandlerThread.quitSafely();
+            try
+            {
+                Log.i(TAG, "Closing detector thread");
+                backgroundHandlerThread.join();
+                backgroundHandlerThread = null;
+                backgroundHandler = null;
+            }
+            catch(InterruptedException e)
+            {
+                Log.e(TAG, "Exception onPause: " + e);
+            }
+
         }
 
         if(session != null)
@@ -333,16 +323,6 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
         {
             this.frame.getLock().unlock();
         }
-    }
-
-    public boolean hasCameraPermission()
-    {
-        return ContextCompat.checkSelfPermission(this, CAMERA_PERMISSION) == PackageManager.PERMISSION_GRANTED;
-    }
-
-    public void requestCameraPermission()
-    {
-        ActivityCompat.requestPermissions(this, new String[] {CAMERA_PERMISSION}, CAMERA_PERMISSION_CODE);
     }
 
     protected synchronized void runInBackground(final Runnable r)
