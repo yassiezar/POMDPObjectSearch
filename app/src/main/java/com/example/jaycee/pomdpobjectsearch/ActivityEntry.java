@@ -33,7 +33,7 @@ public class ActivityEntry extends AppCompatActivity
                     PermissionHelper.requestCameraPermission(ActivityEntry.this);
                     return;
                 }
-                launchActivity();
+                startActivity(new Intent(ActivityEntry.this, ActivityGuided.class));
             }
         });
         findViewById(R.id.button_unguided).setOnClickListener(new View.OnClickListener()
@@ -47,7 +47,7 @@ public class ActivityEntry extends AppCompatActivity
                     PermissionHelper.requestCameraPermission(ActivityEntry.this);
                     return;
                 }
-                launchActivity();
+                startActivity(new Intent(ActivityEntry.this, ActivityUnguided.class));
             }
         });
     }

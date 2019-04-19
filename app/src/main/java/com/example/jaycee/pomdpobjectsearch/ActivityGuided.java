@@ -88,6 +88,7 @@ public class ActivityGuided extends ActivityBase
     @Override
     public void onNewFrame(final Frame frame)
     {
+        Log.d(TAG, "New frame");
         if(soundGenerator == null)
         {
             Log.w(TAG, "Sound Generator is dead. Likely that the thread has been killed");
