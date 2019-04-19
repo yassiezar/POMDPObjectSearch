@@ -91,9 +91,6 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
                     case R.id.item_object_desk:
                         target = T_DESK;
                         break;
-                    case R.id.item_object_office_supplies:
-                        target = T_OFFICE_SUPPLIES;
-                        break;
                     case R.id.item_object_keyboard:
                         target = T_COMPUTER_KEYBOARD;
                         break;
