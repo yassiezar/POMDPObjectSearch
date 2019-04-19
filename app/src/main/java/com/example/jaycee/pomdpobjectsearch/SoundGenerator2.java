@@ -34,8 +34,13 @@ public class SoundGenerator2 implements Runnable
     @Override
     public void run()
     {
+        if(stopped)
+        {
+            return;
+        }
         if(phonePose == null || waypointPose == null)
         {
+            if (!stopped) handler.postDelayed(this, 40);
             return;
         }
         // Get camera pointing vector from phone pose
@@ -138,7 +143,18 @@ public class SoundGenerator2 implements Runnable
         return pitch;
     }
 
-    public void stop() { this.stopped = true; }
+    public void stop()
+    {
+        this.stopped = true;
+        JNIBridge.playSoundFFFF(0.f, phonePose.getTranslation(), 0, 0);
+        JNIBridge.playSoundFF(0, 0);
+    }
+
+    public void start()
+    {
+        this.stopped = false;
+        this.run();
+    }
 
     public void setWaypointPose(Pose pose) { this.waypointPose = pose; }
     public void setPhonePose(Pose pose) { this.phonePose = pose; }
