@@ -289,32 +289,32 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
 
         Log.d(TAG, "Processing new frame");
 
-        // PERFORM DETECTION + INFERENCE
-        try
-        {
-            this.frame.getLock().lock();
-            com.google.ar.core.Frame arFrame = frame.getArFrame();
-            int[] imageBytes = imageConverter.getRgbBytes(arFrame.acquireCameraImage());
-            frameScanner.updateBitmap(imageBytes);
-        }
-        catch(DeadlineExceededException e)
-        {
-            Log.e(TAG, "Deadline exceeded for image");
-        }
-        catch(NotYetAvailableException e)
-        {
-            Log.e(TAG, "Camera not yet ready: " + e);
-        }
-        finally
-        {
-            this.frame.getLock().unlock();
-        }
-
         runInBackground(new Runnable()
         {
             @Override
             public void run()
             {
+                // PERFORM DETECTION + INFERENCE
+                try
+                {
+                    frame.getLock().lock();
+                    com.google.ar.core.Frame arFrame = frame.getArFrame();
+                    int[] imageBytes = imageConverter.getRgbBytes(arFrame.acquireCameraImage());
+                    frameScanner.updateBitmap(imageBytes);
+                }
+                catch(DeadlineExceededException e)
+                {
+                    Log.e(TAG, "Deadline exceeded for image");
+                }
+                catch(NotYetAvailableException e)
+                {
+                    Log.e(TAG, "Camera not yet ready: " + e);
+                }
+                finally
+                {
+                    frame.getLock().unlock();
+                }
+
                 frameScanner.scanFrame();
                 processingFrame = false;
             }

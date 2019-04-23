@@ -5,6 +5,7 @@ import android.graphics.RectF;
 import android.os.Vibrator;
 import android.util.Log;
 
+import com.example.jaycee.pomdpobjectsearch.helpers.VectorTools;
 import com.example.jaycee.pomdpobjectsearch.imageprocessing.ObjectClassifier;
 import com.example.jaycee.pomdpobjectsearch.views.Arrow;
 import com.google.ar.core.Frame;
@@ -16,6 +17,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import static com.example.jaycee.pomdpobjectsearch.Objects.Observation.O_NOTHING;
+import static com.example.jaycee.pomdpobjectsearch.helpers.VectorTools.CameraVector.getCameraVectorPanAndTilt;
 
 public class ActivityGuided extends ActivityBase
 {
@@ -28,6 +30,7 @@ public class ActivityGuided extends ActivityBase
     private Vibrator vibrator;
 
     private WaypointProvider waypointProvider;
+    private ActionGenerator actionGenerator;
 
     private Objects.Observation observation;
 
@@ -43,8 +46,9 @@ public class ActivityGuided extends ActivityBase
             Log.e(TAG, "OpenAL init error");
         }
 
-        soundGenerator = new SoundGenerator(this);
-        waypointProvider = new WaypointProvider();//(getFrame().getArFrame().getAndroidSensorPose());
+        soundGenerator = SoundGenerator.create(this);
+        waypointProvider = new WaypointProvider();
+        actionGenerator = ActionGenerator.create(this);
     }
 
     @Override
@@ -101,12 +105,17 @@ public class ActivityGuided extends ActivityBase
                 soundGenerator.getLock().lock();
 
                 soundGenerator.setPhonePose(phonePose);
-                if(waypointProvider.waypointReached(phonePose) ||
+                VectorTools.PanAndTilt panAndTilt = getCameraVectorPanAndTilt(phonePose);
+                float cameraPan = (float)panAndTilt.pan;
+                float cameraTilt = (float)panAndTilt.tilt;
+
+                if(waypointProvider.waypointReached(cameraPan, cameraTilt) ||
                         (waypointProvider.observation != observation && waypointProvider.observation != O_NOTHING) ||
                         waypointProvider.getWaypointPose() == null)
                 {
                     Log.d(TAG, "setting new waypoint");
-                    waypointProvider.updateWaypoint(phonePose, observation);
+                    VectorTools.PanAndTilt newWaypointAngles = actionGenerator.getAngleAdjustment(observation, cameraPan, cameraTilt);
+                    waypointProvider.updateWaypoint(newWaypointAngles, phonePose.getTranslation()[2]);
                     soundGenerator.setWaypointPose(waypointProvider.getWaypointPose());
                     surfaceView.getRenderer().setDrawWaypoint(true);
                 }
@@ -123,7 +132,7 @@ public class ActivityGuided extends ActivityBase
     {
         super.setTarget(target);
         Log.d(TAG, "Setting target");
-        waypointProvider.setTarget(target, this);
+        actionGenerator.setTarget(target);
         soundGenerator.setPhonePose(getFrame().getArFrame().getAndroidSensorPose());
         soundGenerator.start();
     }

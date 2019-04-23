@@ -11,6 +11,8 @@ import com.google.ar.core.Pose;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static com.example.jaycee.pomdpobjectsearch.helpers.VectorTools.CameraVector.getCameraVector;
+
 public class SoundGenerator implements Runnable
 {
     private static final String TAG = SoundGenerator.class.getSimpleName();
@@ -69,13 +71,9 @@ public class SoundGenerator implements Runnable
             return;
         }
         // Get camera pointing vector from phone pose
-        VectorTools.mQuaternion phoneRotationQuaternion = new VectorTools.mQuaternion(phonePose.getRotationQuaternion());
-        phoneRotationQuaternion.normalise();
-        VectorTools.mVector cameraVector = new VectorTools.mVector(0.f, 0.f, 1.f);
-        cameraVector.rotateByQuaternion(phoneRotationQuaternion);
 
-        float[] phoneRotationAngles = cameraVector.getEuler();
-        float cameraTilt = phoneRotationAngles[1];
+        VectorTools.mVector cameraVector = getCameraVector(phonePose);
+        float cameraTilt = (float)VectorTools.CameraVector.getCameraVectorPanAndTilt(phonePose).tilt;
 
         // Get waypoint position in terms of elevation and pan angles
         VectorTools.mVector waypointVector = new VectorTools.mVector(waypointPose.getTranslation());
