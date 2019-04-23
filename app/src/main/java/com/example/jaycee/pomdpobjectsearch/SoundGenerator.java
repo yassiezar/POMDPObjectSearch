@@ -15,6 +15,8 @@ public class SoundGenerator implements Runnable
 {
     private static final String TAG = SoundGenerator.class.getSimpleName();
 
+    private static SoundGenerator soundGenerator = null;
+
     private static final int SOUND_REFRESH_RATE = 40;       // 40 Hz
     private static final int SOUND_HI_LIM = 12;             // Logarithmic hi limit for pitch, in the form of 2^HI
     private static final int SOUND_LO_LIM = 6;
@@ -27,10 +29,29 @@ public class SoundGenerator implements Runnable
 
     private boolean stopped;
 
-    public SoundGenerator(Context context)
+    private SoundGenerator(Context context)
     {
         this.context = context;
         this.stopped = false;
+    }
+
+    public synchronized static SoundGenerator create(Context context)
+    {
+        if(soundGenerator != null)
+        {
+            throw new AssertionError("Already initialised soundgenerator");
+        }
+        soundGenerator = new SoundGenerator(context);
+        return soundGenerator;
+    }
+
+    public static SoundGenerator getInstance()
+    {
+        if(soundGenerator == null)
+        {
+            throw new AssertionError("Sound generator not initialised");
+        }
+        return soundGenerator;
     }
 
     public Lock getLock() { return this.lock; }
