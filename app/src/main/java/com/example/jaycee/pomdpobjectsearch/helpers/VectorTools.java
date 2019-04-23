@@ -2,9 +2,9 @@ package com.example.jaycee.pomdpobjectsearch.helpers;
 
 import java.util.Locale;
 
-public class ClassHelpers
+public class VectorTools
 {
-    private static final String TAG = ClassHelpers.class.getSimpleName();
+    private static final String TAG = VectorTools.class.getSimpleName();
 
     public static class mQuaternion
     {

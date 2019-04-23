@@ -1,4 +1,4 @@
-package com.example.jaycee.pomdpobjectsearch;
+package com.example.jaycee.pomdpobjectsearch.imageprocessing;
 
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;

@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 
+import com.example.jaycee.pomdpobjectsearch.imageprocessing.ObjectClassifier;
+
 import java.util.List;
 import java.util.Locale;
 

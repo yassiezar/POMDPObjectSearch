@@ -13,7 +13,10 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 
-import com.example.jaycee.pomdpobjectsearch.helpers.ImageConverter;
+import com.example.jaycee.pomdpobjectsearch.imageprocessing.FrameHandler;
+import com.example.jaycee.pomdpobjectsearch.imageprocessing.FrameScanner;
+import com.example.jaycee.pomdpobjectsearch.imageprocessing.ImageConverter;
+import com.example.jaycee.pomdpobjectsearch.views.CentreView;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
 import com.google.ar.core.Session;
@@ -30,32 +33,7 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
 {
     private static final String TAG = ActivityBase.class.getSimpleName();
 
-    protected enum Observation
-    {
-        O_NOTHING (0),
-        T_COMPUTER_MONITOR (1),
-        T_COMPUTER_KEYBOARD (2),
-        T_COMPUTER_MOUSE (3),
-        T_DESK (4),
-        T_LAPTOP (5),
-        T_MUG (6),
-        T_WINDOW (7),
-        T_LAMP (8),
-        T_BACKPACK (9),
-        T_CHAIR (10),
-        T_COUCH (11),
-        T_PLANT (12),
-        T_TELEPHONE (13),
-        T_WHITEBOARD (14),
-        T_DOOR (15);
-
-        private final int obsCode;
-        Observation(int obsCode) { this.obsCode = obsCode; }
-
-        public int getCode() { return this.obsCode; }
-    }
-
-    private Observation target = Observation.O_NOTHING;
+    private Objects.Observation target = Objects.Observation.O_NOTHING;
 
     protected CameraSurface surfaceView;
     private DrawerLayout drawerLayout;
@@ -96,56 +74,56 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
 
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener()
         {
-            Observation target;
+            Objects.Observation target;
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item)
             {
                 switch (item.getItemId())
                 {
                     case R.id.item_object_backpack:
-                        target = Observation.T_BACKPACK;
+                        target = Objects.Observation.T_BACKPACK;
                         break;
                     case R.id.item_object_chair:
-                        target = Observation.T_CHAIR;
+                        target = Objects.Observation.T_CHAIR;
                         break;
                     case R.id.item_object_couch:
-                        target = Observation.T_COUCH;
+                        target = Objects.Observation.T_COUCH;
                         break;
                     case R.id.item_object_desk:
-                        target = Observation.T_DESK;
+                        target = Objects.Observation.T_DESK;
                         break;
                     case R.id.item_object_door:
-                        target = Observation.T_DOOR;
+                        target = Objects.Observation.T_DOOR;
                         break;
                     case R.id.item_object_keyboard:
-                        target = Observation.T_COMPUTER_KEYBOARD;
+                        target = Objects.Observation.T_COMPUTER_KEYBOARD;
                         break;
                     case R.id.item_object_lamp:
-                        target = Observation.T_LAMP;
+                        target = Objects.Observation.T_LAMP;
                         break;
                     case R.id.item_object_laptop:
-                        target = Observation.T_LAPTOP;
+                        target = Objects.Observation.T_LAPTOP;
                         break;
                     case R.id.item_object_monitor:
-                        target = Observation.T_COMPUTER_MONITOR;
+                        target = Objects.Observation.T_COMPUTER_MONITOR;
                         break;
                     case R.id.item_object_mouse:
-                        target = Observation.T_COMPUTER_MOUSE;
+                        target = Objects.Observation.T_COMPUTER_MOUSE;
                         break;
                     case R.id.item_object_mug:
-                        target = Observation.T_MUG;
+                        target = Objects.Observation.T_MUG;
                         break;
                     case R.id.item_object_plant:
-                        target = Observation.T_PLANT;
+                        target = Objects.Observation.T_PLANT;
                         break;
                     case R.id.item_object_telephone:
-                        target = Observation.T_TELEPHONE;
+                        target = Objects.Observation.T_TELEPHONE;
                         break;
                     case R.id.item_object_whiteboard:
-                        target = Observation.T_WHITEBOARD;
+                        target = Objects.Observation.T_WHITEBOARD;
                         break;
                     case R.id.item_object_window:
-                        target = Observation.T_WINDOW;
+                        target = Objects.Observation.T_WINDOW;
                         break;
                 }
 
@@ -372,8 +350,8 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
     public Session getSession() { return this.session; }
     public Frame getFrame() { return this.frame; }
 
-    public void setTarget(Observation target) { this.target = target; }
-    public Observation getTarget() { return this.target; }
+    public void setTarget(Objects.Observation target) { this.target = target; }
+    public Objects.Observation getTarget() { return this.target; }
 
     @Override
     public void onNewTimestamp(long timestamp) { }

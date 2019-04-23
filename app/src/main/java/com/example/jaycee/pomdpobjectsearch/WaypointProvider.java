@@ -3,8 +3,7 @@ package com.example.jaycee.pomdpobjectsearch;
 import android.content.Context;
 import android.util.Log;
 
-import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
-import com.google.ar.core.Anchor;
+import com.example.jaycee.pomdpobjectsearch.helpers.VectorTools;
 import com.google.ar.core.Pose;
 
 import java.io.BufferedReader;
@@ -33,21 +32,21 @@ public class WaypointProvider
 
     private Lock lock = new ReentrantLock();
 
-    public ActivityBase.Observation observation = ActivityBase.Observation.O_NOTHING;
+    public Objects.Observation observation = Objects.Observation.O_NOTHING;
 
-    public WaypointProvider(Pose pose)
+/*    public WaypointProvider(Pose pose)
     {
         float[] phoneTranslation = pose.getTranslation();
         this.pose = new Pose(new float[]{phoneTranslation[0], phoneTranslation[1], phoneTranslation[2] - 1.f}, pose.getRotationQuaternion());
-    }
+    }*/
 
     public WaypointProvider() {}
 
     public Lock getLock() { return this.lock; }
 
-    public void setTarget(ActivityBase.Observation target, Context context)
+    public void setTarget(Objects.Observation target, Context context)
     {
-        if(target == ActivityBase.Observation.O_NOTHING)
+        if(target == Objects.Observation.O_NOTHING)
         {
             state = null;
             policy = null;
@@ -61,11 +60,11 @@ public class WaypointProvider
         return pose;
     }
 
-    void updateWaypoint(Pose phonePose, ActivityBase.Observation observation)
+    void updateWaypoint(Pose phonePose, Objects.Observation observation)
     {
-        ClassHelpers.mQuaternion phoneRotationQuaternion = new ClassHelpers.mQuaternion(phonePose.getRotationQuaternion());
+        VectorTools.mQuaternion phoneRotationQuaternion = new VectorTools.mQuaternion(phonePose.getRotationQuaternion());
         phoneRotationQuaternion.normalise();
-        ClassHelpers.mVector cameraVector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
+        VectorTools.mVector cameraVector = new VectorTools.mVector(0.f, 0.f, 1.f);
         cameraVector.rotateByQuaternion(phoneRotationQuaternion);
         float[] phoneRotationAngles = cameraVector.getEuler();
         float cameraPan = phoneRotationAngles[2];
@@ -124,9 +123,9 @@ public class WaypointProvider
             return true;
         }
 
-        ClassHelpers.mQuaternion phoneRotationQuaternion = new ClassHelpers.mQuaternion(phonePose.getRotationQuaternion());
+        VectorTools.mQuaternion phoneRotationQuaternion = new VectorTools.mQuaternion(phonePose.getRotationQuaternion());
         phoneRotationQuaternion.normalise();
-        ClassHelpers.mVector cameraVector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
+        VectorTools.mVector cameraVector = new VectorTools.mVector(0.f, 0.f, 1.f);
 
         cameraVector.rotateByQuaternion(phoneRotationQuaternion);
         float[] phoneRotationAngles = cameraVector.getEuler();
@@ -151,7 +150,7 @@ public class WaypointProvider
 
         private Map<Long, ArrayList<Long>> policy = new HashMap<>();
 
-        public Policy(ActivityBase.Observation target, Context context)
+        public Policy(Objects.Observation target, Context context)
         {
             switch (target)
             {
@@ -250,7 +249,7 @@ public class WaypointProvider
 
         private long state;
 
-        private ActivityBase.Observation observation = ActivityBase.Observation.O_NOTHING;
+        private Objects.Observation observation = Objects.Observation.O_NOTHING;
 
         private long steps = 0;
         private long stateVisted = 0;
@@ -295,7 +294,7 @@ public class WaypointProvider
             return stateVector;
         }
 
-        private void addObservation(ActivityBase.Observation observation, float fpan, float ftilt)
+        private void addObservation(Objects.Observation observation, float fpan, float ftilt)
         {
             // Origin is top right, not bottom left
             int pan = (int) ((Math.floor(Math.toDegrees(fpan) / ANGLE_INTERVAL)) + GRID_SIZE / 2 - 1);

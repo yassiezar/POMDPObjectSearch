@@ -1,12 +1,10 @@
-package com.example.jaycee.pomdpobjectsearch;
+package com.example.jaycee.pomdpobjectsearch.imageprocessing;
 
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.util.Log;
-
-import com.example.jaycee.pomdpobjectsearch.helpers.ImageUtils;
 
 import java.io.IOException;
 import java.util.List;

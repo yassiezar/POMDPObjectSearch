@@ -1,6 +1,4 @@
-package com.example.jaycee.pomdpobjectsearch;
-
-import android.media.Image;
+package com.example.jaycee.pomdpobjectsearch.imageprocessing;
 
 import com.google.ar.core.Frame;
 

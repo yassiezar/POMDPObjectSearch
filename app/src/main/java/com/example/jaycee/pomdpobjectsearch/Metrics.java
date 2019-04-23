@@ -28,20 +28,20 @@ public class Metrics
 
     public void writeWifi()
     {
-        String wifiString = String.valueOf(timestamp) + DELIMITER +
-                String.valueOf(observation) + DELIMITER +
-                String.valueOf(targetObservation) + DELIMITER +
-                String.valueOf(target) + DELIMITER +
-                String.valueOf(targetX) + DELIMITER +
-                String.valueOf(targetY) + DELIMITER +
-                String.valueOf(targetZ) + DELIMITER +
-                String.valueOf(phoneX) + DELIMITER +
-                String.valueOf(phoneY) + DELIMITER +
-                String.valueOf(phoneZ) + DELIMITER +
-                String.valueOf(phoneQx) + DELIMITER +
-                String.valueOf(phoneQy) + DELIMITER +
-                String.valueOf(phoneQz) + DELIMITER +
-                String.valueOf(phoneQw) + DELIMITER;
+        String wifiString = timestamp + DELIMITER +
+                observation + DELIMITER +
+                targetObservation + DELIMITER +
+                target + DELIMITER +
+                targetX + DELIMITER +
+                targetY + DELIMITER +
+                targetZ + DELIMITER +
+                phoneX + DELIMITER +
+                phoneY + DELIMITER +
+                phoneZ + DELIMITER +
+                phoneQx + DELIMITER +
+                phoneQy + DELIMITER +
+                phoneQz + DELIMITER +
+                phoneQw + DELIMITER;
 
         if(dataStreamer == null ||
                 dataStreamer.getStatus() != AsyncTask.Status.RUNNING)

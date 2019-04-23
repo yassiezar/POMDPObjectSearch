@@ -4,28 +4,18 @@ import android.content.Context;
 import android.graphics.RectF;
 import android.os.Vibrator;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.google.ar.core.Anchor;
-import com.google.ar.core.Config;
+import com.example.jaycee.pomdpobjectsearch.imageprocessing.ObjectClassifier;
+import com.example.jaycee.pomdpobjectsearch.views.Arrow;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
-import com.google.ar.core.exceptions.NotTrackingException;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import static com.example.jaycee.pomdpobjectsearch.ActivityBase.Observation.O_NOTHING;
+import static com.example.jaycee.pomdpobjectsearch.Objects.Observation.O_NOTHING;
 
 public class ActivityGuided extends ActivityBase
 {
@@ -33,13 +23,13 @@ public class ActivityGuided extends ActivityBase
 
     private static final float MIN_CONF = 0.2f;
 
-    private SoundGenerator2 soundGenerator;
+    private SoundGenerator soundGenerator;
 
     private Vibrator vibrator;
 
     private WaypointProvider waypointProvider;
 
-    private Observation observation;
+    private Objects.Observation observation;
 
     @Override
     protected void onResume()
@@ -53,7 +43,7 @@ public class ActivityGuided extends ActivityBase
             Log.e(TAG, "OpenAL init error");
         }
 
-        soundGenerator = new SoundGenerator2(this);
+        soundGenerator = new SoundGenerator(this);
         waypointProvider = new WaypointProvider();//(getFrame().getArFrame().getAndroidSensorPose());
     }
 
@@ -129,7 +119,7 @@ public class ActivityGuided extends ActivityBase
     }
 
     @Override
-    public void setTarget(Observation target)
+    public void setTarget(Objects.Observation target)
     {
         super.setTarget(target);
         Log.d(TAG, "Setting target");
