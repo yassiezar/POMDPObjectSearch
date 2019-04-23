@@ -6,6 +6,7 @@ import android.speech.tts.TextToSpeech;
 import android.util.Log;
 
 import com.example.jaycee.pomdpobjectsearch.imageprocessing.ObjectClassifier;
+import com.example.jaycee.pomdpobjectsearch.CameraSurface.ScreenReadRequest;
 
 import java.util.List;
 import java.util.Locale;

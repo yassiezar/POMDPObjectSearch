@@ -4,7 +4,6 @@ import com.example.jaycee.pomdpobjectsearch.ActivityGuided;
 import com.example.jaycee.pomdpobjectsearch.views.Arrow;
 import com.example.jaycee.pomdpobjectsearch.JNIBridge;
 import com.example.jaycee.pomdpobjectsearch.Metrics;
-import com.example.jaycee.pomdpobjectsearch.NewWaypointHandler;
 import com.example.jaycee.pomdpobjectsearch.helpers.VectorTools;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Frame;
@@ -30,6 +29,13 @@ import java.util.regex.Pattern;
 public class SoundGenerator implements Runnable
 {
     private static final String TAG = SoundGenerator.class.getSimpleName();
+
+    public interface NewWaypointHandler
+    {
+        void onNewWaypoint();
+        void onTargetFound();
+        void onArrowDirectionChange(Arrow.Direction direction);
+    }
 
     private static final int O_NOTHING = 0;
 

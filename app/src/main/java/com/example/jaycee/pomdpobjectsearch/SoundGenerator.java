@@ -15,6 +15,10 @@ public class SoundGenerator implements Runnable
 {
     private static final String TAG = SoundGenerator.class.getSimpleName();
 
+    private static final int SOUND_REFRESH_RATE = 40;       // 40 Hz
+    private static final int SOUND_HI_LIM = 12;             // Logarithmic hi limit for pitch, in the form of 2^HI
+    private static final int SOUND_LO_LIM = 6;
+
     private Pose waypointPose, phonePose;
 
     private Handler handler = new Handler();
@@ -26,7 +30,7 @@ public class SoundGenerator implements Runnable
     public SoundGenerator(Context context)
     {
         this.context = context;
-        stopped = false;
+        this.stopped = false;
     }
 
     public Lock getLock() { return this.lock; }
@@ -40,7 +44,7 @@ public class SoundGenerator implements Runnable
         }
         if(phonePose == null || waypointPose == null)
         {
-            if (!stopped) handler.postDelayed(this, 40);
+            if (!stopped) handler.postDelayed(this, SOUND_REFRESH_RATE);
             return;
         }
         // Get camera pointing vector from phone pose
@@ -57,11 +61,11 @@ public class SoundGenerator implements Runnable
         float[] waypointRotationAngles = waypointVector.getEuler();
         float waypointTilt = waypointRotationAngles[1];
 
-        if (waypointTilt > Math.PI / 2)
+        if (waypointTilt > Math.PI/2)
         {
             waypointTilt -= (float) Math.PI;
         }
-        else if (waypointTilt < Math.PI / 2)
+        else if (waypointTilt < Math.PI/2)
         {
             waypointTilt += (float) Math.PI;
         }
@@ -97,47 +101,44 @@ public class SoundGenerator implements Runnable
 
         // Interlace second tone to notify user that target is close
         float targetSize = 0.1f;
-        float volumeGrad = -1 / targetSize;
+        float volumeGrad = -1/targetSize;
         float volumeMax = 1f;
         if (elevationAngle < targetSize && elevationAngle > 0)
         {
-            gain = volumeGrad * (elevationAngle) + volumeMax;
+            gain = volumeGrad*(elevationAngle) + volumeMax;
         }
         else if (elevationAngle > -targetSize && elevationAngle < 0)
         {
-            gain = -volumeGrad * (elevationAngle) + volumeMax;
+            gain = -volumeGrad*(elevationAngle) + volumeMax;
         }
         Log.d(TAG, String.format("Gain %f elevation %f pitch %f", gain, elevationAngle, pitch));
-        JNIBridge.playSoundFF(gain, pitch * 2);
-        if (!stopped) handler.postDelayed(this, 40);
+        JNIBridge.playSoundFF(gain, pitch*2);
+        if (!stopped) handler.postDelayed(this, SOUND_REFRESH_RATE);
     }
 
     private float getPitch(double tilt)
     {
         float pitch;
-        // From config file; HI setting
-        int pitchHighLim = 12;
-        int pitchLowLim = 6;
 
         // Compensate for the Tango's default position being 90deg upright
-        if(tilt >= Math.PI / 2)
+        if(tilt >= Math.PI/2)
         {
-            pitch = (float)(Math.pow(2, 6));
+            pitch = (float)(Math.pow(2, SOUND_LO_LIM));
         }
 
-        else if(tilt <= -Math.PI / 2)
+        else if(tilt <= -Math.PI/2)
         {
-            pitch = (float)(Math.pow(2, pitchHighLim));
+            pitch = (float)(Math.pow(2, SOUND_HI_LIM));
         }
 
         else
         {
-            double gradientAngle = Math.toDegrees(Math.atan((pitchHighLim - pitchLowLim) / Math.PI));
+            double gradientAngle = Math.toDegrees(Math.atan((SOUND_HI_LIM - SOUND_LO_LIM) / Math.PI));
 
             float grad = (float)(Math.tan(Math.toRadians(gradientAngle)));
-            float intercept = (float)(pitchHighLim - Math.PI / 2 * grad);
+            float intercept = (float)(SOUND_HI_LIM - Math.PI/2*grad);
 
-            pitch = (float)(Math.pow(2, grad * -tilt + intercept));
+            pitch = (float)(Math.pow(2, -tilt*grad + intercept));
         }
 
         return pitch;
