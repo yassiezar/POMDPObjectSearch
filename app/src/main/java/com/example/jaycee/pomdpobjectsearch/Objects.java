@@ -19,7 +19,8 @@ public class Objects
         T_PLANT (12, "plant.txt"),
         T_TELEPHONE (13, "telephone.txt"),
         T_WHITEBOARD (14, "whiteboard.txt"),
-        T_DOOR (15, "door.txt");
+        T_DOOR (15, "door.txt"),
+        T_TIGER (14, "tiger.txt");
 
         private final int obsCode;
         private final String fileName;

@@ -97,13 +97,13 @@ public class ActivityGuided extends ActivityBase
         }
 
         scanFrameForObjects();
-        Pose phonePose = frame.getAndroidSensorPose();
         if(observation != null)
         {
             try
             {
                 soundGenerator.getLock().lock();
 
+                Pose phonePose = frame.getAndroidSensorPose();
                 soundGenerator.setPhonePose(phonePose);
                 VectorTools.PanAndTilt panAndTilt = getCameraVectorPanAndTilt(phonePose);
                 float cameraPan = (float)panAndTilt.pan;

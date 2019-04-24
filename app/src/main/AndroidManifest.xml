@@ -9,7 +9,6 @@
     <uses-feature
         android:name="android.hardware.camera.ar"
         android:required="true" />
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -25,11 +24,13 @@
         </activity>
         <activity
             android:name=".ActivityUnguided"
-            android:configChanges="orientation|screenSize">
+            android:configChanges="orientation|screenSize"
+            android:parentActivityName=".ActivityEntry" >
         </activity>
         <activity
             android:name=".ActivityGuided"
-            android:configChanges="orientation|screenSize">
+            android:configChanges="orientation|screenSize"
+            android:parentActivityName=".ActivityEntry" >
         </activity>
         <meta-data
             android:name="com.google.ar.core"
