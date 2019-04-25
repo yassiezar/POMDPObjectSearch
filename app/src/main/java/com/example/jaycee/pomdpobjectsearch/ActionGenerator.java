@@ -31,7 +31,7 @@ public class ActionGenerator
     public static final int GRID_SIZE = 6;
     public static final int ANGLE_INTERVAL = 20;
 
-    private Policy policy;
+    private POMDPPolicy policy;
     private State state;
 
     private ActionGenerator(Context context)
@@ -63,7 +63,7 @@ public class ActionGenerator
 
     public void setTarget(Objects.Observation target)
     {
-        policy.setTarget(target, 5);
+        policy.setTarget(target, 2);
         state = new State();
     }
 
