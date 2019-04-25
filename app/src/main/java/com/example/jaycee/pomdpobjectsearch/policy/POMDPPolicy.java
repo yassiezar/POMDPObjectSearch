@@ -13,6 +13,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Scanner;
 
+import static com.example.jaycee.pomdpobjectsearch.App.NUM_STATES;
+import static com.example.jaycee.pomdpobjectsearch.policy.State.MAX_STEPS;
 import static com.example.jaycee.pomdpobjectsearch.policy.State.S_OBS;
 import static com.example.jaycee.pomdpobjectsearch.policy.State.S_STEPS;
 
@@ -30,32 +32,33 @@ public class POMDPPolicy
 
     public ArrayList<ArrayList<VEntry>> getPolicy() { return this.policy; }
 
-    public void setTarget(Objects.Observation target, int numStates)
+    public void setTarget(Objects.Observation target)
     {
-        numStates = 2;
-        this.policy = new ArrayList<>(numStates);
+        int numStates = NUM_STATES;
+
+        ArrayList<ArrayList<VEntry>> policy = new ArrayList<>();
+        ArrayList<VEntry> horizon;
 
         Scanner reader = null;
         try
         {
             String fileName = "POMDPPolicies/" + target.getFileName();
-            fileName = "POMDPPolicies/tiger.txt";
             reader = new Scanner(new InputStreamReader(context.getAssets().open(fileName)));
             reader.useDelimiter("\\n");
 
-            ArrayList<VEntry> horizon = new ArrayList<>();
+            horizon = new ArrayList<>();
 
             DoubleVector values = new DoubleVector((Collections.nCopies(numStates, 0.0)));
             int action;
             ArrayList<Integer> obs = new ArrayList<>(Collections.nCopies(numStates, 0));
 
-            while (reader.hasNext())
+            while (reader.hasNext() && policy.size() < MAX_STEPS)
             {
                 ArrayList<String> entries = new ArrayList<>(Arrays.asList(reader.nextLine().split("\\s+")));
                 entries.remove("");
                 if(entries.contains("@"))
                 {
-                    policy.add(horizon);
+                    policy.add(new ArrayList<>(horizon));
                     horizon.clear();
                     continue;
                 }
@@ -73,6 +76,7 @@ public class POMDPPolicy
                 values = new DoubleVector(Collections.nCopies(numStates, 0.0));
                 obs = new ArrayList<>(Collections.nCopies(numStates, 0));
             }
+            this.policy = new ArrayList<>(policy);
         }
         catch (IOException e)
         {
