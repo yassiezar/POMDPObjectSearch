@@ -1,6 +1,7 @@
 package com.example.jaycee.pomdpobjectsearch.policy;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.example.jaycee.pomdpobjectsearch.Objects;
 
@@ -10,8 +11,8 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.Iterator;
 
+import static com.example.jaycee.pomdpobjectsearch.App.NUM_OBJECTS;
 import static com.example.jaycee.pomdpobjectsearch.Objects.Observation.O_NOTHING;
 import static com.example.jaycee.pomdpobjectsearch.policy.State.MAX_STEPS;
 import static com.example.jaycee.pomdpobjectsearch.policy.State.S_OBS;
@@ -20,7 +21,7 @@ import static com.example.jaycee.pomdpobjectsearch.policy.State.S_STEPS;
 
 public class Model
 {
-    private static final int NUM_OBJECTS = 15;
+    private static final String TAG = Model.class.getSimpleName();
 
     private Objects.Observation target;
 
@@ -57,25 +58,14 @@ public class Model
 
         try
         {
-            JSONObject obj1Json = new JSONObject(json);
-            Iterator<String> obj1Iter = obj1Json.keys();
-
-            while(obj1Iter.hasNext())
+            JSONObject jsonObject = new JSONObject(json);
+            for(String obj1 : objects)
             {
-                String obj1 = obj1Iter.next();
-                JSONObject actionJson = (JSONObject)obj1Json.get(obj1);
-                Iterator<String> actionIter = actionJson.keys();
-                while(actionIter.hasNext())
+                for(String action : actions)
                 {
-                    String action = actionIter.next();
-                    JSONObject obj2Json = (JSONObject)actionJson.get(action);
-                    Iterator<String> obj2Iter = obj2Json.keys();
-                    while(obj2Iter.hasNext())
+                    for(String obj2 : objects)
                     {
-                        String obj2 = obj2Iter.next();
-                        double val = obj2Json.getDouble(obj2);
-                        Key key = new Key(obj1, action, obj2);
-                        transitions.put(key, val);
+                        transitions.put(new Key(obj1, action, obj2), jsonObject.getJSONObject(obj1).getJSONObject(action).getDouble(obj2));
                     }
                 }
             }
@@ -145,10 +135,10 @@ public class Model
         return 0.0;
     }
 
-    double getTransitionProbability(int state, int action, int state1)
+    double getTransitionProbability(int state1, int action, int state2)
     {
-        int[] s1 = getEncodedState(state);
-        int[] s2 = getEncodedState(state1);
+        int[] s1 = getEncodedState(state1);
+        int[] s2 = getEncodedState(state2);
 
         // Terminal state
         if(s1[S_OBS] == target.getCode())
@@ -167,7 +157,12 @@ public class Model
             return 0.0;
         }
 
-        return transitions.get(new Key(objects[s1[S_OBS]], actions[action], objects[s2[S_OBS]]))/2.0;
+        Key key = new Key(objects[s1[S_OBS]], actions[action], objects[s2[S_OBS]]);
+        if(transitions.containsKey(key))
+        {
+            return transitions.get(key)/2.0;
+        }
+        return 0.0;
     }
 
     class Key
@@ -178,6 +173,35 @@ public class Model
             this.k1 = k1;
             this.k2 = k2;
             this.k3 = k3;
+        }
+
+        public String toString()
+        {
+            return String.format("transition keys: %s %s %s", k1, k2, k3);
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if(this == obj) return true;
+            if(obj == null || getClass() != obj.getClass()) return false;
+            Key key = (Key)obj;
+
+            if(k1 != null ? !k1.equals(key.k1) : key.k1 != null) return false;
+            if(k2 != null ? !k2.equals(key.k2) : key.k2 != null) return false;
+            if(k3 != null ? !k3.equals(key.k3) : key.k3 != null) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = 11 * k1.hashCode();
+            result = 13*result + (k2.hashCode());
+            result = 13*result + (k3.hashCode());
+
+            return result;
         }
     }
 }
