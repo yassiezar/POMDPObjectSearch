@@ -5,10 +5,17 @@ import android.util.Log;
 
 import com.example.jaycee.pomdpobjectsearch.Objects;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Scanner;
+import java.util.regex.Pattern;
 
 public class POMDPPolicy implements Policy
 {
@@ -28,48 +35,54 @@ public class POMDPPolicy implements Policy
     {
         this.policy = new ArrayList<>(numStates);
 
-        ObjectInputStream ois = null;
-        InputStream is = null;
+        Scanner reader = null;
         try
         {
             String fileName = "POMDPPolicies/" + target.getFileName();
-            is = context.getAssets().open(fileName);
-            ois = new ObjectInputStream(is);
+            fileName = "POMDPPolicies/tiger.txt";
+            reader = new Scanner(new InputStreamReader(context.getAssets().open(fileName)));
+            reader.useDelimiter("\\n");
 
-            ArrayList<VEntry> entry;
-            boolean running = true;
-            while (running)
+            ArrayList<VEntry> horizon = new ArrayList<>();
+
+            ArrayList<Double> values = new ArrayList<>(Collections.nCopies(numStates, 0.0));
+            long action;
+            ArrayList<Long> obs = new ArrayList<>(Collections.nCopies(numStates, 0L));
+
+            while (reader.hasNext())
             {
-                entry = (ArrayList<VEntry>)ois.readObject();
-/*                ArrayList<Double> value = new ArrayList<>(numStates);
-                long action;
-                ArrayList<Long> obs = new ArrayList<>(numStates);*/
-
-                policy.add(entry);
-
-                running = false;
+                ArrayList<String> entries = new ArrayList<>(Arrays.asList(reader.nextLine().split("\\s+")));
+                entries.remove("");
+                if(entries.contains("@"))
+                {
+                    policy.add(horizon);
+                    horizon.clear();
+                    continue;
+                }
+                int entryIndex = 0;
+                for(int i = 0; i < numStates; i ++)
+                {
+                    values.set(i, Double.valueOf(entries.get(entryIndex++)));
+                }
+                action = Long.valueOf(entries.get(entryIndex++));
+                for(int i = 0; i < numStates; i ++)
+                {
+                    obs.set(i, Long.valueOf(entries.get(entryIndex++)));
+                }
+                horizon.add(new VEntry(values, action, obs));
+                values = new ArrayList<>(Collections.nCopies(numStates, 0.0));
+                obs = new ArrayList<>(Collections.nCopies(numStates, 0L));
             }
         }
         catch (IOException e)
         {
             Log.e(TAG, "Could not open policy file: " + e);
         }
-        catch (ClassNotFoundException e)
-        {
-            Log.e(TAG, "Class not found: " + e);
-        }
         finally
         {
-            if (ois != null)
+            if (reader != null)
             {
-                try
-                {
-                    ois.close();
-                }
-                catch (IOException e)
-                {
-                    Log.e(TAG, "Error closing the file: " + e);
-                }
+                reader.close();
             }
         }
     }
