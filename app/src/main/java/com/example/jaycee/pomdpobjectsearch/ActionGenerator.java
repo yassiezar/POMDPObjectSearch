@@ -3,9 +3,12 @@ package com.example.jaycee.pomdpobjectsearch;
 import android.content.Context;
 
 import com.example.jaycee.pomdpobjectsearch.helpers.VectorTools;
+import com.example.jaycee.pomdpobjectsearch.policy.Belief;
 import com.example.jaycee.pomdpobjectsearch.policy.POMDPPolicy;
-import com.example.jaycee.pomdpobjectsearch.policy.Policy;
 import com.example.jaycee.pomdpobjectsearch.policy.State;
+import com.example.jaycee.pomdpobjectsearch.policy.Model;
+
+import static com.example.jaycee.pomdpobjectsearch.policy.State.S_STEPS;
 
 public class ActionGenerator
 {
@@ -26,13 +29,19 @@ public class ActionGenerator
     }
     private static final String TAG = ActionGenerator.class.getSimpleName();
 
-    private static ActionGenerator actionGenerator = null;
-
+    public static final int NUM_STATES = 360;
+    public static final int NUM_ACTIONS = 4;
+    private static final int HORIZON_DISTANCE = 50;
     public static final int GRID_SIZE = 6;
     public static final int ANGLE_INTERVAL = 20;
 
+    private static ActionGenerator actionGenerator = null;
+
     private POMDPPolicy policy;
     private State state;
+    private Belief belief;
+
+    private int id = -1;
 
     private ActionGenerator(Context context)
     {
@@ -61,17 +70,27 @@ public class ActionGenerator
         return actionGenerator;
     }
 
-    public void setTarget(Objects.Observation target)
+    public void setTarget(Objects.Observation target, Model model)
     {
-        policy.setTarget(target, 2);
+        policy.setTarget(target, NUM_STATES);
         state = new State();
+        belief = new Belief(NUM_STATES, model);
     }
 
     public VectorTools.PanAndTilt getAngleAdjustment(Objects.Observation obs, float camPan, float camTilt)
     {
         state.addObservation(obs, camPan, camTilt);
-        POMDPPolicy.ActionId actionId = policy.getAction(id, state.getDecodedState(), timestep);
+        POMDPPolicy.ActionId actionId;
+        if(id == -1 || state.getEncodedState()[S_STEPS] > HORIZON_DISTANCE)
+        {
+            actionId = policy.getAction(belief.getBelief(), HORIZON_DISTANCE);
+        }
+        else
+        {
+            actionId = policy.getAction(id, state);
+        }
         int action = actionId.action;
+        belief.updateBeliefState(action, obs.getCode());
 
         // Get new angles
         int pan = (int) ((Math.floor(Math.toDegrees(camPan) / ANGLE_INTERVAL)) + GRID_SIZE / 2 - 1);

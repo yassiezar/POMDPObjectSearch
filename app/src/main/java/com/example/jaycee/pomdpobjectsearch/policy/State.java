@@ -7,14 +7,14 @@ import static com.example.jaycee.pomdpobjectsearch.ActionGenerator.GRID_SIZE;
 
 public class State
 {
-    private static final int NUM_OBJECTS = 9;
-    private static final int MAX_STEPS = 12;
+    private static final int NUM_OBJECTS = 15;
+    public static final int MAX_STEPS = 12;
 
-    private static final int S_OBS = 0;
-    private static final int S_STEPS = 1;
-    private static final int S_STATE_VISITED = 2;
+    public static final int S_OBS = 0;
+    public static final int S_STEPS = 1;
+    public static final int S_STATE_VISITED = 2;
 
-    private long state;
+    private int state;
 
     private Objects.Observation observation = Objects.Observation.O_NOTHING;
 
@@ -47,10 +47,10 @@ public class State
         return state;
     }
 
-    public long[] getEncodedState()
+    public int[] getEncodedState()
     {
-        long[] stateVector = new long[3];
-        long state = this.state;
+        int[] stateVector = new int[3];
+        int state = this.state;
 
         stateVector[S_OBS] = state % NUM_OBJECTS;
         state /= NUM_OBJECTS;

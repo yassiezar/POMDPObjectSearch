@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.example.jaycee.pomdpobjectsearch.helpers.VectorTools;
 import com.example.jaycee.pomdpobjectsearch.imageprocessing.ObjectClassifier;
+import com.example.jaycee.pomdpobjectsearch.policy.Model;
 import com.example.jaycee.pomdpobjectsearch.views.Arrow;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
@@ -31,6 +32,7 @@ public class ActivityGuided extends ActivityBase
 
     private WaypointProvider waypointProvider;
     private ActionGenerator actionGenerator;
+    private Model model;
 
     private Objects.Observation observation;
 
@@ -49,6 +51,7 @@ public class ActivityGuided extends ActivityBase
         soundGenerator = SoundGenerator.create(this);
         waypointProvider = new WaypointProvider();
         actionGenerator = ActionGenerator.create(this);
+        model = Model.create(this);
     }
 
     @Override
@@ -132,7 +135,8 @@ public class ActivityGuided extends ActivityBase
     {
         super.setTarget(target);
         Log.d(TAG, "Setting target");
-        actionGenerator.setTarget(target);
+        model.setTarget(target);
+        actionGenerator.setTarget(target, model);
         soundGenerator.setPhonePose(getFrame().getArFrame().getAndroidSensorPose());
         soundGenerator.start();
     }
