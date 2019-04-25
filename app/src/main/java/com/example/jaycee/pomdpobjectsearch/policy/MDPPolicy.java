@@ -15,7 +15,7 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class MDPPolicy implements Policy
+public class MDPPolicy
 {
     private static final String TAG = MDPPolicy.class.getSimpleName();
 
