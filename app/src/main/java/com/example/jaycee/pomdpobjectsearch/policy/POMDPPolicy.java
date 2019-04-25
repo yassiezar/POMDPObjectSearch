@@ -3,21 +3,17 @@ package com.example.jaycee.pomdpobjectsearch.policy;
 import android.content.Context;
 import android.util.Log;
 
+import com.example.jaycee.pomdpobjectsearch.ActivityEntry;
 import com.example.jaycee.pomdpobjectsearch.Objects;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Scanner;
-import java.util.regex.Pattern;
 
-public class POMDPPolicy implements Policy
+public class POMDPPolicy
 {
     private static final String TAG = POMDPPolicy.class.getSimpleName();
 
@@ -46,8 +42,8 @@ public class POMDPPolicy implements Policy
             ArrayList<VEntry> horizon = new ArrayList<>();
 
             ArrayList<Double> values = new ArrayList<>(Collections.nCopies(numStates, 0.0));
-            long action;
-            ArrayList<Long> obs = new ArrayList<>(Collections.nCopies(numStates, 0L));
+            int action;
+            ArrayList<Integer> obs = new ArrayList<>(Collections.nCopies(numStates, 0));
 
             while (reader.hasNext())
             {
@@ -64,14 +60,14 @@ public class POMDPPolicy implements Policy
                 {
                     values.set(i, Double.valueOf(entries.get(entryIndex++)));
                 }
-                action = Long.valueOf(entries.get(entryIndex++));
+                action = Integer.valueOf(entries.get(entryIndex++));
                 for(int i = 0; i < numStates; i ++)
                 {
-                    obs.set(i, Long.valueOf(entries.get(entryIndex++)));
+                    obs.set(i, Integer.valueOf(entries.get(entryIndex++)));
                 }
                 horizon.add(new VEntry(values, action, obs));
                 values = new ArrayList<>(Collections.nCopies(numStates, 0.0));
-                obs = new ArrayList<>(Collections.nCopies(numStates, 0L));
+                obs = new ArrayList<>(Collections.nCopies(numStates, 0));
             }
         }
         catch (IOException e)
@@ -87,31 +83,45 @@ public class POMDPPolicy implements Policy
         }
     }
 
-    @Override
-    public long getAction(State state)
+    public ActionId getAction(int id, int obs, int h)
     {
         // TODO: FIX
-        return 0;
+        ArrayList<VEntry> vlist = policy.get(h+1);
+
+        int newId = vlist.get(id).observations.get(obs);
+        int action = policy.get(h).get(newId).action;
+
+        return new ActionId(newId, action);
     }
 
     public class VEntry
     {
         public ArrayList<Double> values;
-        public long action;
-        public ArrayList<Long>observations;
+        public int action;
+        public ArrayList<Integer>observations;
 
         public VEntry() {}
-        public VEntry(ArrayList<Double> v, long a, ArrayList<Long> o)
+        public VEntry(ArrayList<Double> v, int a, ArrayList<Integer> o)
         {
             values = v;
             action = a;
             observations = o;
         }
-        public VEntry(long v, long a, long o)
+        public VEntry(int v, int a, int o)
         {
-            values = new ArrayList<>((int)v);
+            values = new ArrayList<>(v);
             action = a;
-            observations = new ArrayList<>((int)o);
+            observations = new ArrayList<>(o);
+        }
+    }
+
+    public class ActionId
+    {
+        public int id, action;
+        public ActionId(int id, int action)
+        {
+            this.id = id;
+            this.action = action;
         }
     }
 }

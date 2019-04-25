@@ -33,10 +33,10 @@ public class State
         }
     }
 
-    public long getDecodedState()
+    public int getDecodedState()
     {
-        long state = 0;
-        long multiplier = 1;
+        int state = 0;
+        int multiplier = 1;
 
         state += (multiplier * observation.getCode());
         multiplier *= NUM_OBJECTS;

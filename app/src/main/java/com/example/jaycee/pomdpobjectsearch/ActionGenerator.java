@@ -70,7 +70,8 @@ public class ActionGenerator
     public VectorTools.PanAndTilt getAngleAdjustment(Objects.Observation obs, float camPan, float camTilt)
     {
         state.addObservation(obs, camPan, camTilt);
-        long action = policy.getAction(state);
+        POMDPPolicy.ActionId actionId = policy.getAction(id, state.getDecodedState(), timestep);
+        int action = actionId.action;
 
         // Get new angles
         int pan = (int) ((Math.floor(Math.toDegrees(camPan) / ANGLE_INTERVAL)) + GRID_SIZE / 2 - 1);
