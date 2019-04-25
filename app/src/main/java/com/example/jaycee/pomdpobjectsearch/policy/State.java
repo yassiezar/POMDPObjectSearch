@@ -2,8 +2,8 @@ package com.example.jaycee.pomdpobjectsearch.policy;
 
 import com.example.jaycee.pomdpobjectsearch.Objects;
 
-import static com.example.jaycee.pomdpobjectsearch.ActionGenerator.ANGLE_INTERVAL;
-import static com.example.jaycee.pomdpobjectsearch.ActionGenerator.GRID_SIZE;
+import static com.example.jaycee.pomdpobjectsearch.App.ANGLE_INTERVAL;
+import static com.example.jaycee.pomdpobjectsearch.App.GRID_SIZE;
 
 public class State
 {

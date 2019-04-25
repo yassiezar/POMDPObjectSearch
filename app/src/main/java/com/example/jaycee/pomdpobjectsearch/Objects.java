@@ -13,11 +13,11 @@ public class Objects
         T_MUG (6, "mug.txt"),
         T_WINDOW (7, "window.txt"),
         T_LAMP (8, "lamp.txt"),
-        T_BACKPACK (9, "backpack.txt"),
+        T_BACKPACK (9, "backpack_0.5.txt"),
         T_CHAIR (10, "chair.txt"),
         T_COUCH (11, "couch.txt"),
         T_PLANT (12, "plant.txt"),
-        T_TELEPHONE (13, "telephone.txt"),
+        T_TELEPHONE (13, "telephone_0.5.txt"),
         T_WHITEBOARD (14, "whiteboard.txt"),
         T_DOOR (15, "door.txt"),
         T_TIGER (16, "tiger.txt");

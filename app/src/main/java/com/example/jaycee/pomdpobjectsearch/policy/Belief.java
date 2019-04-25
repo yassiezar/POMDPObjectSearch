@@ -2,15 +2,17 @@ package com.example.jaycee.pomdpobjectsearch.policy;
 
 import java.util.Collections;
 
+import static com.example.jaycee.pomdpobjectsearch.App.NUM_STATES;
+
 public class Belief
 {
     private POMDPPolicy.DoubleVector belief;
     private int numStates = 0;
     private Model model;
 
-    public Belief(int numStates, Model model)
+    public Belief(Model model)
     {
-        this.numStates = numStates;
+        this.numStates = NUM_STATES;
         belief = new POMDPPolicy.DoubleVector(Collections.nCopies(numStates, 1.0/numStates));
         this.model = model;
     }

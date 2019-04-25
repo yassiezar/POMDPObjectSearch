@@ -36,8 +36,8 @@ public class Model
         transitions = new HashMap<>();
 
         objects = new String[] {"Nothing", "Computer monitor", "Computer keyboard", "Computer mouse",
-            "Desk", "Laptop", "Mug", "Window", "Lamp", "Backpack",
-            "Chair", "Couch", "Plant", "Telephone", "Whiteboard", "Door"};
+                                    "Desk", "Laptop", "Mug", "Window", "Lamp", "Backpack",
+                                    "Chair", "Couch", "Plant", "Telephone", "Whiteboard", "Door"};
         actions = new String[] {"up", "down", "left", "right"};
 
         String json = null;
@@ -57,7 +57,6 @@ public class Model
 
         try
         {
-
             JSONObject obj1Json = new JSONObject(json);
             Iterator<String> obj1Iter = obj1Json.keys();
 
