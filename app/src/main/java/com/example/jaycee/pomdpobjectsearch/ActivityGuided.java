@@ -135,10 +135,19 @@ public class ActivityGuided extends ActivityBase
     {
         super.setTarget(target);
         Log.d(TAG, "Setting target");
-        model.setTarget(target);
-        actionGenerator.setTarget(target, model);
-        soundGenerator.setPhonePose(getFrame().getArFrame().getAndroidSensorPose());
-        soundGenerator.start();
+        try
+        {
+            soundGenerator.getLock().lock();
+
+            model.setTarget(target);
+            actionGenerator.setTarget(target, model);
+            soundGenerator.setPhonePose(getFrame().getArFrame().getAndroidSensorPose());
+            soundGenerator.start();
+        }
+        finally
+        {
+            soundGenerator.getLock().unlock();
+        }
     }
 
     @Override
