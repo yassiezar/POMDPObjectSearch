@@ -9,6 +9,7 @@ public class App extends Application
     public static final int HORIZON_DISTANCE = 11;
     public static final int GRID_SIZE = 6;
     public static final int ANGLE_INTERVAL = 20;
+    public static final int NUM_OBJECTS = 15;
 
     public static final Action A_UP = new Action(0);
     public static final Action A_DOWN = new Action(1);

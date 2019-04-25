@@ -22,7 +22,7 @@ public class Belief
         for(int s = 0; s < numStates; s++)
         {
             double sum = 0.0;
-            for(int s1 = o; s1 < numStates; s1++)
+            for(int s1 = 0; s1 < numStates; s1++)
             {
                 sum += model.getTransitionProbability(s, a, s1);
             }
