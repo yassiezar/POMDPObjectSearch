@@ -4,7 +4,6 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_VERBOSE_MAKEFILE on)
 
 include_directories(${PROJECT_SOURCE_DIR}/src/main/cpp/include/)
-include_directories(/home/jaycee/src/github.com/openal-soft/include/)
 
 add_library(openal SHARED IMPORTED )
 set_target_properties(openal PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI}/libopenal.so )

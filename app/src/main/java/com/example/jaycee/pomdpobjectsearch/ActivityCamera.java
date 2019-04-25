@@ -1,16 +1,13 @@
 package com.example.jaycee.pomdpobjectsearch;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
@@ -48,22 +45,35 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
 {
     private static final String TAG = ActivityCamera.class.getSimpleName();
 
-    private static final String TF_MODEL_FILE = "mobilenet/detect.tflite";
-    private static final String TF_LABELS_FILE = "file:///android_asset/mobilenet/coco_labels_list.txt";
+    private static final int CAMERA_PERMISSION_CODE = 0;
+    private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
+
+    private static final String TF_MODEL_FILE = "mobilenet/office_detect.tflite";
+    private static final String TF_LABELS_FILE = "file:///android_asset/mobilenet/office_labels_list.txt";
     private static final int TF_INPUT_SIZE = 300;
-    private static final boolean TF_IS_QUANTISED = true;
+    private static final boolean TF_IS_QUANTISED = false;
 
     private static final boolean MAINTAIN_ASPECT_RATIO = false;
 
     private static final int O_NOTHING = 0;
 
-    private static final int T_COMPUTER_MONITOR = 1;
-    private static final int T_COMPUTER_KEYBOARD = 2;
-    private static final int T_COMPUTER_MOUSE = 3;
-    private static final int T_DESK = 4;
-    private static final int T_MUG = 6;
-    private static final int T_OFFICE_SUPPLIES = 7;
-    private static final int T_WINDOW = 8;
+    private static final int T_BACKPACK = 1;
+    private static final int T_BOOK = 2;
+    private static final int T_BOOKCASE = 3;
+    private static final int T_CHAIR = 4;
+    private static final int T_DESK = 5;
+    private static final int T_DOOR = 6;
+    private static final int T_COMPUTER_KEYBOARD = 7;
+    private static final int T_LAMP = 8;
+    private static final int T_LAPTOP = 9;
+    private static final int T_LIGHT_SWITCH = 10;
+    private static final int T_COMPUTER_MONITOR = 11;
+    private static final int T_COMPUTER_MOUSE = 12;
+    private static final int T_MUG = 13;
+    private static final int T_PLANT = 14;
+    private static final int T_TELEPHONE = 15;
+    private static final int T_WHITEBOARD = 16;
+    private static final int T_WINDOW = 17;
 
     private Session session;
 
@@ -116,23 +126,53 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
                 int target = 0;
                 switch (item.getItemId())
                 {
-                    case R.id.item_object_mug:
-                        target = T_MUG;
+                    case R.id.item_object_backpack:
+                        target = T_BACKPACK;
+                        break;
+                    case R.id.item_object_book:
+                        target = T_BOOK;
+                        break;
+                    case R.id.item_object_bookcase:
+                        target = T_BOOKCASE;
+                        break;
+                    case R.id.item_object_chair:
+                        target = T_CHAIR;
                         break;
                     case R.id.item_object_desk:
                         target = T_DESK;
                         break;
-                    case R.id.item_object_office_supplies:
-                        target = T_OFFICE_SUPPLIES;
+                    case R.id.item_object_door:
+                        target = T_DOOR;
                         break;
                     case R.id.item_object_keyboard:
                         target = T_COMPUTER_KEYBOARD;
+                        break;
+                    case R.id.item_object_lamp:
+                        target = T_LAMP;
+                        break;
+                    case R.id.item_object_laptop:
+                        target = T_LAPTOP;
+                        break;
+                    case R.id.item_object_lightswitch:
+                        target = T_LIGHT_SWITCH;
                         break;
                     case R.id.item_object_monitor:
                         target = T_COMPUTER_MONITOR;
                         break;
                     case R.id.item_object_mouse:
                         target = T_COMPUTER_MOUSE;
+                        break;
+                    case R.id.item_object_mug:
+                        target = T_COMPUTER_KEYBOARD;
+                        break;
+                    case R.id.item_object_plant:
+                        target = T_PLANT;
+                        break;
+                    case R.id.item_object_telephone:
+                        target = T_TELEPHONE;
+                        break;
+                    case R.id.item_object_whiteboard:
+                        target = T_WHITEBOARD;
                         break;
                     case R.id.item_object_window:
                         target = T_WINDOW;
@@ -315,19 +355,34 @@ public class ActivityCamera extends AppCompatActivity implements NewFrameHandler
         }
         return super.onOptionsItemSelected(item);
     }
-    
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results)
     {
-        if(!CameraPermissionHelper.hasCameraPermission(this))
+        super.onRequestPermissionsResult(requestCode, permissions, results);
+        if(!hasCameraPermission())
         {
-            Toast.makeText(this, "Camera permissions are required to run this app", Toast.LENGTH_LONG).show();
-            if(!CameraPermissionHelper.shouldShowRequestPermissionRationale(this))
-            {
-                CameraPermissionHelper.launchPermissionSettings(this);
-            }
-            finish();
+//            Toast.makeText(this, "Camera permissions are required to run this app", Toast.LENGTH_LONG).show();
+//            if(!shouldShowRequestPermissionRationale())
+//            {
+//                Intent intent = new Intent();
+//                intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+//                intent.setData(Uri.fromParts("package", this.getPackageName(), null));
+//                startActivity(intent);
+//            }
+//            finish();
+            requestCameraPermission();
         }
+    }
+
+    public boolean hasCameraPermission()
+    {
+        return ContextCompat.checkSelfPermission(this, CAMERA_PERMISSION) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    public void requestCameraPermission()
+    {
+        ActivityCompat.requestPermissions(this, new String[] {CAMERA_PERMISSION}, CAMERA_PERMISSION_CODE);
     }
 
     public Anchor getWaypointAnchor()
