@@ -19,11 +19,6 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
 
     private TextToSpeech tts;
 
-    /* TODO:
-    Detect object in middle of screen
-    Add text to speech to read objects in middle on screen tap
-     */
-
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
@@ -86,7 +81,13 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
             Log.i(TAG, result.toString());
             if(result.getConfidence() > MIN_CONF && centreOfScreen.contains(result.getLocation()))
             {
+                Log.i(TAG, result.getObservation().getFileName() + getTarget().getFileName());
                 tts.speak(result.getTitle(), TextToSpeech.QUEUE_ADD, null, "");
+                if(result.getObservation() == getTarget())
+                {
+                    vibrator.vibrate(350);
+                    setTarget(Objects.Observation.O_NOTHING);
+                }
                 Log.d(TAG, result.toString());
             }
         }

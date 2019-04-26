@@ -28,8 +28,6 @@ public class ActivityGuided extends ActivityBase
 
     private SoundGenerator soundGenerator;
 
-    private Vibrator vibrator;
-
     private WaypointProvider waypointProvider;
     private ActionGenerator actionGenerator;
     private Model model;
@@ -40,8 +38,6 @@ public class ActivityGuided extends ActivityBase
     protected void onResume()
     {
         super.onResume();
-
-        this.vibrator = (Vibrator)this.getSystemService(Context.VIBRATOR_SERVICE);
 
         if(!JNIBridge.initSound())
         {
@@ -57,11 +53,6 @@ public class ActivityGuided extends ActivityBase
     @Override
     protected void onPause()
     {
-        if(vibrator != null)
-        {
-            vibrator.cancel();
-        }
-
         if(soundGenerator != null)
         {
             soundGenerator.stop();

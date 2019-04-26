@@ -7,6 +7,7 @@ import android.graphics.Matrix;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -88,7 +89,7 @@ public class FrameScanner
         {
             lock.lock();
             Log.d(TAG, "Detecting objects");
-            List<ObjectClassifier.Recognition> results = detector.recogniseImage(croppedBitmap);
+            List<ObjectClassifier.Recognition> results = new ArrayList<>(detector.recogniseImage(croppedBitmap));
             frameHandler.onScanComplete(results);
         }
         finally

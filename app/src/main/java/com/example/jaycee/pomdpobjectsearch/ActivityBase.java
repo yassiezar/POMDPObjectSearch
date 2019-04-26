@@ -1,8 +1,10 @@
 package com.example.jaycee.pomdpobjectsearch;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -38,6 +40,7 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
     protected CameraSurface surfaceView;
     private DrawerLayout drawerLayout;
     private CentreView centreView;
+    protected Vibrator vibrator;
 
     private Handler backgroundHandler;
     private HandlerThread backgroundHandlerThread;
@@ -51,6 +54,8 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
 
     private boolean processingFrame = false;
     private boolean requestARCoreInstall = true;
+
+    private long latestFrameTimestamp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -154,6 +159,11 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
     {
         super.onResume();
 
+        if(vibrator == null)
+        {
+            this.vibrator = (Vibrator)this.getSystemService(Context.VIBRATOR_SERVICE);
+        }
+
         if(session == null)
         {
             try
@@ -251,6 +261,12 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
 
         }
 
+        if(vibrator != null)
+        {
+            vibrator.cancel();
+            vibrator = null;
+        }
+
         if(session != null)
         {
             surfaceView.onPause();
@@ -298,17 +314,12 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
                 try
                 {
                     frame.getLock().lock();
-                    com.google.ar.core.Frame arFrame = frame.getArFrame();
-                    int[] imageBytes = imageConverter.getRgbBytes(arFrame.acquireCameraImage());
+                    int[] imageBytes = imageConverter.getRgbBytes(frame.getImage());
                     frameScanner.updateBitmap(imageBytes);
                 }
                 catch(DeadlineExceededException e)
                 {
-                    Log.e(TAG, "Deadline exceeded for image");
-                }
-                catch(NotYetAvailableException e)
-                {
-                    Log.e(TAG, "Camera not yet ready: " + e);
+                    Log.e(TAG, String.format("Deadline exceeded for image: latest %d current %d", latestFrameTimestamp, frame.getArFrame().getTimestamp()));
                 }
                 finally
                 {
@@ -324,10 +335,11 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
     @Override
     public void onNewFrame(final com.google.ar.core.Frame frame)
     {
+        this.latestFrameTimestamp = frame.getTimestamp();
         try
         {
             this.frame.getLock().lock();
-            this.frame.setFrame(frame);
+            this.frame.updateFrame(frame);
         }
         finally
         {

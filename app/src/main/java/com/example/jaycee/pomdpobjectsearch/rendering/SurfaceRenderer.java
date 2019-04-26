@@ -154,10 +154,10 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
                 waypointRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
                 waypointRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
             }
-            else
+/*            else
             {
                 Log.d(TAG, "Camera not tracking or target not set. ");
-            }
+            }*/
         }
         catch(CameraNotAvailableException e)
         {
