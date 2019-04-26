@@ -8,6 +8,7 @@ import android.util.Log;
 import com.example.jaycee.pomdpobjectsearch.imageprocessing.ObjectClassifier;
 import com.example.jaycee.pomdpobjectsearch.CameraSurface.ScreenReadRequest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -76,13 +77,15 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
     public void onScanComplete(List<ObjectClassifier.Recognition> results)
     {
         RectF centreOfScreen = new RectF(100, 100, 200, 200);
+        ArrayList<String> previousUtterances = new ArrayList<>();
         for(ObjectClassifier.Recognition result : results)
         {
             Log.i(TAG, result.toString());
-            if(result.getConfidence() > MIN_CONF && centreOfScreen.contains(result.getLocation()))
+            if(result.getConfidence() > MIN_CONF && centreOfScreen.contains(result.getLocation()) && !previousUtterances.contains(result.getTitle()))
             {
                 Log.i(TAG, result.getObservation().getFileName() + getTarget().getFileName());
                 tts.speak(result.getTitle(), TextToSpeech.QUEUE_ADD, null, "");
+                previousUtterances.add(result.getTitle());
                 if(result.getObservation() == getTarget())
                 {
                     vibrator.vibrate(350);
