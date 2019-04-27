@@ -56,11 +56,16 @@ public class ActionGenerator
         return actionGenerator;
     }
 
-    public void setTarget(Objects.Observation target, Model model)
+    public boolean setTarget(Objects.Observation target, Model model)
     {
-        policy.setTarget(target);
+        if(!policy.setTarget(target))
+        {
+            return false;
+        }
         state = new State();
         belief = new Belief(model);
+
+        return true;
     }
 
     public VectorTools.PanAndTilt getAngleAdjustment(Objects.Observation obs, float camPan, float camTilt)

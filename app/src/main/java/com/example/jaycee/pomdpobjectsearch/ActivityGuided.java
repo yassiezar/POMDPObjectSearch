@@ -1,8 +1,6 @@
 package com.example.jaycee.pomdpobjectsearch;
 
-import android.content.Context;
 import android.graphics.RectF;
-import android.os.Vibrator;
 import android.util.Log;
 
 import com.example.jaycee.pomdpobjectsearch.helpers.VectorTools;
@@ -33,6 +31,8 @@ public class ActivityGuided extends ActivityBase
     private Model model;
 
     private Objects.Observation observation;
+
+    private boolean targetSet = false;
 
     @Override
     protected void onResume()
@@ -84,7 +84,7 @@ public class ActivityGuided extends ActivityBase
 
         super.onNewFrame(frame);
 
-        if(getTarget() == O_NOTHING)
+        if(!targetSet)
         {
             Log.d(TAG, "Target not set");
             return;
@@ -131,9 +131,16 @@ public class ActivityGuided extends ActivityBase
             soundGenerator.getLock().lock();
 
             model.setTarget(target);
-            actionGenerator.setTarget(target, model);
-            soundGenerator.setPhonePose(getFrame().getArFrame().getAndroidSensorPose());
-            soundGenerator.start();
+            if(actionGenerator.setTarget(target, model))
+            {
+                targetSet = true;
+                soundGenerator.setPhonePose(getFrame().getArFrame().getAndroidSensorPose());
+                soundGenerator.start();
+            }
+            else
+            {
+                targetSet = false;
+            }
         }
         finally
         {
@@ -176,6 +183,7 @@ public class ActivityGuided extends ActivityBase
         {
             Log.i(TAG, "Target found");
 
+            targetSet = false;
             setTarget(O_NOTHING);
             soundGenerator.stop();
             vibrator.vibrate(350);

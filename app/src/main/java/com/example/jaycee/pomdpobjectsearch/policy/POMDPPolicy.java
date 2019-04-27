@@ -32,7 +32,7 @@ public class POMDPPolicy
 
     public ArrayList<ArrayList<VEntry>> getPolicy() { return this.policy; }
 
-    public void setTarget(Objects.Observation target)
+    public boolean setTarget(Objects.Observation target)
     {
         int numStates = NUM_STATES;
 
@@ -81,6 +81,7 @@ public class POMDPPolicy
         catch (IOException e)
         {
             Log.e(TAG, "Could not open policy file: " + e);
+            return false;
         }
         finally
         {
@@ -89,6 +90,8 @@ public class POMDPPolicy
                 reader.close();
             }
         }
+
+        return true;
     }
 
     public ActionId getAction(int id, State state)

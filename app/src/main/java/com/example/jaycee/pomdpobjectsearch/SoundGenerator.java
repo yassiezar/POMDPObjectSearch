@@ -166,7 +166,8 @@ public class SoundGenerator implements Runnable
     public void stop()
     {
         this.stopped = true;
-        JNIBridge.playSoundFFFF(0.f, phonePose.getTranslation(), 0, 0);
+        float[] dummyLocation = new float[] {0.f, 0.f, 0.f};
+        JNIBridge.playSoundFFFF(0.f, dummyLocation, 0, 0);
         JNIBridge.playSoundFF(0, 0);
     }
 
