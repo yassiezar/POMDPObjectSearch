@@ -44,10 +44,31 @@ public class ActivityGuided extends ActivityBase
             Log.e(TAG, "OpenAL init error");
         }
 
-        soundGenerator = SoundGenerator.create(this);
+        if(soundGenerator == null)
+        {
+            soundGenerator = SoundGenerator.create(this);
+        }
+        else
+        {
+            soundGenerator = SoundGenerator.getInstance();
+        }
         waypointProvider = new WaypointProvider();
-        actionGenerator = ActionGenerator.create(this);
-        model = Model.create(this);
+        if(actionGenerator == null)
+        {
+            actionGenerator = ActionGenerator.create(this);
+        }
+        else
+        {
+            actionGenerator = ActionGenerator.getInstance();
+        }
+        if(model == null)
+        {
+            model = Model.create(this);
+        }
+        else
+        {
+            model = Model.getInstance();
+        }
     }
 
     @Override
@@ -140,6 +161,10 @@ public class ActivityGuided extends ActivityBase
             else
             {
                 targetSet = false;
+                if(target != O_NOTHING)
+                {
+                    displayToast("Invalid target");
+                }
             }
         }
         finally
@@ -173,6 +198,8 @@ public class ActivityGuided extends ActivityBase
                 }
             });
             observation = validObservations.get(0).getObservation();
+            Log.d(TAG, observation.getFileName());
+            displayToast(observation.getFriendlyName());
         }
         else
         {

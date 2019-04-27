@@ -16,7 +16,7 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
 {
     private static final String TAG = ActivityUnguided.class.getSimpleName();
 
-    private static final float MIN_CONF = 0.2f;
+    private static final float MIN_CONF = 0.3f;
 
     private TextToSpeech tts;
 
