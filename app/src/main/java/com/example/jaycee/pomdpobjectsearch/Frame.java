@@ -20,6 +20,8 @@ public class Frame
     private com.google.ar.core.Frame arFrame;
     private Image image;
 
+    private boolean imageClosed = true;
+
     public Frame() {}
 
     public static Frame getFrame() { return frame; }
@@ -34,12 +36,16 @@ public class Frame
             if(image != null)
             {
                 image.close();
+                imageClosed = true;
             }
             image = frame.acquireCameraImage();
+            imageClosed = false;
         }
         catch(NotYetAvailableException e)
         {
             Log.e(TAG, "Camera not available: " + e);
         }
     }
+
+    public boolean isImageClosed() { return this.imageClosed; }
 }
