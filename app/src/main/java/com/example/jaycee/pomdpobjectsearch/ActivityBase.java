@@ -1,10 +1,12 @@
 package com.example.jaycee.pomdpobjectsearch;
 
 import android.content.Context;
+import android.media.Image;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Vibrator;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -14,6 +16,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.example.jaycee.pomdpobjectsearch.imageprocessing.FrameHandler;
 import com.example.jaycee.pomdpobjectsearch.imageprocessing.FrameScanner;
@@ -51,6 +54,8 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
     private FrameScanner frameScanner;
 
     private ImageConverter imageConverter;
+
+    private Toast toast;
 
     private boolean processingFrame = false;
     private boolean requestARCoreInstall = true;
@@ -314,6 +319,11 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
                 try
                 {
                     frame.getLock().lock();
+                    if(frame.isImageClosed())
+                    {
+                        Log.w(TAG, "Image is closed");
+                        return;
+                    }
                     int[] imageBytes = imageConverter.getRgbBytes(frame.getImage());
                     frameScanner.updateBitmap(imageBytes);
                 }
@@ -367,4 +377,21 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
 
     @Override
     public void onNewTimestamp(long timestamp) { }
+
+    public void displayToast(final String msg)
+    {
+        this.runInBackground(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                if(toast != null)
+                {
+                    toast.cancel();
+                }
+                toast = Toast.makeText(ActivityBase.this, msg, Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        });
+    }
 }
