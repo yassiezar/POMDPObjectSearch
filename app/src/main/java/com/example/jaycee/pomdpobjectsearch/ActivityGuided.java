@@ -22,7 +22,7 @@ public class ActivityGuided extends ActivityBase
 {
     private static final String TAG = ActivityGuided.class.getSimpleName();
 
-    private static final float MIN_CONF = 0.2f;
+    private static final float MIN_CONF = 0.3f;
 
     private SoundGenerator soundGenerator;
 
@@ -151,18 +151,18 @@ public class ActivityGuided extends ActivityBase
         {
             soundGenerator.getLock().lock();
 
-            model.setTarget(target);
-            if(actionGenerator.setTarget(target, model))
+            if(target != O_NOTHING)
             {
-                targetSet = true;
-                soundGenerator.setPhonePose(getFrame().getArFrame().getAndroidSensorPose());
-                soundGenerator.start();
-            }
-            else
-            {
-                targetSet = false;
-                if(target != O_NOTHING)
+                model.setTarget(target);
+                if(actionGenerator.setTarget(target, model))
                 {
+                    targetSet = true;
+                    soundGenerator.setPhonePose(getFrame().getArFrame().getAndroidSensorPose());
+                    soundGenerator.start();
+                }
+                else
+                {
+                    targetSet = false;
                     displayToast("Invalid target");
                 }
             }
