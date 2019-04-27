@@ -41,26 +41,25 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
     private Objects.Observation target = Objects.Observation.O_NOTHING;
 
     protected CameraSurface surfaceView;
+
     private DrawerLayout drawerLayout;
     private CentreView centreView;
-    protected Vibrator vibrator;
+    private FrameScanner frameScanner;
+    private ImageConverter imageConverter;
+
+    private Frame frame;
+    private Metrics metrics;
 
     private Handler backgroundHandler;
     private HandlerThread backgroundHandlerThread;
 
+    private Vibrator vibrator;
+
     private Session session;
-    private Frame frame = Frame.getFrame();
-
-    private FrameScanner frameScanner;
-
-    private ImageConverter imageConverter;
-
     private Toast toast;
 
     private boolean processingFrame = false;
     private boolean requestARCoreInstall = true;
-
-    private long latestFrameTimestamp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -168,6 +167,17 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
         {
             this.vibrator = (Vibrator)this.getSystemService(Context.VIBRATOR_SERVICE);
         }
+
+        try
+        {
+            frame = Frame.create();
+        }
+        catch(AssertionError e)
+        {
+            frame = Frame.getInstance();
+        }
+
+        metrics = new Metrics();
 
         if(session == null)
         {
@@ -329,7 +339,7 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
                 }
                 catch(DeadlineExceededException e)
                 {
-                    Log.e(TAG, String.format("Deadline exceeded for image: latest %d current %d", latestFrameTimestamp, frame.getArFrame().getTimestamp()));
+                    Log.e(TAG, String.format("Deadline exceeded for image"));
                 }
                 finally
                 {
@@ -345,7 +355,6 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
     @Override
     public void onNewFrame(final com.google.ar.core.Frame frame)
     {
-        this.latestFrameTimestamp = frame.getTimestamp();
         try
         {
             this.frame.getLock().lock();
@@ -371,6 +380,8 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
     }
     public Session getSession() { return this.session; }
     public Frame getFrame() { return this.frame; }
+    public Vibrator getVibrator() { return this.vibrator; }
+    public Metrics getMetrics() { return this.metrics; }
 
     public void setTarget(Objects.Observation target) { this.target = target; }
     public Objects.Observation getTarget() { return this.target; }

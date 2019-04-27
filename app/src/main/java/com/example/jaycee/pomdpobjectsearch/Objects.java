@@ -14,7 +14,7 @@ public class Objects
         T_WINDOW (7, "window.txt", "Window"),
         T_LAMP (8, "lamp.txt", "Lamp"),
         T_BACKPACK (9, "backpack_0.5.txt", "Backpack"),
-        T_CHAIR (10, "chair.txt", "Chair"),
+        T_CHAIR (10, "chair_o.5.txt", "Chair"),
         T_COUCH (11, "couch.txt", "Couch"),
         T_PLANT (12, "plant.txt", "Plant"),
         T_TELEPHONE (13, "telephone_0.5.txt", "Telephone"),

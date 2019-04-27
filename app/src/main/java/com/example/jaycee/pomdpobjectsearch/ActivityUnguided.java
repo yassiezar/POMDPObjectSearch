@@ -74,10 +74,31 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
     }
 
     @Override
+    public void onNewFrame(com.google.ar.core.Frame frame)
+    {
+        super.onNewFrame(frame);
+
+        getMetrics().updateTimestamp(frame.getTimestamp());
+        getMetrics().updatePhonePose(frame.getAndroidSensorPose());
+
+        getMetrics().writeWifi();
+    }
+
+    @Override
+    public void setTarget(Objects.Observation target)
+    {
+        super.setTarget(target);
+        getMetrics().updateTarget(target);
+    }
+
+
+    @Override
     public void onScanComplete(List<ObjectClassifier.Recognition> results)
     {
         RectF centreOfScreen = new RectF(100, 100, 200, 200);
         ArrayList<String> previousUtterances = new ArrayList<>();
+        ArrayList<Objects.Observation> validObservations = new ArrayList<>();
+
         for(ObjectClassifier.Recognition result : results)
         {
             Log.i(TAG, result.toString());
@@ -86,13 +107,22 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
                 Log.i(TAG, result.getObservation().getFileName() + getTarget().getFileName());
                 tts.speak(result.getTitle(), TextToSpeech.QUEUE_ADD, null, "");
                 previousUtterances.add(result.getTitle());
+                validObservations.add(result.getObservation());
                 if(result.getObservation() == getTarget())
                 {
-                    vibrator.vibrate(350);
+                    getVibrator().vibrate(350);
                     setTarget(Objects.Observation.O_NOTHING);
                 }
                 Log.d(TAG, result.toString());
             }
+        }
+        if(validObservations.isEmpty())
+        {
+            getMetrics().updateObservation(Objects.Observation.O_NOTHING);
+        }
+        else
+        {
+            getMetrics().updateObservation(validObservations);
         }
     }
 }

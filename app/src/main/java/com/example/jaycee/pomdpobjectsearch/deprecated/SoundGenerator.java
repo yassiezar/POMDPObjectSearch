@@ -207,9 +207,8 @@ public class SoundGenerator implements Runnable
                 Log.d(TAG, String.format("Gain %f elevation %f pitch %f", gain, elevationAngle, pitch));
                 JNIBridge.playSoundFF(gain, pitch * 2);
 
-                metrics.updateTargetPosition(waypoint.getPose());
-                metrics.updatePhoneOrientation(phonePose);
-                metrics.updatePhonePosition(phonePose);
+                metrics.updateWaypointPosition(waypoint.getPose());
+                metrics.updatePhonePose(phonePose);
                 metrics.updateTimestamp(timestamp);
                 metrics.writeWifi();
             }

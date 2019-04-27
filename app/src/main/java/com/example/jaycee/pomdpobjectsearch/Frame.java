@@ -13,7 +13,7 @@ public class Frame
 {
     private static final String TAG = Frame.class.getSimpleName();
 
-    private static Frame frame = new Frame();
+    private static Frame frame;
 
     private static final Lock lock = new ReentrantLock();
 
@@ -22,7 +22,30 @@ public class Frame
 
     private boolean imageClosed = true;
 
-    public Frame() {}
+    public static Frame create()
+    {
+        if(frame != null)
+        {
+            throw new AssertionError("Frame already initialised");
+        }
+        frame = new Frame();
+
+        return frame;
+    }
+
+    public static Frame getInstance()
+    {
+        if(frame == null)
+        {
+            throw new AssertionError("Frame not initialised");
+        }
+
+        return frame;
+    }
+
+    private Frame()
+    {
+    }
 
     public static Frame getFrame() { return frame; }
     public Lock getLock() { return lock; }

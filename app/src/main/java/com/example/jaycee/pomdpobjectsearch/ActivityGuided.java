@@ -97,13 +97,18 @@ public class ActivityGuided extends ActivityBase
     @Override
     public void onNewFrame(final Frame frame)
     {
+        super.onNewFrame(frame);
+
+        getMetrics().updateTimestamp(frame.getTimestamp());
+        getMetrics().updatePhonePose(frame.getAndroidSensorPose());
+
+        getMetrics().writeWifi();
+
         if(soundGenerator == null)
         {
             Log.w(TAG, "Sound Generator is dead. Likely that the thread has been killed");
             return;
         }
-
-        super.onNewFrame(frame);
 
         if(!targetSet)
         {
@@ -146,6 +151,7 @@ public class ActivityGuided extends ActivityBase
     public void setTarget(Objects.Observation target)
     {
         super.setTarget(target);
+        getMetrics().updateTarget(target);
         Log.d(TAG, "Setting target");
         try
         {
@@ -198,6 +204,7 @@ public class ActivityGuided extends ActivityBase
                 }
             });
             observation = validObservations.get(0).getObservation();
+            getMetrics().updateObservation(observation);
             Log.d(TAG, observation.getFileName());
             displayToast(observation.getFriendlyName());
         }
@@ -213,7 +220,7 @@ public class ActivityGuided extends ActivityBase
             targetSet = false;
             setTarget(O_NOTHING);
             soundGenerator.stop();
-            vibrator.vibrate(350);
+            getVibrator().vibrate(350);
             surfaceView.getRenderer().setDrawWaypoint(false);
             updateArrows(null);
         }
