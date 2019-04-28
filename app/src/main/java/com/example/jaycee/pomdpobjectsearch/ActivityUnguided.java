@@ -5,6 +5,10 @@ import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 
+import com.example.jaycee.pomdpobjectsearch.imageprocessing.ObjectClassifier;
+import com.example.jaycee.pomdpobjectsearch.CameraSurface.ScreenReadRequest;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -12,14 +16,9 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
 {
     private static final String TAG = ActivityUnguided.class.getSimpleName();
 
-    private static final float MIN_CONF = 0.2f;
+    private static final float MIN_CONF = 0.3f;
 
     private TextToSpeech tts;
-
-    /* TODO:
-    Detect object in middle of screen
-    Add text to speech to read objects in middle on screen tap
-     */
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -75,17 +74,55 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
     }
 
     @Override
+    public void onNewFrame(com.google.ar.core.Frame frame)
+    {
+        super.onNewFrame(frame);
+
+        getMetrics().updateTimestamp(frame.getTimestamp());
+        getMetrics().updatePhonePose(frame.getAndroidSensorPose());
+
+        getMetrics().writeWifi();
+    }
+
+    @Override
+    public void setTarget(Objects.Observation target)
+    {
+        super.setTarget(target);
+        getMetrics().updateTarget(target);
+    }
+
+
+    @Override
     public void onScanComplete(List<ObjectClassifier.Recognition> results)
     {
         RectF centreOfScreen = new RectF(100, 100, 200, 200);
+        ArrayList<String> previousUtterances = new ArrayList<>();
+        ArrayList<Objects.Observation> validObservations = new ArrayList<>();
+
         for(ObjectClassifier.Recognition result : results)
         {
             Log.i(TAG, result.toString());
-            if(result.getConfidence() > MIN_CONF && centreOfScreen.contains(result.getLocation()))
+            if(result.getConfidence() > MIN_CONF && centreOfScreen.contains(result.getLocation()) && !previousUtterances.contains(result.getTitle()))
             {
+                Log.i(TAG, result.getObservation().getFileName() + getTarget().getFileName());
                 tts.speak(result.getTitle(), TextToSpeech.QUEUE_ADD, null, "");
+                previousUtterances.add(result.getTitle());
+                validObservations.add(result.getObservation());
+                if(result.getObservation() == getTarget())
+                {
+                    getVibrator().vibrate(350);
+                    setTarget(Objects.Observation.O_NOTHING);
+                }
                 Log.d(TAG, result.toString());
             }
+        }
+        if(validObservations.isEmpty())
+        {
+            getMetrics().updateObservation(Objects.Observation.O_NOTHING);
+        }
+        else
+        {
+            getMetrics().updateObservation(validObservations);
         }
     }
 }

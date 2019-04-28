@@ -14,6 +14,11 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
 {
     private static final String TAG = CameraSurface.class.getSimpleName();
 
+    public interface ScreenReadRequest
+    {
+        void onScreenTap();
+    }
+
     private Context context;
 
     private ScreenReadRequest screenReadRequest;

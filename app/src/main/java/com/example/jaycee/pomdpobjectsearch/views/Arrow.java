@@ -1,4 +1,4 @@
-package com.example.jaycee.pomdpobjectsearch;
+package com.example.jaycee.pomdpobjectsearch.views;
 
 import android.content.Context;
 import android.content.res.TypedArray;

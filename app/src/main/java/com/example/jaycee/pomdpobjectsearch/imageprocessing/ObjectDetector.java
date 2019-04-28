@@ -1,4 +1,4 @@
-package com.example.jaycee.pomdpobjectsearch;
+package com.example.jaycee.pomdpobjectsearch.imageprocessing;
 
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
@@ -31,7 +31,7 @@ public class ObjectDetector implements ObjectClassifier
     private static final float IMAGE_STD = 128.0f;
     private static final int NUM_THREADS = 4;
 
-    private Vector<String> labels = new Vector<String>();
+    private Vector<String> labels = new Vector<>();
 
     private int[] intValues;
     private float[][][] outputLocations;

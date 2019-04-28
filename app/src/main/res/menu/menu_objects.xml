@@ -4,26 +4,50 @@
         <item
             android:title="I AM A HACK" />
         <item
+            android:id="@+id/item_object_backpack"
+            android:title="Backpack" />
+        <item android:id="@+id/item_object_couch"
+            android:title="Couch" />
+        <item
+            android:id="@+id/item_object_chair"
+            android:title="Chair" />
+        <item
+            android:id="@+id/item_object_desk"
+            android:title="Desk" />
+        <item
+            android:id="@+id/item_object_door"
+            android:title="Door" />
+        <item
+            android:id="@+id/item_object_keyboard"
+            android:title="Computer Keyboard" />
+        <item
+            android:id="@+id/item_object_lamp"
+            android:title="Lamp" />
+        <item
+            android:id="@+id/item_object_laptop"
+            android:title="Laptop" />
+        <item
             android:id="@+id/item_object_monitor"
             android:title="Computer Monitor" />
         <item
             android:id="@+id/item_object_mouse"
             android:title="Computer Mouse" />
         <item
-            android:id="@+id/item_object_keyboard"
-            android:title="Computer Keyboard" />
-        <item
-            android:id="@+id/item_object_desk"
-            android:title="Desk" />
-        <item
             android:id="@+id/item_object_mug"
             android:title="Mug" />
         <item
-            android:id="@+id/item_object_office_supplies"
-            android:title="Office Supplies" />
+            android:id="@+id/item_object_plant"
+            android:title="Plant" />
+        <item
+            android:id="@+id/item_object_telephone"
+            android:title="Telephone" />
+        <item
+            android:id="@+id/item_object_whiteboard"
+            android:title="Whiteboard" />
         <item
             android:id="@+id/item_object_window"
             android:title="Window" />
+
     </group>
 
 </menu>

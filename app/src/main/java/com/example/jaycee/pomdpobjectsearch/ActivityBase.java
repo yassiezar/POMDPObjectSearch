@@ -1,16 +1,14 @@
 package com.example.jaycee.pomdpobjectsearch;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
+import android.content.Context;
 import android.media.Image;
 import android.os.Bundle;
-import android.os.DeadObjectException;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Vibrator;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -18,8 +16,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
-import com.example.jaycee.pomdpobjectsearch.helpers.ImageConverter;
+import com.example.jaycee.pomdpobjectsearch.imageprocessing.FrameHandler;
+import com.example.jaycee.pomdpobjectsearch.imageprocessing.FrameScanner;
+import com.example.jaycee.pomdpobjectsearch.imageprocessing.ImageConverter;
+import com.example.jaycee.pomdpobjectsearch.views.CentreView;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
 import com.google.ar.core.Session;
@@ -36,33 +38,25 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
 {
     private static final String TAG = ActivityBase.class.getSimpleName();
 
-    private static final int CAMERA_PERMISSION_CODE = 0;
-    private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
-
-    private static final int O_NOTHING = 0;
-    private static final int T_COMPUTER_MONITOR = 1;
-    private static final int T_COMPUTER_KEYBOARD = 2;
-    private static final int T_COMPUTER_MOUSE = 3;
-    private static final int T_DESK = 4;
-    private static final int T_MUG = 6;
-    private static final int T_OFFICE_SUPPLIES = 7;
-    private static final int T_WINDOW = 8;
-
-    protected int target = O_NOTHING;
+    private Objects.Observation target = Objects.Observation.O_NOTHING;
 
     protected CameraSurface surfaceView;
+
     private DrawerLayout drawerLayout;
     private CentreView centreView;
+    private FrameScanner frameScanner;
+    private ImageConverter imageConverter;
+
+    private Frame frame;
+    private Metrics metrics;
 
     private Handler backgroundHandler;
     private HandlerThread backgroundHandlerThread;
 
-    protected Session session;
-    protected Frame frame = Frame.getFrame();
+    private Vibrator vibrator;
 
-    private FrameScanner frameScanner;
-
-    private ImageConverter imageConverter;
+    private Session session;
+    private Toast toast;
 
     private boolean processingFrame = false;
     private boolean requestARCoreInstall = true;
@@ -89,31 +83,56 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
 
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener()
         {
+            Objects.Observation target;
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item)
             {
                 switch (item.getItemId())
                 {
-                    case R.id.item_object_mug:
-                        target = T_MUG;
+                    case R.id.item_object_backpack:
+                        target = Objects.Observation.T_BACKPACK;
+                        break;
+                    case R.id.item_object_chair:
+                        target = Objects.Observation.T_CHAIR;
+                        break;
+                    case R.id.item_object_couch:
+                        target = Objects.Observation.T_COUCH;
                         break;
                     case R.id.item_object_desk:
-                        target = T_DESK;
+                        target = Objects.Observation.T_DESK;
                         break;
-                    case R.id.item_object_office_supplies:
-                        target = T_OFFICE_SUPPLIES;
+                    case R.id.item_object_door:
+                        target = Objects.Observation.T_DOOR;
                         break;
                     case R.id.item_object_keyboard:
-                        target = T_COMPUTER_KEYBOARD;
+                        target = Objects.Observation.T_COMPUTER_KEYBOARD;
+                        break;
+                    case R.id.item_object_lamp:
+                        target = Objects.Observation.T_LAMP;
+                        break;
+                    case R.id.item_object_laptop:
+                        target = Objects.Observation.T_LAPTOP;
                         break;
                     case R.id.item_object_monitor:
-                        target = T_COMPUTER_MONITOR;
+                        target = Objects.Observation.T_COMPUTER_MONITOR;
                         break;
                     case R.id.item_object_mouse:
-                        target = T_COMPUTER_MOUSE;
+                        target = Objects.Observation.T_COMPUTER_MOUSE;
+                        break;
+                    case R.id.item_object_mug:
+                        target = Objects.Observation.T_MUG;
+                        break;
+                    case R.id.item_object_plant:
+                        target = Objects.Observation.T_PLANT;
+                        break;
+                    case R.id.item_object_telephone:
+                        target = Objects.Observation.T_TELEPHONE;
+                        break;
+                    case R.id.item_object_whiteboard:
+                        target = Objects.Observation.T_WHITEBOARD;
                         break;
                     case R.id.item_object_window:
-                        target = T_WINDOW;
+                        target = Objects.Observation.T_WINDOW;
                         break;
                 }
 
@@ -144,6 +163,22 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
     {
         super.onResume();
 
+        if(vibrator == null)
+        {
+            this.vibrator = (Vibrator)this.getSystemService(Context.VIBRATOR_SERVICE);
+        }
+
+        try
+        {
+            frame = Frame.create();
+        }
+        catch(AssertionError e)
+        {
+            frame = Frame.getInstance();
+        }
+
+        metrics = new Metrics();
+
         if(session == null)
         {
             try
@@ -157,11 +192,6 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
                         return;
                 }
 
-                if(!hasCameraPermission())
-                {
-                    requestCameraPermission();
-                    return;
-                }
                 session = new Session(this);
 
                 // Set config settings
@@ -229,17 +259,27 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
             finish();
         }
 
-        backgroundHandlerThread.quitSafely();
-        try
+        if(backgroundHandler != null)
         {
-            Log.i(TAG, "Closing detector thread");
-            backgroundHandlerThread.join();
-            backgroundHandlerThread = null;
-            backgroundHandler = null;
+            backgroundHandlerThread.quitSafely();
+            try
+            {
+                Log.i(TAG, "Closing detector thread");
+                backgroundHandlerThread.join();
+                backgroundHandlerThread = null;
+                backgroundHandler = null;
+            }
+            catch(InterruptedException e)
+            {
+                Log.e(TAG, "Exception onPause: " + e);
+            }
+
         }
-        catch(InterruptedException e)
+
+        if(vibrator != null)
         {
-            Log.e(TAG, "Exception onPause: " + e);
+            vibrator.cancel();
+            vibrator = null;
         }
 
         if(session != null)
@@ -280,32 +320,32 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
 
         Log.d(TAG, "Processing new frame");
 
-        // PERFORM DETECTION + INFERENCE
-        try
-        {
-            this.frame.getLock().lock();
-            com.google.ar.core.Frame arFrame = frame.getArFrame();
-            int[] imageBytes = imageConverter.getRgbBytes(arFrame.acquireCameraImage());
-            frameScanner.updateBitmap(imageBytes);
-        }
-        catch(DeadlineExceededException e)
-        {
-            Log.e(TAG, "Deadline exceeded for image");
-        }
-        catch(NotYetAvailableException e)
-        {
-            Log.e(TAG, "Camera not yet ready: " + e);
-        }
-        finally
-        {
-            this.frame.getLock().unlock();
-        }
-
         runInBackground(new Runnable()
         {
             @Override
             public void run()
             {
+                // PERFORM DETECTION + INFERENCE
+                try
+                {
+                    frame.getLock().lock();
+                    if(frame.isImageClosed())
+                    {
+                        Log.w(TAG, "Image is closed");
+                        return;
+                    }
+                    int[] imageBytes = imageConverter.getRgbBytes(frame.getImage());
+                    frameScanner.updateBitmap(imageBytes);
+                }
+                catch(DeadlineExceededException e)
+                {
+                    Log.e(TAG, String.format("Deadline exceeded for image"));
+                }
+                finally
+                {
+                    frame.getLock().unlock();
+                }
+
                 frameScanner.scanFrame();
                 processingFrame = false;
             }
@@ -318,22 +358,12 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
         try
         {
             this.frame.getLock().lock();
-            this.frame.setFrame(frame);
+            this.frame.updateFrame(frame);
         }
         finally
         {
             this.frame.getLock().unlock();
         }
-    }
-
-    public boolean hasCameraPermission()
-    {
-        return ContextCompat.checkSelfPermission(this, CAMERA_PERMISSION) == PackageManager.PERMISSION_GRANTED;
-    }
-
-    public void requestCameraPermission()
-    {
-        ActivityCompat.requestPermissions(this, new String[] {CAMERA_PERMISSION}, CAMERA_PERMISSION_CODE);
     }
 
     protected synchronized void runInBackground(final Runnable r)
@@ -348,9 +378,31 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
     {
         return centreView;
     }
+    public Session getSession() { return this.session; }
+    public Frame getFrame() { return this.frame; }
+    public Vibrator getVibrator() { return this.vibrator; }
+    public Metrics getMetrics() { return this.metrics; }
 
-    public void setTarget(int target) { }
+    public void setTarget(Objects.Observation target) { this.target = target; }
+    public Objects.Observation getTarget() { return this.target; }
 
     @Override
     public void onNewTimestamp(long timestamp) { }
+
+    public void displayToast(final String msg)
+    {
+        this.runInBackground(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                if(toast != null)
+                {
+                    toast.cancel();
+                }
+                toast = Toast.makeText(ActivityBase.this, msg, Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        });
+    }
 }

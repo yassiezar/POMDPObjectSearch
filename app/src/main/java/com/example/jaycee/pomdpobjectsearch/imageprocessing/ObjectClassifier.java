@@ -1,7 +1,9 @@
-package com.example.jaycee.pomdpobjectsearch;
+package com.example.jaycee.pomdpobjectsearch.imageprocessing;
 
 import android.graphics.Bitmap;
 import android.graphics.RectF;
+
+import com.example.jaycee.pomdpobjectsearch.Objects;
 
 import java.util.List;
 
@@ -10,13 +12,14 @@ public interface ObjectClassifier
     List<Recognition> recogniseImage(Bitmap bitmap);
     void close();
 
-    public class Recognition
+    class Recognition
     {
         private final String id;
         private final String title;
         private final Float confidence;
         private RectF location;
         private int code;
+        private Objects.Observation observation;
 
         public Recognition(final String id, final String title, final Float confidence, final RectF location)
         {
@@ -28,6 +31,28 @@ public interface ObjectClassifier
 
         public String getId() {
             return id;
+        }
+
+        public Objects.Observation getObservation()
+        {
+            switch(getCode())
+            {
+                case 1: return Objects.Observation.T_COMPUTER_MONITOR;
+                case 2: return Objects.Observation.T_COMPUTER_KEYBOARD;
+                case 3: return Objects.Observation.T_COMPUTER_MOUSE;
+                case 4: return Objects.Observation.T_DESK;
+                case 5: return Objects.Observation.T_LAPTOP;
+                case 6: return Objects.Observation.T_MUG;
+                case 8: return Objects.Observation.T_WINDOW;
+                case 9: return Objects.Observation.T_BACKPACK;
+                case 10: return Objects.Observation.T_CHAIR;
+                case 11: return Objects.Observation.T_COUCH;
+                case 12: return Objects.Observation.T_PLANT;
+                case 13: return Objects.Observation.T_TELEPHONE;
+                case 14: return Objects.Observation.T_WHITEBOARD;
+                case 15: return Objects.Observation.T_DOOR;
+                default: return Objects.Observation.O_NOTHING;
+            }
         }
 
         public int getCode()
