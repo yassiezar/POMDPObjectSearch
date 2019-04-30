@@ -218,7 +218,7 @@ public class ActivityGuided extends ActivityBase
             Log.i(TAG, "Target found");
 
             targetSet = false;
-            setTarget(O_NOTHING);
+//            setTarget(O_NOTHING);
             soundGenerator.stop();
             getVibrator().vibrate(350);
             surfaceView.getRenderer().setDrawWaypoint(false);

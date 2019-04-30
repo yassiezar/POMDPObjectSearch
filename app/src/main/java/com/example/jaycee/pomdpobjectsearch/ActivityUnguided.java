@@ -111,7 +111,7 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
                 if(result.getObservation() == getTarget())
                 {
                     getVibrator().vibrate(350);
-                    setTarget(Objects.Observation.O_NOTHING);
+                    // setTarget(Objects.Observation.O_NOTHING);
                 }
                 Log.d(TAG, result.toString());
             }

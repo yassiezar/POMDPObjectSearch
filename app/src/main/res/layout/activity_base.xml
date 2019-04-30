@@ -1,43 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v4.widget.DrawerLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".ActivityGuided"
-    android:id="@+id/layout_drawer_objects"
-    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
-    <RelativeLayout
+    android:layout_width="match_parent"
+    android:orientation="vertical">
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"  >
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
+        android:layout_height="?android:attr/actionBarSize"
+        android:background="?android:attr/colorPrimary"
+        app:layout_scrollFlags="scroll|enterAlways"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
+    <android.support.v4.widget.DrawerLayout
+        tools:context=".ActivityBase"
+        android:id="@+id/layout_drawer_objects"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="?android:attr/actionBarSize"
-            android:background="?android:attr/colorPrimary"
-            android:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
-        <com.example.jaycee.pomdpobjectsearch.CameraSurface
-            android:id="@+id/surfaceview"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:layout_below="@id/toolbar"
-            android:contentDescription="Drawing debug object" >
-        </com.example.jaycee.pomdpobjectsearch.CameraSurface>
-        <com.example.jaycee.pomdpobjectsearch.views.CentreView
+            android:layout_height="match_parent" >
+            <com.example.jaycee.pomdpobjectsearch.CameraSurface
+                android:id="@+id/surfaceview"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:contentDescription="Drawing debug object" >
+                <!--android:layout_below="@id/toolbar"-->
+            </com.example.jaycee.pomdpobjectsearch.CameraSurface>
+            <com.example.jaycee.pomdpobjectsearch.views.CentreView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:id="@+id/centre_view">
+            </com.example.jaycee.pomdpobjectsearch.views.CentreView>
+        </RelativeLayout>
+        <android.support.design.widget.NavigationView
+            android:id="@+id/navigation_view_objects"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:id="@+id/centre_view">
-        </com.example.jaycee.pomdpobjectsearch.views.CentreView>
-    </RelativeLayout>
-    <android.support.design.widget.NavigationView
-        android:id="@+id/navigation_view_objects"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:layout_below="@id/toolbar"
-        android:fitsSystemWindows="true"
-        app:menu="@menu/menu_objects" />
-</android.support.v4.widget.DrawerLayout>
+            android:layout_height="match_parent"
+            android:fitsSystemWindows="true"
+            android:layout_gravity="start"
+            app:menu="@menu/menu_objects" />
+        <!--android:layout_below="@id/toolbar"-->
+    </android.support.v4.widget.DrawerLayout>
+</LinearLayout>

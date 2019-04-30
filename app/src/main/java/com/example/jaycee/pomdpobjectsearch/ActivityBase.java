@@ -10,6 +10,7 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -41,6 +42,7 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
     protected CameraSurface surfaceView;
 
     private DrawerLayout drawerLayout;
+    private ActionBarDrawerToggle actionBarDrawerToggle;
     private CentreView centreView;
     private FrameScanner frameScanner;
     private ImageConverter imageConverter;
@@ -68,17 +70,23 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
-
         surfaceView = findViewById(R.id.surfaceview);
 
         centreView = findViewById(R.id.centre_view);
 
         drawerLayout = findViewById(R.id.layout_drawer_objects);
-        NavigationView navigationView = findViewById(R.id.navigation_view_objects);
 
+        actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open, R.string.close);
+        drawerLayout.addDrawerListener(actionBarDrawerToggle);
+        actionBarDrawerToggle.syncState();
+//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        // getSupportActionBar().setHomeButtonEnabled(true);
+
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
+
+        NavigationView navigationView = findViewById(R.id.navigation_view_objects);
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener()
         {
             Objects.Observation target;
@@ -132,10 +140,11 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
                     case R.id.item_object_window:
                         target = Objects.Observation.T_WINDOW;
                         break;
+                    default: target = null;
                 }
 
                 item.setCheckable(true);
-                setTarget(target);
+                if(target != null) setTarget(target);
 
                 drawerLayout.closeDrawers();
 
@@ -147,12 +156,10 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
-        switch (item.getItemId())
-        {
-            case android.R.id.home:
-                drawerLayout.openDrawer(GravityCompat.START);
-                return true;
-        }
+//            case android.R.id.home:
+//                drawerLayout.openDrawer(GravityCompat.START);
+//                return true;
+        if(actionBarDrawerToggle.onOptionsItemSelected(item)) return true;
         return super.onOptionsItemSelected(item);
     }
 
