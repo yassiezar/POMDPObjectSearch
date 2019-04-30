@@ -43,7 +43,8 @@ public interface ObjectClassifier
                 case 4: return Objects.Observation.T_DESK;
                 case 5: return Objects.Observation.T_LAPTOP;
                 case 6: return Objects.Observation.T_MUG;
-                case 8: return Objects.Observation.T_WINDOW;
+                case 7: return Objects.Observation.T_WINDOW;
+                case 8: return Objects.Observation.T_LAMP;
                 case 9: return Objects.Observation.T_BACKPACK;
                 case 10: return Objects.Observation.T_CHAIR;
                 case 11: return Objects.Observation.T_COUCH;
@@ -61,14 +62,23 @@ public interface ObjectClassifier
             if(title.equals("keyboard")) return 2;
             if(title.equals("mouse")) return 3;
             if(title.equals("desk")) return 4;
+            if(title.equals("laptop")) return 5;
             if(title.equals("mug")) return 6;
-            if(title.equals("supplies")) return 7;
-            if(title.equals("window")) return 8;
+            if(title.equals("window")) return 7;
+            if(title.equals("lamp")) return 8;
+            if(title.equals("backpack")) return 9;
+            if(title.equals("chair")) return 10;
+            if(title.equals("couch")) return 11;
+            if(title.equals("plant")) return 12;
+            if(title.equals("telephone")) return 13;
+            if(title.equals("whiteboard")) return 14;
+            if(title.equals("door")) return 15;
 
             return 0;
         }
 
-        public String getTitle() {
+        public String getTitle()
+        {
             return title;
         }
 

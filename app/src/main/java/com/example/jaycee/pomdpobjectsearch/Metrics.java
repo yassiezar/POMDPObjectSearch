@@ -94,10 +94,10 @@ public class Metrics
 
     private static class WifiDataSend extends AsyncTask<String, Void, Void>
     {
-        private String serverIdAddress = "10.5.42.29";
+        private String serverIdAddress = "10.42.0.1";
         private int connectionPort = 6666;
 
-        public WifiDataSend() { }
+        WifiDataSend() { }
 
         @Override
         protected Void doInBackground(String... strings)

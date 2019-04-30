@@ -41,7 +41,8 @@ public class SoundGenerator implements Runnable
     {
         if(soundGenerator != null)
         {
-            throw new AssertionError("Already initialised soundgenerator");
+            Log.w(TAG, "Already initialised soundgenerator");
+            return soundGenerator;
         }
         soundGenerator = new SoundGenerator(context);
         return soundGenerator;

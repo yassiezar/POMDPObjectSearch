@@ -1,6 +1,7 @@
 package com.example.jaycee.pomdpobjectsearch;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.example.jaycee.pomdpobjectsearch.helpers.VectorTools;
 import com.example.jaycee.pomdpobjectsearch.policy.Belief;
@@ -38,7 +39,8 @@ public class ActionGenerator
     {
         if(actionGenerator != null)
         {
-            throw new AssertionError("Already initialised action generator");
+            Log.w(TAG, "Already initialised action generator");
+            return actionGenerator;
         }
 
         actionGenerator = new ActionGenerator(context);

@@ -22,7 +22,7 @@ public class ActivityGuided extends ActivityBase
 {
     private static final String TAG = ActivityGuided.class.getSimpleName();
 
-    private static final float MIN_CONF = 0.3f;
+    private static final float MIN_CONF = 0.4f;
 
     private SoundGenerator soundGenerator;
 
@@ -182,7 +182,7 @@ public class ActivityGuided extends ActivityBase
     @Override
     public void onScanComplete(List<ObjectClassifier.Recognition> results)
     {
-        RectF centreOfScreen = new RectF(100, 100, 200, 200);
+        RectF centreOfScreen = new RectF(0, 0, 300, 300);
         List<ObjectClassifier.Recognition> validObservations = new ArrayList<>();
         for(ObjectClassifier.Recognition result : results)
         {
@@ -204,14 +204,14 @@ public class ActivityGuided extends ActivityBase
                 }
             });
             observation = validObservations.get(0).getObservation();
-            getMetrics().updateObservation(observation);
             Log.d(TAG, observation.getFileName());
-            displayToast(observation.getFriendlyName());
         }
         else
         {
             observation = O_NOTHING;
         }
+        getMetrics().updateObservation(observation);
+        displayToast(observation.getFriendlyName());
 
         if(observation == getTarget())
         {
