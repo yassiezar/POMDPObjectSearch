@@ -1,9 +1,12 @@
 #!/usr/bin/python3
 
-import socket, datetime, atexit
+import socket, datetime, atexit, argparse
 
-def get_filename():
-    return datetime.datetime.now().strftime("%Y-%m-%d_%I:%M:%S")	
+def get_filename(obj=None):
+    fstring = datetime.datetime.now().strftime("%Y-%m-%d_%I:%M:%S")	
+    if obj is not None:
+        fstring = obj + '_' + fstring 
+    return fstring
 
 host = "10.42.0.1"
 port = 6666
@@ -11,11 +14,17 @@ port = 6666
 print(host)
 print(port)
 
+parser = argparse.ArgumentParser(description='Record experiment data from wifi socket')
+parser.add_argument('object', metavar='o', type=str, nargs='?', help='the object being searched for')
+
+args = parser.parse_args()
+obj = args.object
+
 serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 serversocket.bind((host, port))
 
-f = open(get_filename() + '.csv', 'w')
+f = open(get_filename(obj) + '.csv', 'w')
 
 def close_socket():
     print('Closing Socket...')
