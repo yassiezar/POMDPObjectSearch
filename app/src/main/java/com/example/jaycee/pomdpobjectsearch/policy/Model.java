@@ -80,7 +80,8 @@ public class Model
     {
         if(model != null)
         {
-            throw new AssertionError("Already initialised model");
+            Log.w(TAG, "Already initialised model");
+            return model;
         }
 
         model = new Model(context);

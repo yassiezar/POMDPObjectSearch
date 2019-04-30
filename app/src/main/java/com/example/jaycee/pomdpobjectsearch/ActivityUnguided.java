@@ -16,7 +16,7 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
 {
     private static final String TAG = ActivityUnguided.class.getSimpleName();
 
-    private static final float MIN_CONF = 0.3f;
+    private static final float MIN_CONF = 0.4f;
 
     private TextToSpeech tts;
 
@@ -95,14 +95,14 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
     @Override
     public void onScanComplete(List<ObjectClassifier.Recognition> results)
     {
-        RectF centreOfScreen = new RectF(100, 100, 200, 200);
+        RectF centreOfScreen = new RectF(0, 0, 300, 300);
         ArrayList<String> previousUtterances = new ArrayList<>();
         ArrayList<Objects.Observation> validObservations = new ArrayList<>();
 
         for(ObjectClassifier.Recognition result : results)
         {
             Log.i(TAG, result.toString());
-            if(result.getConfidence() > MIN_CONF && centreOfScreen.contains(result.getLocation()) && !previousUtterances.contains(result.getTitle()))
+            if(result.getConfidence() > MIN_CONF && !previousUtterances.contains(result.getTitle()) && centreOfScreen.contains(result.getLocation()))
             {
                 Log.i(TAG, result.getObservation().getFileName() + getTarget().getFileName());
                 tts.speak(result.getTitle(), TextToSpeech.QUEUE_ADD, null, "");
