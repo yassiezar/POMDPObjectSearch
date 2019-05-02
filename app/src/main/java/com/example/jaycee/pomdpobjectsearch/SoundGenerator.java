@@ -132,7 +132,7 @@ public class SoundGenerator implements Runnable
             gain = -volumeGrad*(elevationAngle) + volumeMax;
         }
         Log.d(TAG, String.format("Gain %f elevation %f pitch %f", gain, elevationAngle, pitch));
-        JNIBridge.playSoundFF(gain, pitch*2);
+//        JNIBridge.playSoundFF(gain, pitch*2);
         if (!stopped) handler.postDelayed(this, SOUND_REFRESH_RATE);
     }
 

@@ -60,7 +60,6 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
         if(tts != null)
         {
             tts.shutdown();
-            tts.shutdown();
         }
 
         super.onPause();
