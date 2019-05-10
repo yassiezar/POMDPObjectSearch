@@ -4,23 +4,41 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
-    <uses-feature android:name="android.hardware.camera.ar" android:required="true" />
 
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <uses-feature
+        android:name="android.hardware.camera.ar"
+        android:required="true" />
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        android:name=".App"
         android:theme="@style/AppTheme">
-        <meta-data android:name="com.google.ar.core" android:value="required" />
-        <activity android:name=".ActivityCamera"
-            android:configChanges="orientation|screenSize">
+        <activity android:name=".ActivityEntry">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ActivityUnguided"
+            android:configChanges="orientation|screenSize"
+            android:parentActivityName=".ActivityEntry" >
+        </activity>
+        <activity
+            android:name=".ActivityGuided"
+            android:configChanges="orientation|screenSize"
+            android:parentActivityName=".ActivityEntry" >
+        </activity>
+        <meta-data
+            android:name="com.google.ar.core"
+            android:value="required" />
     </application>
 
 </manifest>

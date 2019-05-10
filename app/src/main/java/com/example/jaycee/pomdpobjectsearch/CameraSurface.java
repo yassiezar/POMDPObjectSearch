@@ -14,11 +14,20 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
 {
     private static final String TAG = CameraSurface.class.getSimpleName();
 
+    public interface ScreenReadRequest
+    {
+        void onScreenTap();
+    }
+
     private Context context;
+
+    private ScreenReadRequest screenReadRequest;
 
     private Session session;
 
     private SurfaceRenderer renderer;
+
+    private boolean screenTapEnabled = false;
 
     public CameraSurface(Context context, AttributeSet attrs)
     {
@@ -36,6 +45,11 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
         setEGLConfigChooser(8, 8, 8, 8, 16, 0);
         setRenderer(renderer);
         setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+    }
+
+    public void setScreenReadRequest(Context context)
+    {
+        this.screenReadRequest = (ScreenReadRequest)context;
     }
 
     @Override
@@ -59,8 +73,12 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
-        Log.i(TAG, "Pressed");
         final int action = event.getAction();
+
+        if(!screenTapEnabled)
+        {
+            return false;
+        }
 
         switch(action)
         {
@@ -70,6 +88,20 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
             }
         }
         return super.onTouchEvent(event);
+    }
+
+    @Override
+    public boolean performClick()
+    {
+        super.performClick();
+        // Read out object in view
+        screenReadRequest.onScreenTap();
+        return true;
+    }
+
+    public void enableScreenTap()
+    {
+        this.screenTapEnabled = true;
     }
 
     public SurfaceRenderer getRenderer()

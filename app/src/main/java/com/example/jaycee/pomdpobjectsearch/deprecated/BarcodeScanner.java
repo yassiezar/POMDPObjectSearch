@@ -1,4 +1,4 @@
-package com.example.jaycee.pomdpobjectsearch;
+package com.example.jaycee.pomdpobjectsearch.deprecated;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -11,6 +11,7 @@ import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
+@Deprecated
 public class BarcodeScanner implements Runnable
 {
     private static final String TAG = BarcodeScanner.class.getSimpleName();

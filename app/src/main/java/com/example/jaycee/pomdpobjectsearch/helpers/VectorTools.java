@@ -1,8 +1,12 @@
 package com.example.jaycee.pomdpobjectsearch.helpers;
 
-public class ClassHelpers
+import com.google.ar.core.Pose;
+
+import java.util.Locale;
+
+public class VectorTools
 {
-    private static final String TAG = ClassHelpers.class.getSimpleName();
+    private static final String TAG = VectorTools.class.getSimpleName();
 
     public static class mQuaternion
     {
@@ -206,5 +210,51 @@ public class ClassHelpers
         {
             return new float[] {-this.x, this.y, this.z};
         }
+
+        @Override
+        public String toString()
+        {
+            return String.format(Locale.UK, "x: %f y: %f z: %f", x, y, z);
+        }
+    }
+
+    public static class CameraVector
+    {
+        public static PanAndTilt getCameraVectorPanAndTilt(Pose phonePose)
+        {
+            PanAndTilt angles = new PanAndTilt();
+
+            float[] phoneRotationAngles = getCameraVector(phonePose).getEuler();
+            angles.tilt = phoneRotationAngles[1];
+            angles.pan = phoneRotationAngles[2];
+
+            return angles;
+        }
+
+        public static PanAndTilt getCameraVectorPanAndTilt(mVector cameraVector)
+        {
+            PanAndTilt angles = new PanAndTilt();
+
+            float[] phoneRotationAngles = cameraVector.getEuler();
+            angles.tilt = phoneRotationAngles[1];
+            angles.pan = phoneRotationAngles[2];
+
+            return angles;
+        }
+
+        public static mVector getCameraVector(Pose phonePose)
+        {
+            mQuaternion phoneRotationQuaternion = new mQuaternion(phonePose.getRotationQuaternion());
+            phoneRotationQuaternion.normalise();
+            mVector cameraVector = new mVector(0.f, 0.f, 1.f);
+            cameraVector.rotateByQuaternion(phoneRotationQuaternion);
+
+            return cameraVector;
+        }
+    }
+
+    public static class PanAndTilt
+    {
+        public double pan, tilt;
     }
 }

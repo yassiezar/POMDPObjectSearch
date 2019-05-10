@@ -6,15 +6,8 @@
         <item
             android:id="@+id/item_object_backpack"
             android:title="Backpack" />
-        <item
-            android:id="@+id/item_object_book"
-            android:title="Book" />
-        <item
-            android:id="@+id/item_object_bookcase"
-            android:title="Bookcase" />
-        <item
-            android:id="@+id/item_object_chair"
-            android:title="Chair" />
+        <item android:id="@+id/item_object_couch"
+            android:title="Couch" />
         <item
             android:id="@+id/item_object_desk"
             android:title="Desk" />
@@ -22,8 +15,11 @@
             android:id="@+id/item_object_door"
             android:title="Door" />
         <item
-            android:id="@+id/item_object_keyboard"
-            android:title="Computer Keyboard" />
+            android:id="@+id/item_object_bookcase"
+            android:title="Bookcase" />
+        <item
+            android:id="@+id/item_object_chair"
+            android:title="Chair" />
         <item
             android:id="@+id/item_object_lamp"
             android:title="Lamp" />
@@ -31,14 +27,17 @@
             android:id="@+id/item_object_laptop"
             android:title="Laptop" />
         <item
-            android:id="@+id/item_object_lightswitch"
-            android:title="Lightswitch" />
-        <item
             android:id="@+id/item_object_monitor"
             android:title="Computer Monitor" />
         <item
             android:id="@+id/item_object_mouse"
             android:title="Computer Mouse" />
+        <item
+            android:id="@+id/item_object_keyboard"
+            android:title="Computer Keyboard" />
+        <item
+            android:id="@+id/item_object_lightswitch"
+            android:title="Lightswitch" />
         <item
             android:id="@+id/item_object_mug"
             android:title="Mug" />

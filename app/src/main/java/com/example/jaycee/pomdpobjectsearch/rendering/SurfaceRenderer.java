@@ -6,9 +6,9 @@ import android.opengl.GLSurfaceView;
 import android.util.Log;
 import android.view.WindowManager;
 
-import com.example.jaycee.pomdpobjectsearch.ActivityCamera;
+import com.example.jaycee.pomdpobjectsearch.ActivityGuided;
 import com.example.jaycee.pomdpobjectsearch.CameraSurface;
-import com.example.jaycee.pomdpobjectsearch.NewFrameHandler;
+import com.example.jaycee.pomdpobjectsearch.imageprocessing.FrameHandler;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
@@ -32,7 +32,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     private BackgroundRenderer backgroundRenderer;
     private ObjectRenderer waypointRenderer;
 
-    private NewFrameHandler frameHandler;
+    private FrameHandler frameHandler;
 
     private int width, height;
 
@@ -48,7 +48,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     {
         this.context = context;
         this.surfaceView = surfaceView;
-        this.frameHandler = (NewFrameHandler)context;
+        this.frameHandler = (FrameHandler)context;
 
         this.scannerWidth = 525;
         this.scannerHeight = 525;
@@ -60,7 +60,8 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
 
     public void init()
     {
-        backgroundRenderer = new BackgroundRenderer(scannerX, scannerY, scannerWidth, scannerHeight);
+//        backgroundRenderer = new BackgroundRenderer(scannerX, scannerY, scannerWidth, scannerHeight);
+        backgroundRenderer = new BackgroundRenderer();
         waypointRenderer = new ObjectRenderer();
     }
 
@@ -146,17 +147,17 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
             // Update the debug object
             if(camera.getTrackingState() == TrackingState.TRACKING && drawWaypoint)
             {
-                Pose waypointPose = ((ActivityCamera)context).getWaypointAnchor().getPose();
+                Pose waypointPose = ((ActivityGuided)context).getWaypointPose();
 
                 // Draw the waypoints as an Andyman
                 waypointPose.toMatrix(anchorMatrix, 0);
                 waypointRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
                 waypointRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
             }
-            else
+/*            else
             {
                 Log.d(TAG, "Camera not tracking or target not set. ");
-            }
+            }*/
         }
         catch(CameraNotAvailableException e)
         {
@@ -168,6 +169,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         }
     }
 
+    @Deprecated
     public IntBuffer getCurrentFrameBuffer()
     {
         try

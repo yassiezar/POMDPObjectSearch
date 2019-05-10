@@ -10,7 +10,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.net.ConnectException;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class Metrics
 {
@@ -23,25 +25,25 @@ public class Metrics
     private double targetX, targetY, targetZ;
     private double phoneX, phoneY, phoneZ;
     private double phoneQx, phoneQy, phoneQz, phoneQw;
-    private long observation, targetObservation, target;
+    private String observation, target;
 
     public void writeWifi()
     {
-        String wifiString = String.valueOf(timestamp) + DELIMITER +
-                String.valueOf(observation) + DELIMITER +
-                String.valueOf(targetObservation) + DELIMITER +
-                String.valueOf(target) + DELIMITER +
-                String.valueOf(targetX) + DELIMITER +
-                String.valueOf(targetY) + DELIMITER +
-                String.valueOf(targetZ) + DELIMITER +
-                String.valueOf(phoneX) + DELIMITER +
-                String.valueOf(phoneY) + DELIMITER +
-                String.valueOf(phoneZ) + DELIMITER +
-                String.valueOf(phoneQx) + DELIMITER +
-                String.valueOf(phoneQy) + DELIMITER +
-                String.valueOf(phoneQz) + DELIMITER +
-                String.valueOf(phoneQw) + DELIMITER;
+        String wifiString = timestamp + DELIMITER +
+                observation + DELIMITER +
+                target + DELIMITER +
+                targetX + DELIMITER +
+                targetY + DELIMITER +
+                targetZ + DELIMITER +
+                phoneX + DELIMITER +
+                phoneY + DELIMITER +
+                phoneZ + DELIMITER +
+                phoneQx + DELIMITER +
+                phoneQy + DELIMITER +
+                phoneQz + DELIMITER +
+                phoneQw + DELIMITER;
 
+        Log.d(TAG, "Wifi output: " + wifiString);
         if(dataStreamer == null ||
                 dataStreamer.getStatus() != AsyncTask.Status.RUNNING)
         {
@@ -52,7 +54,7 @@ public class Metrics
 
     public void updateTimestamp(double timestamp) { this.timestamp = timestamp; }
 
-    public void updateTargetPosition(Pose pose)
+    public void updateWaypointPosition(Pose pose)
     {
         float[] pos = pose.getTranslation();
 
@@ -61,34 +63,42 @@ public class Metrics
         targetZ = pos[2];
     }
 
-    public void updatePhonePosition(Pose pose)
+    public void updatePhonePose(Pose pose)
     {
+
+        float[] q = pose.getRotationQuaternion();
         float[] pos = pose.getTranslation();
+
+        phoneQx = q[0];
+        phoneQy = q[1];
+        phoneQz = q[2];
+        phoneQw = q[3];
 
         phoneX = pos[0];
         phoneY = pos[1];
         phoneZ = pos[2];
     }
 
-    public void updatePhoneOrientation(Pose pose)
+    public void updateObservation(Objects.Observation observation) { this.observation = String.valueOf(observation.getCode()); }
+    public void updateObservation(ArrayList<Objects.Observation> observations)
     {
-        float[] q = pose.getRotationQuaternion();
-
-        phoneQx = q[0];
-        phoneQy = q[1];
-        phoneQz = q[2];
-        phoneQw = q[3];
+        StringBuilder stringBuilder = new StringBuilder();
+        for(Objects.Observation obs : observations)
+        {
+            stringBuilder.append(obs.getCode()).append(";");
+        }
+        this.observation = stringBuilder.toString();
     }
-
-    public void updateObservation(long observation) { this.observation = observation; }
-    public void updateTarget (long target) { this.target = target; }
+    public void updateObservation(long observation) { this.observation = String.valueOf(observation); }
+    public void updateTarget (Objects.Observation target) { this.target = String.valueOf(target.getCode()); }
+    public void updateTarget (long target) { this.target = String.valueOf(target); }
 
     private static class WifiDataSend extends AsyncTask<String, Void, Void>
     {
-        private String serverIdAddress = "10.5.42.29";
+        private String serverIdAddress = "10.42.0.1";
         private int connectionPort = 6666;
 
-        public WifiDataSend() { }
+        WifiDataSend() { }
 
         @Override
         protected Void doInBackground(String... strings)
@@ -116,6 +126,10 @@ public class Metrics
                 writer.close();
 
                 socket.close();
+            }
+            catch(ConnectException e)
+            {
+                Log.w(TAG, "WiFi connect error. Likely not connected to wifi network");
             }
             catch(IOException e)
             {

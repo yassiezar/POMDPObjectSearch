@@ -1,4 +1,4 @@
-package com.example.jaycee.pomdpobjectsearch;
+package com.example.jaycee.pomdpobjectsearch.views;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -8,6 +8,8 @@ import android.graphics.Path;
 import android.graphics.Point;
 import android.util.AttributeSet;
 import android.view.View;
+
+import com.example.jaycee.pomdpobjectsearch.R;
 
 public class Arrow extends View
 {

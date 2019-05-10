@@ -1,8 +1,9 @@
-package com.example.jaycee.pomdpobjectsearch.rendering;
+package com.example.jaycee.pomdpobjectsearch.deprecated.rendering;
 
-import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
+import com.example.jaycee.pomdpobjectsearch.helpers.VectorTools;
 import com.google.ar.core.Pose;
 
+@Deprecated
 public class ARObject
 {
     private static final float ANGLE_INTERVAL = 12f;
@@ -38,9 +39,9 @@ public class ARObject
         float[] rotation = devicePose.getRotationQuaternion();
         float[] centre = this.pose.getTranslation();
 
-        ClassHelpers.mQuaternion phoneRotationQuaternion = new ClassHelpers.mQuaternion(devicePose.getRotationQuaternion());
+        VectorTools.mQuaternion phoneRotationQuaternion = new VectorTools.mQuaternion(devicePose.getRotationQuaternion());
         phoneRotationQuaternion.normalise();
-        ClassHelpers.mVector objectVector = new ClassHelpers.mVector(centre);
+        VectorTools.mVector objectVector = new VectorTools.mVector(centre);
         objectVector.rotateByQuaternion(phoneRotationQuaternion);
         objectVector.normalise();
 
