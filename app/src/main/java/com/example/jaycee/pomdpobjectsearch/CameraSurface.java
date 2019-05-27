@@ -15,16 +15,16 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     private static final String TAG = CameraSurface.class.getSimpleName();
 
     private Context context;
-
     private Session session;
-
     private SurfaceRenderer renderer;
+    private BarcodeListener barcodeListener;
 
     public CameraSurface(Context context, AttributeSet attrs)
     {
         super(context, attrs);
 
         this.context = context;
+        this.barcodeListener = (BarcodeListener)context;
 
         renderer = new SurfaceRenderer(context, this);
 
@@ -48,17 +48,17 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height)
     {
         super.surfaceChanged(surfaceHolder, format, width, height);
-        ((ActivityCamera)context).startBarcodeScanner();
+        barcodeListener.onBarcodeScannerStart();
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder surfaceHolder)
     {
         super.surfaceDestroyed(surfaceHolder);
-        ((ActivityCamera)context).stopBarcodeScanner();
+        barcodeListener.onBarcodeScannerStop();
     }
 
-    @Override
+/*    @Override
     public boolean onTouchEvent(MotionEvent event)
     {
         Log.i(TAG, "Pressed");
@@ -82,7 +82,7 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
         renderer.toggleDrawObjects();
 
         return true;
-    }
+    }*/
 
     public SurfaceRenderer getRenderer()
     {

@@ -26,7 +26,7 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
-public class ActivityCamera extends AppCompatActivity
+public class ActivityCamera extends AppCompatActivity implements BarcodeListener
 {
     private static final String TAG = ActivityCamera.class.getSimpleName();
 
@@ -242,33 +242,8 @@ public class ActivityCamera extends AppCompatActivity
     }
 
     public void requestCameraPermission()
-    {
+   {
         ActivityCompat.requestPermissions(this, new String[] {CAMERA_PERMISSION}, CAMERA_PERMISSION_CODE);
-    }
-
-    public void stopBarcodeScanner()
-    {
-        if(barcodeScanner != null)
-        {
-            barcodeScanner.stop();
-            barcodeScanner = null;
-        }
-    }
-
-    public void startBarcodeScanner()
-    {
-        barcodeScanner = new BarcodeScanner(this, 525, 525, surfaceView.getRenderer());
-        barcodeScanner.run();
-    }
-
-    public int currentBarcodeScan()
-    {
-        if(barcodeScanner != null)
-        {
-            return barcodeScanner.getCode();
-        }
-
-        return O_NOTHING;
     }
 
     public Anchor getWaypointAnchor()
@@ -280,5 +255,33 @@ public class ActivityCamera extends AppCompatActivity
     public CentreView getCentreView()
     {
         return centreView;
+    }
+
+    @Override
+    public long onBarcodeScan()
+    {
+        if(barcodeScanner != null)
+        {
+            return barcodeScanner.getCode();
+        }
+
+        return O_NOTHING;
+    }
+
+    @Override
+    public void onBarcodeScannerStart()
+    {
+        barcodeScanner = new BarcodeScanner(this, 525, 525, surfaceView.getRenderer());
+        barcodeScanner.run();
+    }
+
+    @Override
+    public void onBarcodeScannerStop()
+    {
+        if(barcodeScanner != null)
+        {
+            barcodeScanner.stop();
+            barcodeScanner = null;
+        }
     }
 }

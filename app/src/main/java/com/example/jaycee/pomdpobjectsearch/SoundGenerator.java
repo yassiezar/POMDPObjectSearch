@@ -58,11 +58,13 @@ public class SoundGenerator implements Runnable
     private boolean targetSet = false;
     private boolean targetFound = false;
 
+    private BarcodeListener barcodeListener;
 
     SoundGenerator(Context context, SurfaceRenderer renderer)
     {
         this.context = context;
         this.renderer = renderer;
+        this.barcodeListener = (BarcodeListener)context;
 
         this.vibrator= (Vibrator)context.getSystemService(Context.VIBRATOR_SERVICE);
     }
@@ -92,7 +94,7 @@ public class SoundGenerator implements Runnable
             return;
         }
 
-        setObservation(((ActivityCamera)context).currentBarcodeScan());
+        setObservation(barcodeListener.onBarcodeScan());
 
         float gain = 1.f;
         if(observation == target)
