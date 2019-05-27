@@ -10,12 +10,16 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 
-import com.google.ar.core.Anchor;
+import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
+import com.example.jaycee.pomdpobjectsearch.mdptools.GuidanceInterface;
+import com.example.jaycee.pomdpobjectsearch.mdptools.GuidanceManager;
+import com.example.jaycee.pomdpobjectsearch.mdptools.Waypoint;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
 import com.google.ar.core.Session;
@@ -26,7 +30,7 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
-public class ActivityCamera extends AppCompatActivity implements BarcodeListener
+public class ActivityCamera extends AppCompatActivity implements BarcodeListener, GuidanceInterface
 {
     private static final String TAG = ActivityCamera.class.getSimpleName();
 
@@ -51,6 +55,8 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
 
     private SoundGenerator soundGenerator;
     private BarcodeScanner barcodeScanner;
+
+    private GuidanceManager guidanceManager;
 
     private boolean requestARCoreInstall = true;
 
@@ -105,8 +111,10 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
                         break;
                 }
 
+                onGuidanceStart(target);
+
                 soundGenerator.setTarget(target);
-                soundGenerator.markOffsetPose();
+/*                soundGenerator.markOffsetPose();*/
                 item.setCheckable(true);
 
                 drawerLayout.closeDrawers();
@@ -242,14 +250,8 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
     }
 
     public void requestCameraPermission()
-   {
-        ActivityCompat.requestPermissions(this, new String[] {CAMERA_PERMISSION}, CAMERA_PERMISSION_CODE);
-    }
-
-    public Anchor getWaypointAnchor()
     {
-        /* TODO: Handle nullpointer crash here */
-        return soundGenerator.getWaypointAnchor();
+        ActivityCompat.requestPermissions(this, new String[] {CAMERA_PERMISSION}, CAMERA_PERMISSION_CODE);
     }
 
     public CentreView getCentreView()
@@ -283,5 +285,88 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
             barcodeScanner.stop();
             barcodeScanner = null;
         }
+    }
+
+    @Override
+    public void onNewPoseAvailable()
+    {
+        guidanceManager.updateDevicePose(surfaceView.getRenderer().getDevicePose());
+    }
+
+/*    @Override
+    public void onUpdateWaypoint(long action)
+    {
+        waypoint.updateWaypoint(action, session);
+    }*/
+
+    @Override
+    public void onGuidanceStart(int target)
+    {
+        guidanceManager = new GuidanceManager(session, surfaceView.getRenderer().getDevicePose(), ActivityCamera.this, target);
+    }
+
+    @Override
+    public void onGuidanceEnd()
+    {
+        guidanceManager.end();
+    }
+
+    @Override
+    public boolean onWaypointReached()
+    {
+        return guidanceManager.waypointReached();
+    }
+
+    @Override
+    public void onGuidanceRequested(long observation)
+    {
+        guidanceManager.provideGuidance(session, observation);
+    }
+
+    @Override
+    public void onPlaySound()
+    {
+        float gain = 1.f;
+
+        float pitch;
+        // From config file; HI setting
+        int pitchHighLim = 12;
+        int pitchLowLim = 6;
+
+        // Compensate for the Tango's default position being 90deg upright
+        // tilt = waypoint  - phone
+        float deviceTilt = guidanceManager.getCameraVector()[1];
+        ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(guidanceManager.getWaypointPose().getTranslation());
+        float waypointTilt = waypointVector.getEuler()[1];
+
+        float tilt = waypointTilt -deviceTilt;
+
+        if(tilt >= Math.PI / 2)
+        {
+            pitch = (float)(Math.pow(2, 64));
+        }
+
+        else if(tilt <= -Math.PI / 2)
+        {
+            pitch = (float)(Math.pow(2, pitchHighLim));
+        }
+
+        else
+        {
+            double gradientAngle = Math.toDegrees(Math.atan((pitchHighLim - pitchLowLim) / Math.PI));
+
+            float grad = (float)(Math.tan(Math.toRadians(gradientAngle)));
+            float intercept = (float)(pitchHighLim - Math.PI / 2 * grad);
+
+            pitch = (float)(Math.pow(2, grad * -tilt + intercept));
+        }
+
+        JNIBridge.playSound(guidanceManager.getWaypointPose().getTranslation(), guidanceManager.getCameraVector(), gain, pitch);
+
+/*        metrics.updateTargetPosition(waypoint.getPose());
+        metrics.updatePhoneOrientation(phonePose);
+        metrics.updatePhonePosition(phonePose);
+        metrics.updateTimestamp(renderer.getTimestamp());
+        metrics.writeWifi();*/
     }
 }

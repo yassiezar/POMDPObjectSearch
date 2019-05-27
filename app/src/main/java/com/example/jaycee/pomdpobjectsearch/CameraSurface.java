@@ -14,7 +14,6 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
 {
     private static final String TAG = CameraSurface.class.getSimpleName();
 
-    private Context context;
     private Session session;
     private SurfaceRenderer renderer;
     private BarcodeListener barcodeListener;
@@ -23,7 +22,6 @@ public class CameraSurface extends GLSurfaceView implements SurfaceHolder.Callba
     {
         super(context, attrs);
 
-        this.context = context;
         this.barcodeListener = (BarcodeListener)context;
 
         renderer = new SurfaceRenderer(context, this);

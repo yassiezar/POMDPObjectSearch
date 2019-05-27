@@ -1,6 +1,8 @@
 package com.example.jaycee.pomdpobjectsearch.helpers;
 
-public class ClassHelpers
+import com.google.ar.core.Pose;
+
+public final class ClassHelpers
 {
     private static final String TAG = ClassHelpers.class.getSimpleName();
 
@@ -206,5 +208,18 @@ public class ClassHelpers
         {
             return new float[] {-this.x, this.y, this.z};
         }
+
+    }
+
+    public static mVector getCameraVector(Pose pose)
+    {
+        // Get rotation angles and convert to pan/tilt angles
+        // Start by rotating vector by quaternion (camera vector = -z)
+        mQuaternion phoneRotationQuaternion = new mQuaternion(pose.getRotationQuaternion());
+        phoneRotationQuaternion.normalise();
+        ClassHelpers.mVector vector = new ClassHelpers.mVector(0.f, 0.f, 1.f);
+        vector.rotateByQuaternion(phoneRotationQuaternion);
+
+        return vector;
     }
 }
