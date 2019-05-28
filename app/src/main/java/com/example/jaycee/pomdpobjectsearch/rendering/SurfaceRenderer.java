@@ -167,16 +167,18 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
                 if(drawWaypoint)
                 {
                     Pose waypointPose = guidanceInterface.onDrawWaypoint();
-
-                    // Draw the waypoints as an Andyman
-                    waypointPose.toMatrix(anchorMatrix, 0);
-                    waypointRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
-                    waypointRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
+                    if(waypointPose != null)
+                    {
+                        // Draw the waypoints as an Andyman
+                        waypointPose.toMatrix(anchorMatrix, 0);
+                        waypointRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
+                        waypointRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
+                    }
                 }
             }
             else
             {
-                Log.d(TAG, "Camera not tracking or target not set. ");
+                Log.v(TAG, "Camera not tracking or target not set. ");
             }
 
             // Indicate renderer is ready after first frame is drawn

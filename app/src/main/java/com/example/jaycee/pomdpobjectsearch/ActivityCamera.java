@@ -16,7 +16,6 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.WindowManager;
 
-import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
 import com.example.jaycee.pomdpobjectsearch.mdptools.GuidanceInterface;
 import com.example.jaycee.pomdpobjectsearch.mdptools.GuidanceManager;
 import com.google.ar.core.ArCoreApk;
@@ -203,7 +202,7 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
     @Override
     protected void onPause()
     {
-        if(barcodeScanner != null)
+/*        if(barcodeScanner != null)
         {
             barcodeScanner.stop();
             barcodeScanner = null;
@@ -213,7 +212,10 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
         {
             guidanceManager.end();
             guidanceManager = null;
-        }
+        }*/
+
+        onBarcodeScannerStop();
+        onGuidanceEnd();
 
         if(soundGenerator != null)
         {
@@ -288,7 +290,10 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
     @Override
     public void onNewPoseAvailable()
     {
-        guidanceManager.updateDevicePose(devicePose);
+        if(guidanceManager != null)
+        {
+            guidanceManager.updateDevicePose(devicePose);
+        }
     }
 
     @Override
@@ -300,71 +305,68 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
     @Override
     public void onGuidanceEnd()
     {
-        guidanceManager.end();
+        if(guidanceManager != null)
+        {
+            guidanceManager.end();
+            guidanceManager = null;
+        }
     }
 
     @Override
     public boolean onWaypointReached()
     {
-        return guidanceManager.waypointReached();
+        if(guidanceManager != null)
+        {
+            return guidanceManager.waypointReached();
+        }
+
+        return false;
     }
 
     @Override
     public void onGuidanceRequested(long observation)
     {
-        guidanceManager.provideGuidance(session, observation);
+        if(guidanceManager != null)
+        {
+            guidanceManager.provideGuidance(session, observation);
+        }
     }
 
     @Override
     public Pose onDrawWaypoint()
     {
-        return guidanceManager.getWaypointPose();
+        if(guidanceManager != null)
+        {
+            return guidanceManager.getWaypointPose();
+        }
+        return null;
     }
 
     @Override
-    public void onPlaySound()
+    public Pose onWaypointPoseRequested()
     {
-        float gain = 1.f;
-
-        float pitch;
-        // From config file; HI setting
-        int pitchHighLim = 12;
-        int pitchLowLim = 6;
-
-        // Compensate for the Tango's default position being 90deg upright
-        float deviceTilt = guidanceManager.getCameraVector()[1];
-        ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(guidanceManager.getWaypointPose().getTranslation());
-        float waypointTilt = waypointVector.getEuler()[1];
-
-        float tilt = waypointTilt -deviceTilt;
-
-        if(tilt >= Math.PI / 2)
+        if(guidanceManager != null)
         {
-            pitch = (float)(Math.pow(2, 64));
+            return guidanceManager.getWaypointPose();
+        }
+        return null;
+    }
+
+    @Override
+    public Pose onDevicePoseRequested()
+    {
+        return devicePose;
+    }
+
+    @Override
+    public float[] onCameraVectorRequested()
+    {
+        if(guidanceManager != null)
+        {
+            return guidanceManager.getCameraVector();
         }
 
-        else if(tilt <= -Math.PI / 2)
-        {
-            pitch = (float)(Math.pow(2, pitchHighLim));
-        }
-
-        else
-        {
-            double gradientAngle = Math.toDegrees(Math.atan((pitchHighLim - pitchLowLim) / Math.PI));
-
-            float grad = (float)(Math.tan(Math.toRadians(gradientAngle)));
-            float intercept = (float)(pitchHighLim - Math.PI / 2 * grad);
-
-            pitch = (float)(Math.pow(2, grad * -tilt + intercept));
-        }
-
-        JNIBridge.playSound(guidanceManager.getWaypointPose().getTranslation(), guidanceManager.getCameraVector(), gain, pitch);
-
-/*        metrics.updateTargetPosition(waypoint.getPose());
-        metrics.updatePhoneOrientation(phonePose);
-        metrics.updatePhonePosition(phonePose);
-        metrics.updateTimestamp(renderer.getTimestamp());
-        metrics.writeWifi();*/
+        return null;
     }
 
     @Override

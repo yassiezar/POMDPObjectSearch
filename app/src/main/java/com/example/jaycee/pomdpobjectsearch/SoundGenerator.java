@@ -1,7 +1,9 @@
 package com.example.jaycee.pomdpobjectsearch;
 
+import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
 import com.example.jaycee.pomdpobjectsearch.mdptools.GuidanceInterface;
 import com.example.jaycee.pomdpobjectsearch.rendering.SurfaceRenderer;
+import com.google.ar.core.Pose;
 
 import android.content.Context;
 import android.os.Handler;
@@ -79,18 +81,63 @@ public class SoundGenerator implements Runnable
             guidanceInterface.onGuidanceEnd();
         }
 
-        guidanceInterface.onNewPoseAvailable();
-        long newCameraObservation = this.observation;
-
-        if(guidanceInterface.onWaypointReached() || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
+        if(!stop)
         {
-            prevCameraObservation = newCameraObservation;
-            guidanceInterface.onGuidanceRequested(newCameraObservation);
-            Log.i(TAG, "Setting new waypoint");
-        }
+            guidanceInterface.onNewPoseAvailable();
+            long newCameraObservation = this.observation;
 
-        guidanceInterface.onPlaySound();
-        if(!stop) handler.postDelayed(this, 40);
+            if(guidanceInterface.onWaypointReached() || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
+            {
+                prevCameraObservation = newCameraObservation;
+                guidanceInterface.onGuidanceRequested(newCameraObservation);
+                Log.i(TAG, "Setting new waypoint");
+            }
+
+            float gain = 1.f;
+
+            float pitch;
+            // From config file; HI setting
+            int pitchHighLim = 12;
+            int pitchLowLim = 6;
+
+            // Compensate for the Tango's default position being 90deg upright
+            float[] deviceOrientation = guidanceInterface.onCameraVectorRequested();
+            float deviceTilt = deviceOrientation[1];
+            Pose waypointPose = guidanceInterface.onWaypointPoseRequested();
+            ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(waypointPose.getTranslation());
+            float waypointTilt = waypointVector.getEuler()[1];
+
+            float tilt = waypointTilt -deviceTilt;
+
+            if(tilt >= Math.PI / 2)
+            {
+                pitch = (float)(Math.pow(2, 64));
+            }
+
+            else if(tilt <= -Math.PI / 2)
+            {
+                pitch = (float)(Math.pow(2, pitchHighLim));
+            }
+
+            else
+            {
+                double gradientAngle = Math.toDegrees(Math.atan((pitchHighLim - pitchLowLim) / Math.PI));
+
+                float grad = (float)(Math.tan(Math.toRadians(gradientAngle)));
+                float intercept = (float)(pitchHighLim - Math.PI / 2 * grad);
+
+                pitch = (float)(Math.pow(2, grad * -tilt + intercept));
+            }
+
+            JNIBridge.playSound(waypointPose.getTranslation(), deviceOrientation, gain, pitch);
+
+/*        metrics.updateTargetPosition(waypointPose);
+        metrics.updatePhoneOrientation(guidanceInterface.onDevicePoseRequested());
+        metrics.updatePhonePosition(guidanceInterface.onDevicePoseRequested());
+        metrics.updateTimestamp(renderer.getTimestamp());
+        metrics.writeWifi();*/
+            if(!stop) handler.postDelayed(this, 40);
+        }
     }
 
 
