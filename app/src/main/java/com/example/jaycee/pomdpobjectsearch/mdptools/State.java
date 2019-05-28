@@ -4,7 +4,7 @@ import static com.example.jaycee.pomdpobjectsearch.mdptools.Params.ANGLE_INTERVA
 import static com.example.jaycee.pomdpobjectsearch.mdptools.Params.GRID_SIZE_TILT;
 import static com.example.jaycee.pomdpobjectsearch.mdptools.Params.GRID_SIZE_PAN;
 
-public class State
+class State
 {
     private static final String TAG = State.class.getSimpleName();
 
@@ -24,7 +24,7 @@ public class State
     private int[] panHistory = new int[GRID_SIZE_PAN];
     private int[] tiltHistory = new int[GRID_SIZE_TILT];
 
-    public State()
+    State()
     {
         for(int i = 0; i < GRID_SIZE_PAN; i ++)
         {
@@ -36,7 +36,7 @@ public class State
         }
     }
 
-    public long getDecodedState()
+    long getDecodedState()
     {
         long state = 0;
         long multiplier = 1;
@@ -50,7 +50,7 @@ public class State
         return state;
     }
 
-    public long[] getEncodedState()
+    long[] getEncodedState()
     {
         long[] stateVector = new long[3];
         long state = this.state;
@@ -64,7 +64,7 @@ public class State
         return stateVector;
     }
 
-    public void addObservation(long observation, float fpan, float ftilt)
+    void addObservation(long observation, float fpan, float ftilt)
     {
         // Origin is top right, not bottom left
         int pan = (int)((Math.floor(Math.toDegrees(fpan)/ANGLE_INTERVAL)) + GRID_SIZE_PAN/2 - 1);

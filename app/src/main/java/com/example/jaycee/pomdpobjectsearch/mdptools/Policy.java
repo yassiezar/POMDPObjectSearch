@@ -22,7 +22,7 @@ import static com.example.jaycee.pomdpobjectsearch.mdptools.Params.O_MUG;
 import static com.example.jaycee.pomdpobjectsearch.mdptools.Params.O_OFFICE_SUPPLIES;
 import static com.example.jaycee.pomdpobjectsearch.mdptools.Params.O_WINDOW;
 
-public class Policy
+class Policy
 {
     private static final String TAG = Policy.class.getSimpleName();
 
@@ -30,7 +30,7 @@ public class Policy
 
     private Map<Long, ArrayList<Long>> policy = new HashMap<>();
 
-    public Policy(Context context, int target)
+    Policy(Context context, int target)
     {
         switch(target)
         {
@@ -105,7 +105,7 @@ public class Policy
         }
     }
 
-    public long getAction(State state)
+    long getAction(State state)
     {
         // Draw random action from action set from policy
         Random rand = new Random();

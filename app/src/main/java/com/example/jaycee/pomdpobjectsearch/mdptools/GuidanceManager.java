@@ -45,7 +45,6 @@ public class GuidanceManager
         float x = waypoint.getWaypointPose().getTranslation()[0];
         float y = waypoint.getWaypointPose().getTranslation()[1];
 
-        /*        Log.d(TAG, String.format("x: %f y %f", Math.sin(pan) - x, Math.sin(tilt) - y));*/
         // Compensate for Z-axis going in negative direction, rotating pan around y-axis
         return Math.abs(Math.sin(cameraTilt) - y) < 0.1 && Math.abs(Math.cos(-cameraPan+Math.PI/2) - x) < 0.1;
     }

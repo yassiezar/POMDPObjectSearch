@@ -10,18 +10,19 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.WindowManager;
 
 import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
 import com.example.jaycee.pomdpobjectsearch.mdptools.GuidanceInterface;
 import com.example.jaycee.pomdpobjectsearch.mdptools.GuidanceManager;
-import com.example.jaycee.pomdpobjectsearch.mdptools.Waypoint;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.Config;
+import com.google.ar.core.Frame;
+import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 import com.google.ar.core.exceptions.CameraNotAvailableException;
 import com.google.ar.core.exceptions.UnavailableApkTooOldException;
@@ -30,7 +31,7 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 
-public class ActivityCamera extends AppCompatActivity implements BarcodeListener, GuidanceInterface
+public class ActivityCamera extends AppCompatActivity implements BarcodeListener, GuidanceInterface, RenderListener
 {
     private static final String TAG = ActivityCamera.class.getSimpleName();
 
@@ -48,10 +49,10 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
     private static final int T_WINDOW = 8;
 
     private Session session;
+    private Pose devicePose;
 
     private CameraSurface surfaceView;
     private DrawerLayout drawerLayout;
-    private CentreView centreView;
 
     private SoundGenerator soundGenerator;
     private BarcodeScanner barcodeScanner;
@@ -74,8 +75,6 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
         actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
 
         surfaceView = findViewById(R.id.surfaceview);
-
-        centreView = findViewById(R.id.centre_view);
 
         drawerLayout = findViewById(R.id.layout_drawer_objects);
         NavigationView navigationView = findViewById(R.id.navigation_view_objects);
@@ -114,7 +113,6 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
                 onGuidanceStart(target);
 
                 soundGenerator.setTarget(target);
-/*                soundGenerator.markOffsetPose();*/
                 item.setCheckable(true);
 
                 drawerLayout.closeDrawers();
@@ -191,7 +189,6 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
             return;
         }
 
-        surfaceView.setSession(session);
         surfaceView.onResume();
 
         if(!JNIBridge.initSound())
@@ -210,6 +207,12 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
         {
             barcodeScanner.stop();
             barcodeScanner = null;
+        }
+
+        if(guidanceManager != null)
+        {
+            guidanceManager.end();
+            guidanceManager = null;
         }
 
         if(soundGenerator != null)
@@ -254,11 +257,6 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
         ActivityCompat.requestPermissions(this, new String[] {CAMERA_PERMISSION}, CAMERA_PERMISSION_CODE);
     }
 
-    public CentreView getCentreView()
-    {
-        return centreView;
-    }
-
     @Override
     public long onBarcodeScan()
     {
@@ -290,19 +288,13 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
     @Override
     public void onNewPoseAvailable()
     {
-        guidanceManager.updateDevicePose(surfaceView.getRenderer().getDevicePose());
+        guidanceManager.updateDevicePose(devicePose);
     }
-
-/*    @Override
-    public void onUpdateWaypoint(long action)
-    {
-        waypoint.updateWaypoint(action, session);
-    }*/
 
     @Override
     public void onGuidanceStart(int target)
     {
-        guidanceManager = new GuidanceManager(session, surfaceView.getRenderer().getDevicePose(), ActivityCamera.this, target);
+        guidanceManager = new GuidanceManager(session, devicePose, ActivityCamera.this, target);
     }
 
     @Override
@@ -324,6 +316,12 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
     }
 
     @Override
+    public Pose onDrawWaypoint()
+    {
+        return guidanceManager.getWaypointPose();
+    }
+
+    @Override
     public void onPlaySound()
     {
         float gain = 1.f;
@@ -334,7 +332,6 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
         int pitchLowLim = 6;
 
         // Compensate for the Tango's default position being 90deg upright
-        // tilt = waypoint  - phone
         float deviceTilt = guidanceManager.getCameraVector()[1];
         ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(guidanceManager.getWaypointPose().getTranslation());
         float waypointTilt = waypointVector.getEuler()[1];
@@ -368,5 +365,41 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
         metrics.updatePhonePosition(phonePose);
         metrics.updateTimestamp(renderer.getTimestamp());
         metrics.writeWifi();*/
+    }
+
+    @Override
+    public Frame onFrameRequest()
+    {
+        try
+        {
+            Frame newFrame = session.update();
+            devicePose = newFrame.getCamera().getPose();
+            return newFrame;
+        }
+        catch (CameraNotAvailableException e)
+        {
+            Log.e(TAG, "AR Camera not available: " + e);
+            return null;
+        }
+    }
+
+    @Override
+    public void onViewportChange(int width, int height)
+    {
+        try
+        {
+            int displayRotation = getSystemService(WindowManager.class).getDefaultDisplay().getRotation();
+            session.setDisplayGeometry(displayRotation, width, height);
+        }
+        catch(NullPointerException e)
+        {
+            Log.e(TAG, "Default display exception: " + e);
+        }
+    }
+
+    @Override
+    public void onDrawRequest(int textureId)
+    {
+        session.setCameraTextureName(textureId);
     }
 }

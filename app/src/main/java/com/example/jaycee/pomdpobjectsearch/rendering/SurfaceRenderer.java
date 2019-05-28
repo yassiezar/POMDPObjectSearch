@@ -4,18 +4,13 @@ import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
-import android.view.WindowManager;
 
-import com.example.jaycee.pomdpobjectsearch.ActivityCamera;
-import com.example.jaycee.pomdpobjectsearch.CameraSurface;
-import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
-import com.google.ar.core.Anchor;
+import com.example.jaycee.pomdpobjectsearch.RenderListener;
+import com.example.jaycee.pomdpobjectsearch.mdptools.GuidanceInterface;
 import com.google.ar.core.Camera;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
-import com.google.ar.core.Session;
 import com.google.ar.core.TrackingState;
-import com.google.ar.core.exceptions.CameraNotAvailableException;
 
 import java.io.IOException;
 import java.nio.IntBuffer;
@@ -28,16 +23,13 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     private static final String TAG = SurfaceRenderer.class.getSimpleName();
 
     private Context context;
-    private CameraSurface surfaceView;
-
-    private Pose devicePose;
-    private Anchor debugObjectAnchor;
 
     private BackgroundRenderer backgroundRenderer;
     private ObjectRenderer objectRenderer;
     private ObjectRenderer waypointRenderer;
 
-    private ARObject debugObject;
+    private GuidanceInterface guidanceInterface;
+    private RenderListener renderListener;
 
     private int width, height;
 
@@ -48,15 +40,16 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
 
     private final float[] anchorMatrix = new float[16];
 
-    private boolean drawObjects = false;
     private boolean drawWaypoint = false;
     private boolean viewportChanged = false;
     private boolean rendererReady = false;
 
-    public SurfaceRenderer(Context context, CameraSurface surfaceView)
+    public SurfaceRenderer(Context context)
     {
         this.context = context;
-        this.surfaceView = surfaceView;
+
+        this.guidanceInterface = (GuidanceInterface)context;
+        this.renderListener = (RenderListener)context;
 
         this.scannerWidth = 525;
         this.scannerHeight = 525;
@@ -104,7 +97,6 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         GLES20.glViewport(0, 0, width, height);
 
         // Create AR debug object
-        debugObject = new ARObject(5, 5, "Centre");
 
         // If surface changed, renderer is not ready
         rendererReady = false;
@@ -115,32 +107,24 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-        Session session = surfaceView.getSession();
-        if(session == null)
+/*        Session session = renderListener.onFrameAvailable();*/
+/*        if(session == null)
         {
             Log.w(TAG, "No session available for draw.");
             return;
-        }
+        }*/
         if(viewportChanged)
         {
-            try
-            {
-                viewportChanged = false;
-                int displayRotation = context.getSystemService(WindowManager.class).getDefaultDisplay().getRotation();
-                session.setDisplayGeometry(displayRotation, width, height);
-            }
-            catch(NullPointerException e)
-            {
-                Log.e(TAG, "Default display exception: " + e);
-            }
+            renderListener.onViewportChange(width, height);
+            viewportChanged = false;
         }
 
-        session.setCameraTextureName(backgroundRenderer.getTextureId());
+        renderListener.onDrawRequest(backgroundRenderer.getTextureId());
         try
         {
-            Frame frame = session.update();
+            //Frame frame = session.update();
+            Frame frame = renderListener.onFrameRequest();
             Camera camera = frame.getCamera();
-            devicePose = frame.getAndroidSensorPose();
             timestamp = frame.getTimestamp();
 
             backgroundRenderer.draw(frame);
@@ -162,7 +146,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
             // Update the debug object
             if(camera.getTrackingState() == TrackingState.TRACKING)
             {
-                if(drawObjects)
+/*                if(drawObjects)
                 {
                     // Get pointing vector
                     ClassHelpers.mVector currentPointingVector = new ClassHelpers.mVector(devicePose.getTranslation());
@@ -178,11 +162,11 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
                     indicatorPose.toMatrix(anchorMatrix, 0);
                     objectRenderer.updateModelMatrix(anchorMatrix, scaleFactor);
                     objectRenderer.draw(viewMatrix, projectionMatrix, colourCorrectionRgba);
-                }
+                }*/
 
                 if(drawWaypoint)
                 {
-                    Pose waypointPose = ((ActivityCamera)context).getWaypointAnchor().getPose();
+                    Pose waypointPose = guidanceInterface.onDrawWaypoint();
 
                     // Draw the waypoints as an Andyman
                     waypointPose.toMatrix(anchorMatrix, 0);
@@ -198,10 +182,10 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
             // Indicate renderer is ready after first frame is drawn
             rendererReady = true;
         }
-        catch(CameraNotAvailableException e)
+/*        catch(CameraNotAvailableException e)
         {
             Log.e(TAG, "Camera not available: " + e);
-        }
+        }*/
         catch(Throwable t)
         {
             Log.e(TAG, "Exception on the GL Thread: " + t);
@@ -221,24 +205,12 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         }
     }
 
-    public void toggleDrawObjects()
-    {
-        if(debugObjectAnchor != null)
-        {
-            debugObjectAnchor.detach();
-        }
-        debugObject.getRotatedObject(devicePose);
-        debugObjectAnchor = surfaceView.getSession().createAnchor(debugObject.getRotatedPose());
-
-        this.drawObjects = !this.drawObjects;
-    }
     public boolean isRendererReady() { return this.rendererReady; }
     public void setDrawWaypoint(boolean drawWaypoint) { this.drawWaypoint = drawWaypoint; }
 
-    public Session getSession() { return surfaceView.getSession(); }
-    public Pose getDevicePose() { return this.devicePose; }
-    public long getTimestamp() { return this.timestamp; }
+    // public Pose getDevicePose() { return this.devicePose; }
+/*    public long getTimestamp() { return this.timestamp; }*/
 
-    public int getWidth() { return this.width; }
-    public int getHeight() { return this.height; }
+/*    public int getWidth() { return this.width; }
+    public int getHeight() { return this.height; }*/
 }
