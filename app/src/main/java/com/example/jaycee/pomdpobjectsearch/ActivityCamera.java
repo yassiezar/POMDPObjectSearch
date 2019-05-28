@@ -111,6 +111,7 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
 
                 onGuidanceStart(target);
 
+                surfaceView.getRenderer().setDrawWaypoint(true);
                 soundGenerator.setTarget(target);
                 item.setCheckable(true);
 

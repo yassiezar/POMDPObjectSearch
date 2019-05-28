@@ -36,7 +36,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
     private int scannerWidth, scannerHeight;
     private int scannerX, scannerY;
 
-    private long timestamp;
+/*    private long timestamp;*/
 
     private final float[] anchorMatrix = new float[16];
 
@@ -125,7 +125,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
             //Frame frame = session.update();
             Frame frame = renderListener.onFrameRequest();
             Camera camera = frame.getCamera();
-            timestamp = frame.getTimestamp();
+/*            timestamp = frame.getTimestamp();*/
 
             backgroundRenderer.draw(frame);
 
@@ -169,6 +169,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
                     Pose waypointPose = guidanceInterface.onDrawWaypoint();
                     if(waypointPose != null)
                     {
+/*                        Log.d(TAG, waypointPose.toString());*/
                         // Draw the waypoints as an Andyman
                         waypointPose.toMatrix(anchorMatrix, 0);
                         waypointRenderer.updateModelMatrix(anchorMatrix, scaleFactor);

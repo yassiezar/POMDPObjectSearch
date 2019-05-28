@@ -171,7 +171,7 @@ namespace SoundGenerator
         alSourcei(soundSrc, AL_LOOPING, AL_TRUE);
 
         pitch = convertToneToSemitone(pitch);
-        __android_log_print(ANDROID_LOG_DEBUG, SOUNDLOG, "pitch: %f", pitch);
+/*        __android_log_print(ANDROID_LOG_DEBUG, SOUNDLOG, "pitch: %f", pitch);*/
 
         if(!sourcePlaying())
         {
@@ -225,7 +225,7 @@ namespace SoundGenerator
             if(pitch - notes[i] < 0)
             {
                 nPitch = (float)(notes[i] + 0.5f);
-                __android_log_print(ANDROID_LOG_DEBUG, SOUNDLOG, "Old pitch: %d New pitch: %d", (int)pitch, (int)nPitch);
+/*                __android_log_print(ANDROID_LOG_DEBUG, SOUNDLOG, "Old pitch: %d New pitch: %d", (int)pitch, (int)nPitch);*/
                 break;
             }
         }

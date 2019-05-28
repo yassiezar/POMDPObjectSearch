@@ -36,13 +36,8 @@ class Waypoint
         anchor.detach();
     }
 
-    void updateWaypoint(long action, Session session, Pose devicePose)
+    void updateWaypoint(long action, Session session, float cameraPan, float cameraTilt, float cameraZ)
     {
-        ClassHelpers.mVector cameraVector = ClassHelpers.getCameraVector(devicePose);
-        float[] phoneRotationAngles = cameraVector.getEuler();
-        float cameraPan = phoneRotationAngles[2];
-        float cameraTilt = phoneRotationAngles[1];
-
         float[] wayPointTranslation = new float[3];
 
         // Assume the current waypoint is where the camera is pointing.
@@ -74,7 +69,7 @@ class Waypoint
         if(tilt < 0) tilt = GRID_SIZE_TILT - 1;
         if(tilt > GRID_SIZE_TILT - 1) tilt = 0;
 
-        float z =  devicePose.getTranslation()[2] - 1.f;
+        float z = cameraZ - 1.f;
         wayPointTranslation[0] = (float)Math.sin(Math.toRadians(ANGLE_INTERVAL*(pan - GRID_SIZE_PAN/2 + 1)));
         wayPointTranslation[1] = (float)Math.sin(Math.toRadians(ANGLE_INTERVAL*(tilt - GRID_SIZE_TILT/2 + 1)));
         wayPointTranslation[2] = z;

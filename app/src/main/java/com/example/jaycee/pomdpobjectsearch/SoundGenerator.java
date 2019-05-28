@@ -150,8 +150,6 @@ public class SoundGenerator implements Runnable
         prevCameraObservation = O_NOTHING;
 
         metrics.updateTarget(target);
-
-        renderer.setDrawWaypoint(true);
     }
 
     public void setObservation(long observation)
