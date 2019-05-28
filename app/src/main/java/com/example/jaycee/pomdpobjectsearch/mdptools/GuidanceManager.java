@@ -7,6 +7,8 @@ import com.example.jaycee.pomdpobjectsearch.helpers.ClassHelpers;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Session;
 
+import static com.example.jaycee.pomdpobjectsearch.mdptools.Params.SEARCH_TIME_LIMIT;
+
 public class GuidanceManager
 {
     private static final String TAG = GuidanceManager.class.getSimpleName();
@@ -17,12 +19,16 @@ public class GuidanceManager
 
     private Pose devicePose;
 
+    private long searchTimerZero;
+
     public GuidanceManager(Session session, Pose pose, Context context, int target)
     {
         devicePose = pose;
         waypoint = new Waypoint(session, pose);
         state = new State();
         policy = new Policy(context, target);
+
+        searchTimerZero = System.currentTimeMillis();
     }
 
     public void end()
@@ -32,9 +38,13 @@ public class GuidanceManager
         waypoint = null;
     }
 
-    public void updateDevicePose(Pose pose)
+    // Called on every sound emission loop
+    public boolean updateDevicePose(Pose pose)
     {
         devicePose = pose;
+
+        // Check if time limit for search has been exceeded, return true if it has
+        return System.currentTimeMillis() - searchTimerZero > SEARCH_TIME_LIMIT;
     }
 
     public boolean waypointReached()

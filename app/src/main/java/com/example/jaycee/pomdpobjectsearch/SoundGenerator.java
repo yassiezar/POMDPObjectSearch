@@ -47,7 +47,7 @@ public class SoundGenerator implements Runnable
         this.vibrator= (Vibrator)context.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
-    public void stop()
+    void stop()
     {
         this.stop = true;
         handler = null;
@@ -83,7 +83,11 @@ public class SoundGenerator implements Runnable
 
         if(!stop)
         {
-            guidanceInterface.onNewPoseAvailable();
+            if(guidanceInterface.onGuidanceLoop())
+            {
+                guidanceInterface.onGuidanceEnd();
+                return;
+            }
             long newCameraObservation = this.observation;
 
             if(guidanceInterface.onWaypointReached() || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
@@ -92,8 +96,6 @@ public class SoundGenerator implements Runnable
                 guidanceInterface.onGuidanceRequested(newCameraObservation);
                 Log.i(TAG, "Setting new waypoint");
             }
-
-            float gain = 1.f;
 
             float pitch;
             // From config file; HI setting
@@ -107,7 +109,7 @@ public class SoundGenerator implements Runnable
             ClassHelpers.mVector waypointVector = new ClassHelpers.mVector(waypointPose.getTranslation());
             float waypointTilt = waypointVector.getEuler()[1];
 
-            float tilt = waypointTilt -deviceTilt;
+            float tilt = waypointTilt - deviceTilt;
 
             if(tilt >= Math.PI / 2)
             {
@@ -129,6 +131,16 @@ public class SoundGenerator implements Runnable
                 pitch = (float)(Math.pow(2, grad * -tilt + intercept));
             }
 
+            float gain;
+            if(Math.abs(tilt) > 0.175)      // 0.175rad = ~10deg
+            {
+                gain = 1.f;
+            }
+            else
+            {
+                gain = (float)(0.5/0.175*Math.abs(tilt) + 0.5);
+            }
+
             JNIBridge.playSound(waypointPose.getTranslation(), deviceOrientation, gain, pitch);
 
 /*        metrics.updateTargetPosition(waypointPose);
@@ -139,7 +151,6 @@ public class SoundGenerator implements Runnable
             if(!stop) handler.postDelayed(this, 40);
         }
     }
-
 
     public void setTarget(long target)
     {

@@ -288,13 +288,16 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
         }
     }
 
+    // Triggers pose update, returns timer status
     @Override
-    public void onNewPoseAvailable()
+    public boolean onGuidanceLoop()
     {
         if(guidanceManager != null)
         {
-            guidanceManager.updateDevicePose(devicePose);
+            return guidanceManager.updateDevicePose(devicePose);
         }
+
+        return false;
     }
 
     @Override

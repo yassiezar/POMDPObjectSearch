@@ -4,11 +4,11 @@ import com.google.ar.core.Pose;
 
 public interface GuidanceInterface
 {
-    void onNewPoseAvailable();
     void onGuidanceStart(int target);
     void onGuidanceEnd();
     void onGuidanceRequested(long observation);
     boolean onWaypointReached();
+    boolean onGuidanceLoop();
     Pose onDrawWaypoint();
     Pose onWaypointPoseRequested();
     Pose onDevicePoseRequested();

@@ -19,4 +19,6 @@ final class Params
     static final int A_DOWN = 1;
     static final int A_LEFT = 2;
     static final int A_RIGHT = 3;
+
+    static final long SEARCH_TIME_LIMIT = 180000;
 }
