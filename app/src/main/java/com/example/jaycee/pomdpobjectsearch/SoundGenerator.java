@@ -9,7 +9,6 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.util.Log;
-import android.widget.Toast;
 
 public class SoundGenerator implements Runnable
 {
@@ -17,30 +16,24 @@ public class SoundGenerator implements Runnable
 
     private static final int O_NOTHING = 0;
 
-    private Context context;
-    private SurfaceRenderer renderer;
+//    private SurfaceRenderer renderer;
 
-    private long observation = O_NOTHING;
     private long prevCameraObservation = O_NOTHING;
     private long target = -1;
 
-    private Metrics metrics = new Metrics();
-
     private Vibrator vibrator;
-    private Toast toast;
     private Handler handler = new Handler();
 
     private boolean stop = false;
-    private boolean targetSet = false;
-    private boolean targetFound = false;
+/*    private boolean targetSet = false;
+    private boolean targetFound = false;*/
 
     private BarcodeListener barcodeListener;
     private GuidanceInterface guidanceInterface;
 
-    SoundGenerator(Context context, SurfaceRenderer renderer)
+    SoundGenerator(Context context)//, SurfaceRenderer renderer)
     {
-        this.context = context;
-        this.renderer = renderer;
+//        this.renderer = renderer;
         this.barcodeListener = (BarcodeListener)context;
         this.guidanceInterface = (GuidanceInterface)context;
 
@@ -50,13 +43,14 @@ public class SoundGenerator implements Runnable
     void stop()
     {
         this.stop = true;
+        handler.removeCallbacks(this);
         handler = null;
     }
 
     @Override
     public void run()
     {
-        if(!isTargetSet() || isTargetFound())
+/*        if(!targetSet || targetFound)
         {
             if(!stop) handler.postDelayed(this, 40);
             return;
@@ -66,19 +60,20 @@ public class SoundGenerator implements Runnable
         {
             if(!stop) handler.postDelayed(this, 40);
             return;
-        }
+        }*/
 
-        setObservation(barcodeListener.onBarcodeScan());
+//        setObservation(barcodeListener.onBarcodeScan());
+        long observation = barcodeListener.onBarcodeScan();
 
         if(observation == target)
         {
             Log.i(TAG, "Target found");
-            targetFound = true;
-            targetSet = false;
-            observation = O_NOTHING;
+/*            targetFound = true;
+            targetSet = false;*/
             vibrator.vibrate(350);
-            renderer.setDrawWaypoint(false);
             guidanceInterface.onGuidanceEnd();
+
+            return;
         }
 
         if(!stop)
@@ -88,12 +83,12 @@ public class SoundGenerator implements Runnable
                 guidanceInterface.onGuidanceEnd();
                 return;
             }
-            long newCameraObservation = this.observation;
+            // long newCameraObservation = observation;
 
-            if(guidanceInterface.onWaypointReached() || (newCameraObservation != prevCameraObservation && newCameraObservation != O_NOTHING))
+            if(guidanceInterface.onWaypointReached() || (observation != prevCameraObservation && observation != O_NOTHING))
             {
-                prevCameraObservation = newCameraObservation;
-                guidanceInterface.onGuidanceRequested(newCameraObservation);
+                prevCameraObservation = observation;
+                guidanceInterface.onGuidanceRequested(observation);
                 Log.i(TAG, "Setting new waypoint");
             }
 
@@ -143,11 +138,6 @@ public class SoundGenerator implements Runnable
 
             JNIBridge.playSound(waypointPose.getTranslation(), deviceOrientation, gain, pitch);
 
-/*        metrics.updateTargetPosition(waypointPose);
-        metrics.updatePhoneOrientation(guidanceInterface.onDevicePoseRequested());
-        metrics.updatePhonePosition(guidanceInterface.onDevicePoseRequested());
-        metrics.updateTimestamp(renderer.getTimestamp());
-        metrics.writeWifi();*/
             if(!stop) handler.postDelayed(this, 40);
         }
     }
@@ -155,75 +145,14 @@ public class SoundGenerator implements Runnable
     public void setTarget(long target)
     {
         this.target = target;
-        this.targetSet = true;
-        this.targetFound = false;
+/*        this.targetSet = true;
+        this.targetFound = false;*/
 
         prevCameraObservation = O_NOTHING;
-
-        metrics.updateTarget(target);
     }
 
-    public void setObservation(long observation)
+/*    public void setObservation(long observation)
     {
-        final String val;
-        if(observation == 1)
-        {
-            val = "Monitor";
-        }
-        else if(observation == 2)
-        {
-            val = "Keyboard";
-        }
-        else if(observation == 3)
-        {
-            val = "Mouse";
-        }
-        else if(observation == 4)
-        {
-            val = "Desk";
-        }
-        else if(observation == 5)
-        {
-            val = "Laptop";
-        }
-        else if(observation == 6)
-        {
-            val = "Mug";
-        }
-        else if(observation == 7)
-        {
-            val = "Office supplies";
-        }
-        else if(observation == 8)
-        {
-            val = "Window";
-        }
-        else
-        {
-            val = "Unknown";
-        }
         this.observation = observation;
-        this.metrics.updateObservation(observation);
-
-        if(observation != O_NOTHING && observation != -1)
-        {
-            ((ActivityCamera)context).runOnUiThread(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    if(toast != null)
-                    {
-                        toast.cancel();
-                    }
-                    toast = Toast.makeText(context, val, Toast.LENGTH_SHORT);
-                    toast.show();
-                }
-            });
-        }
-    }
-
-    public boolean isTargetSet() { return this.targetSet; }
-    public boolean isTargetFound() { return this.targetFound; }
-    public long getTarget() { return this.target; }
+    }*/
 }

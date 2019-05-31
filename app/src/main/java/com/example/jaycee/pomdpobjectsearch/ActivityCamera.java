@@ -15,6 +15,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.example.jaycee.pomdpobjectsearch.mdptools.GuidanceInterface;
 import com.example.jaycee.pomdpobjectsearch.mdptools.GuidanceManager;
@@ -52,13 +53,17 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
 
     private CameraSurface surfaceView;
     private DrawerLayout drawerLayout;
+    private Toast toast;
 
     private SoundGenerator soundGenerator;
     private BarcodeScanner barcodeScanner;
 
     private GuidanceManager guidanceManager;
+    private Metrics metrics;
 
     private boolean requestARCoreInstall = true;
+
+    private long timestamp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -111,8 +116,6 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
 
                 onGuidanceStart(target);
 
-                surfaceView.getRenderer().setDrawWaypoint(true);
-                soundGenerator.setTarget(target);
                 item.setCheckable(true);
 
                 drawerLayout.closeDrawers();
@@ -195,26 +198,11 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
         {
             Log.e(TAG, "OpenAL init error");
         }
-
-        soundGenerator = new SoundGenerator(this, surfaceView.getRenderer());
-        soundGenerator.run();
     }
 
     @Override
     protected void onPause()
     {
-/*        if(barcodeScanner != null)
-        {
-            barcodeScanner.stop();
-            barcodeScanner = null;
-        }
-
-        if(guidanceManager != null)
-        {
-            guidanceManager.end();
-            guidanceManager = null;
-        }*/
-
         onBarcodeScannerStop();
         onGuidanceEnd();
 
@@ -263,12 +251,28 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
     @Override
     public long onBarcodeScan()
     {
+        long scannedObject = O_NOTHING;
         if(barcodeScanner != null)
         {
-            return barcodeScanner.getCode();
+            scannedObject = barcodeScanner.getCode();
         }
 
-        return O_NOTHING;
+        if(metrics != null)
+        {
+            metrics.updateObservation(scannedObject);
+        }
+
+        if(scannedObject != O_NOTHING && scannedObject != -1)
+        {
+            if (toast != null)
+            {
+                toast.cancel();
+            }
+            toast = Toast.makeText(this, guidanceManager.objectCodeToString(scannedObject), Toast.LENGTH_SHORT);
+            toast.show();
+        }
+
+        return scannedObject;
     }
 
     @Override
@@ -292,6 +296,13 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
     @Override
     public boolean onGuidanceLoop()
     {
+        if(metrics != null)
+        {
+            metrics.updateWaypointPosition(guidanceManager.getWaypointPose());
+            metrics.updateDevicePose(devicePose);
+            metrics.updateTimestamp(timestamp);
+
+        }
         if(guidanceManager != null)
         {
             return guidanceManager.updateDevicePose(devicePose);
@@ -304,6 +315,15 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
     public void onGuidanceStart(int target)
     {
         guidanceManager = new GuidanceManager(session, devicePose, ActivityCamera.this, target);
+        metrics = new Metrics();
+        metrics.updateTarget(target);
+        metrics.run();
+
+        soundGenerator = new SoundGenerator(this);//, surfaceView.getRenderer());
+        soundGenerator.setTarget(target);
+        soundGenerator.run();
+
+        surfaceView.getRenderer().setDrawWaypoint(true);
     }
 
     @Override
@@ -314,6 +334,14 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
             guidanceManager.end();
             guidanceManager = null;
         }
+
+        if(metrics != null)
+        {
+            metrics.stop();
+            metrics = null;
+        }
+
+        surfaceView.getRenderer().setDrawWaypoint(false);
     }
 
     @Override
@@ -356,11 +384,11 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
         return null;
     }
 
-    @Override
+/*    @Override
     public Pose onDevicePoseRequested()
     {
         return devicePose;
-    }
+    }*/
 
     @Override
     public float[] onCameraVectorRequested()
@@ -379,6 +407,7 @@ public class ActivityCamera extends AppCompatActivity implements BarcodeListener
         try
         {
             Frame newFrame = session.update();
+            timestamp = newFrame.getTimestamp();
             devicePose = newFrame.getCamera().getPose();
             return newFrame;
         }

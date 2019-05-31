@@ -15,10 +15,10 @@ public class CentreView extends LinearLayout
         LayoutInflater inflater = LayoutInflater.from(context);
         inflater.inflate(R.layout.centre_layout, this);
 
-        leftArrow = findViewById(R.id.arrow_left);
+/*        leftArrow = findViewById(R.id.arrow_left);
         rightArrow = findViewById(R.id.arrow_right);
         upArrow = findViewById(R.id.arrow_up);
-        downArrow = findViewById(R.id.arrow_down);
+        downArrow = findViewById(R.id.arrow_down);*/
     }
 
     public void setArrowAlpha(Arrow.Direction direction, int alpha)

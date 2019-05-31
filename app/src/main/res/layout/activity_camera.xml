@@ -25,12 +25,12 @@
             android:layout_below="@id/toolbar"
             android:contentDescription="Drawing debug object" >
         </com.example.jaycee.pomdpobjectsearch.CameraSurface>
-<!--        <com.example.jaycee.pomdpobjectsearch.CentreView
+        <com.example.jaycee.pomdpobjectsearch.CentreView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:id="@+id/centre_view">
-        </com.example.jaycee.pomdpobjectsearch.CentreView>-->
+        </com.example.jaycee.pomdpobjectsearch.CentreView>
     </RelativeLayout>
     <android.support.design.widget.NavigationView
         android:id="@+id/navigation_view_objects"

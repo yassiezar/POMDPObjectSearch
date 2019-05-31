@@ -208,7 +208,7 @@ public class SurfaceRenderer implements GLSurfaceView.Renderer
         }
     }
 
-    public boolean isRendererReady() { return this.rendererReady; }
+//    public boolean isRendererReady() { return this.rendererReady; }
     public void setDrawWaypoint(boolean drawWaypoint) { this.drawWaypoint = drawWaypoint; }
 
     // public Pose getDevicePose() { return this.devicePose; }

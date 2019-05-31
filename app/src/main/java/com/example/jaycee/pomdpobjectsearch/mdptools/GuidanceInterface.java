@@ -11,6 +11,6 @@ public interface GuidanceInterface
     boolean onGuidanceLoop();
     Pose onDrawWaypoint();
     Pose onWaypointPoseRequested();
-    Pose onDevicePoseRequested();
+//    Pose onDevicePoseRequested();
     float[] onCameraVectorRequested();
 }

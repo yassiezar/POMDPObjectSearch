@@ -81,4 +81,46 @@ public class GuidanceManager
         ClassHelpers.mVector cameraVector = ClassHelpers.getCameraVector(this.devicePose);
         return cameraVector.getEuler();
     }
+
+    public String objectCodeToString(long observation)
+    {
+        final String val;
+        if(observation == 1)
+        {
+            val = "Monitor";
+        }
+        else if(observation == 2)
+        {
+            val = "Keyboard";
+        }
+        else if(observation == 3)
+        {
+            val = "Mouse";
+        }
+        else if(observation == 4)
+        {
+            val = "Desk";
+        }
+        else if(observation == 5)
+        {
+            val = "Laptop";
+        }
+        else if(observation == 6)
+        {
+            val = "Mug";
+        }
+        else if(observation == 7)
+        {
+            val = "Office supplies";
+        }
+        else if(observation == 8)
+        {
+            val = "Window";
+        }
+        else
+        {
+            val = "Unknown";
+        }
+        return val;
+    }
 }
