@@ -113,9 +113,6 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
                     case R.id.item_object_keyboard:
                         target = Objects.Observation.T_COMPUTER_KEYBOARD;
                         break;
-                    case R.id.item_object_lamp:
-                        target = Objects.Observation.T_LAMP;
-                        break;
                     case R.id.item_object_laptop:
                         target = Objects.Observation.T_LAPTOP;
                         break;
@@ -136,9 +133,6 @@ public abstract class ActivityBase extends AppCompatActivity implements FrameHan
                         break;
                     case R.id.item_object_whiteboard:
                         target = Objects.Observation.T_WHITEBOARD;
-                        break;
-                    case R.id.item_object_window:
-                        target = Objects.Observation.T_WINDOW;
                         break;
                     default: target = null;
                 }
