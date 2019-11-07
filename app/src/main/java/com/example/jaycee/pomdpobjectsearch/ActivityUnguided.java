@@ -15,10 +15,13 @@ import java.util.Locale;
 public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
 {
     private static final String TAG = ActivityUnguided.class.getSimpleName();
+    private static final long SCAN_FREQUENCY = 1500L;
 
     private static final float MIN_CONF = 0.4f;
 
     private TextToSpeech tts;
+
+    private long time = 0;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -76,6 +79,13 @@ public class ActivityUnguided extends ActivityBase implements ScreenReadRequest
     public void onNewFrame(com.google.ar.core.Frame frame)
     {
         super.onNewFrame(frame);
+
+/*        if(System.currentTimeMillis() - time > SCAN_FREQUENCY)
+        {
+            Log.d(TAG, "Scanning");
+            time = System.currentTimeMillis();
+            scanFrameForObjects();
+        }*/
 
         getMetrics().updateTimestamp(frame.getTimestamp());
         getMetrics().updatePhonePose(frame.getAndroidSensorPose());
