@@ -43,7 +43,7 @@ public class Metrics
                 phoneQz + DELIMITER +
                 phoneQw + DELIMITER;
 
-        Log.d(TAG, "Wifi output: " + wifiString);
+//        Log.d(TAG, "Wifi output: " + wifiString);
         if(dataStreamer == null ||
                 dataStreamer.getStatus() != AsyncTask.Status.RUNNING)
         {
