@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/POMDPObjectSearch.iml" filepath="$PROJECT_DIR$/POMDPObjectSearch.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/POMDPObjectSearch-app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/POMDPObjectSearch-app.iml" group="POMDPObjectSearch/app" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/android-POMDPObjectSearch.iml" filepath="$PROJECT_DIR$/.idea/modules/android-POMDPObjectSearch.iml" group="POMDPObjectSearch" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
