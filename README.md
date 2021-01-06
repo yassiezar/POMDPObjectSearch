@@ -91,6 +91,7 @@ This project is licensed under the terms of the GPL v3.0 license.
 
 If you found this code useful, please consider adding a reference to this repository in your work:
 
+```
 @phdthesis {lock2020,
   author  = {"Lock, Jacobus C. and Bellotto, Nicola and Cielniak, Grzegorz"},
   title   = {"Active Vision-Based Guidance with a Mobile Device for People with Visual Impairments"},
@@ -99,4 +100,4 @@ If you found this code useful, please consider adding a reference to this reposi
   year    = {"2020"},
   month   = {"April"}
 }
-
+```
