@@ -66,7 +66,7 @@ Then, open the project in AndroidStudio, hit compile and run it on your device.
 To compile and install the POMDP search is a bit more complex.
 
 First, clone this repo and check out the `object-search-experiment` or `object-search-experiment-dev` branch.
-Then, download [this]() file and unzip its contents into `/path/to/repo/POMDPObjectSearch/app/src/main/assets/`.
+Then, download [this](https://drive.google.com/file/d/1FgSHg3DeHHmvaml89lBDeMFe1PEt-1Hp/view?usp=sharing) file and unzip its contents into `/path/to/repo/POMDPObjectSearch/app/src/main/assets/`.
 Open the project in AndroidStudio, compile the code and then run it on your device. 
 
 Note that the policy files take long to load and may make it look like your phone is hanging when you select a target object.
